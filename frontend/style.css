@@ -1,0 +1,10 @@
+/* TODO (Person 3 - Frontend): Style the chat UI, loading states, and grammar highlighting */
+
+body {
+    font-family: sans-serif;
+}
+
+#chat-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
