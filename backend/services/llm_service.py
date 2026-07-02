@@ -15,13 +15,22 @@ class LLMService:
         self.client = genai.Client(api_key=api_key)
         self.model_id = 'gemini-2.5-flash'
         
-    def generate_response_basic(self, prompt: str) -> str:
-        """A simple, non-streaming call to verify Gemini is working."""
+    def generate_response_basic(self, prompt: str, rag_context: str = "") -> str:
+        """A non-streaming call to verify Gemini is working, optionally using RAG context."""
         
         system_instruction = (
-            "You are a strict but encouraging Business English tutor. "
-            "Correct any grammar mistakes the user makes and provide professional alternatives."
+            "You are an expert, professional Business English tutor. Your goal is to help the user "
+            "communicate effectively, politely, and formally in a corporate setting.\n\n"
+            "RULES:\n"
+            "1. Identify any grammar, spelling, or phrasing mistakes in the user's input.\n"
+            "2. Gently correct the mistakes.\n"
+            "3. Provide 2-3 more professional alternatives that sound natural in a business context.\n"
+            "4. If relevant, incorporate the provided Curriculum Context to explain grammar rules.\n"
+            "5. Keep your tone encouraging and concise."
         )
+
+        if rag_context:
+            system_instruction += f"\n\nCURRICULUM CONTEXT:\n{rag_context}"
         
         response = self.client.models.generate_content(
             model=self.model_id,
