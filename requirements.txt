@@ -6,3 +6,5 @@ redis
 websockets
 # Person 1 will add: google-genai, langchain, chromadb, etc.
 # Person 2 will add: asyncpg, sqlalchemy, arq, etc.
+google-genai
+python-dotenv

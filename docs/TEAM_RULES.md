@@ -90,7 +90,7 @@ When starting a new chat with your AI, use the prompt below for your specific ro
 > My responsibility is strictly the Intelligence layer: LLM integration, RAG pipeline, and ElevenLabs TTS integration.
 > Do NOT touch the FastAPI routing (`routes.py`), Redis session logic, or the Frontend.
 > Once I confirm, we will build ONE small feature at a time, starting with setting up a basic non-streaming Gemini call in `llm_service.py`."
-
+(only for reference person 1 and 2. i am person 1 now only)
 ### Person 2 (Backend & Infrastructure Engineer)
 > "I am Person 2 on a 3-person team building a Business English Tutor.
 > Read the ENTIRE repository first. Read `docs/ROADMAP.md` and `docs/api_contract.md`. Understand the architecture.
