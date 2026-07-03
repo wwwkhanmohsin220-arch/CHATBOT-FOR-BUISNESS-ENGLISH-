@@ -1,4 +1,6 @@
 import os
+import asyncio
+import sys
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 from dotenv import load_dotenv
@@ -8,7 +10,7 @@ from backend.services.rag_service import RAGService
 # Load environment variables from the .env file
 load_dotenv()
 
-def main():
+async def main():
     print("Initializing Services...")
     try:
         llm = LLMService()
@@ -38,16 +40,16 @@ def main():
     else:
         print("No context found.\n")
 
-    print("Waiting for Gemini response...\n")
+    print("Waiting for Gemini response (STREAMING)...\n")
+    print("Bot Response: ", end="", flush=True)
     
     try:
-        # 4. Pass prompt and context to LLM
-        response = llm.generate_response_basic(test_prompt, rag_context=context)
-        print("Bot Response:")
-        print(response)
+        # 4. Stream response from LLM using the async generator
+        async for chunk in llm.generate_response_stream(test_prompt, rag_context=context):
+            print(chunk, end="", flush=True)
+        print("\n\n[Stream Complete]")
     except Exception as e:
-        print(f"\n[ERROR] Failed to generate response: {e}")
-        print("Did you remember to copy .env.example to .env and add your GEMINI_API_KEY?")
+        print(f"\n[ERROR] Failed to generate stream: {e}")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

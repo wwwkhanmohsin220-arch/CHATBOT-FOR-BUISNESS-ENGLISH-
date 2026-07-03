@@ -3,6 +3,7 @@
 import json
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.models.session import SessionManager
@@ -73,6 +74,32 @@ async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
         )
 
     return chat_response
+
+
+@router.post("/chat/stream")
+async def chat_stream_endpoint(payload: ChatRequest) -> StreamingResponse:
+    session_id = payload.session_id or "default_session"
+    history = session_manager.get_history(session_id)
+    prompt = _build_prompt(payload.message, history)
+
+    async def text_streamer():
+        try:
+            from backend.services.llm_service import LLMService
+
+            llm_service = LLMService()
+            full_response_accumulator = []
+
+            async for token in llm_service.generate_response_stream(prompt):
+                full_response_accumulator.append(token)
+                yield token
+
+            complete_reply = "".join(full_response_accumulator)
+            session_manager.add_message(session_id, "user", payload.message)
+            session_manager.add_message(session_id, "assistant", complete_reply)
+        except Exception as exc:
+            yield f"Streaming error: {exc}"
+
+    return StreamingResponse(text_streamer(), media_type="text/plain")
 
 
 @router.websocket("/ws")
