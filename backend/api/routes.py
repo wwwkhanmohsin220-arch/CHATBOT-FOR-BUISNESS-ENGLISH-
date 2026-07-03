@@ -33,9 +33,16 @@ def _build_prompt(message: str, history: list) -> str:
 def _generate_response(prompt: str) -> ChatResponse:
     try:
         from backend.services.llm_service import LLMService
+        from backend.services.rag_service import RAGService
 
         llm_service = LLMService()
-        response_text = llm_service.generate_response_basic(prompt)
+        rag_service = RAGService()
+        
+        # 1. Retrieve the curriculum context
+        context = rag_service.retrieve_context(prompt)
+        
+        # 2. Pass both the prompt and the context to your LLM
+        response_text = llm_service.generate_response_basic(prompt, rag_context=context)
         return ChatResponse(response=response_text, status="success")
     except Exception as exc:
         return ChatResponse(
@@ -85,11 +92,16 @@ async def chat_stream_endpoint(payload: ChatRequest) -> StreamingResponse:
     async def text_streamer():
         try:
             from backend.services.llm_service import LLMService
+            from backend.services.rag_service import RAGService
 
             llm_service = LLMService()
+            rag_service = RAGService()
             full_response_accumulator = []
 
-            async for token in llm_service.generate_response_stream(prompt):
+            # Retrieve RAG context
+            context = rag_service.retrieve_context(prompt)
+
+            async for token in llm_service.generate_response_stream(prompt, rag_context=context):
                 full_response_accumulator.append(token)
                 yield token
 
@@ -111,12 +123,43 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
             raw_message = await websocket.receive_text()
             message_text = _parse_websocket_message(raw_message)
 
-            await websocket.send_json(
-                {
-                    "type": "text_token",
-                    "content": f"Echo: {message_text}",
-                }
-            )
+            if not message_text or message_text == "Unsupported WebSocket action.":
+                continue
+
+            from backend.services.llm_service import LLMService
+            from backend.services.rag_service import RAGService
+            from backend.services.tts_service import TTSService
+
+            llm_service = LLMService()
+            rag_service = RAGService()
+            tts_service = TTSService()
+
+            # 1. Retrieve Context
+            context = rag_service.retrieve_context(message_text)
+
+            # 2. Get the LLM text generator
+            llm_generator = llm_service.generate_response_stream(message_text, rag_context=context)
+
+            # 3. Intercept the text generator to send text chunks to the frontend 
+            #    WHILE piping them to ElevenLabs
+            async def intercept_text(generator):
+                async for chunk in generator:
+                    await websocket.send_json({
+                        "type": "text_token",
+                        "content": chunk
+                    })
+                    yield chunk
+
+            # 4. Stream audio from the intercepted text stream
+            audio_generator = tts_service.stream_audio_from_text(intercept_text(llm_generator))
+            
+            if audio_generator:
+                async for audio_chunk in audio_generator:
+                    await websocket.send_json({
+                        "type": "audio_chunk",
+                        "audio_base64": audio_chunk
+                    })
+
             await websocket.send_json({"type": "done"})
     except WebSocketDisconnect:
         return
