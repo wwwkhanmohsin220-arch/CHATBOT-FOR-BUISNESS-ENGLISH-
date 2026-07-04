@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business English Voice Chat Test</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #f4f7f6;
+            color: #17211f;
+        }
+
+        main {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 32px 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin: 0 0 18px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        button {
+            border: 1px solid #1f6f64;
+            background: #1f6f64;
+            color: white;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        button.secondary {
+            background: white;
+            color: #1f6f64;
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 82px;
+            box-sizing: border-box;
+            border: 1px solid #bac7c3;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 15px;
+            resize: vertical;
+        }
+
+        .panel {
+            background: white;
+            border: 1px solid #d8e1de;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 14px;
+        }
+
+        .label {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        #response {
+            white-space: pre-wrap;
+            line-height: 1.55;
+            min-height: 120px;
+        }
+
+        #status {
+            min-height: 20px;
+            color: #47615b;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Business English Voice Chat</h1>
+
+        <div class="controls">
+            <button id="connectBtn">Connect</button>
+            <button id="micBtn" disabled>Speak</button>
+            <button id="sendBtn" disabled>Send Text</button>
+            <button id="resetBtn" class="secondary">Reset Audio</button>
+        </div>
+
+        <textarea id="message" placeholder="Speak or type your message...">I wants to schedule meeting tomorrow. Please correct me.</textarea>
+
+        <div class="panel">
+            <div class="label">Status</div>
+            <div id="status">Disconnected</div>
+        </div>
+
+        <div class="panel">
+            <div class="label">Response</div>
+            <div id="response"></div>
+            <audio id="audio" controls autoplay></audio>
+        </div>
+    </main>
+
+    <script>
+        const connectBtn = document.getElementById("connectBtn");
+        const micBtn = document.getElementById("micBtn");
+        const sendBtn = document.getElementById("sendBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const messageInput = document.getElementById("message");
+        const statusBox = document.getElementById("status");
+        const responseBox = document.getElementById("response");
+        const audio = document.getElementById("audio");
+
+        const sessionId = `voice-chat-${Date.now()}`;
+        let socket = null;
+        let mediaSource = null;
+        let sourceBuffer = null;
+        let audioQueue = [];
+        let streamDone = false;
+
+        function setStatus(text) {
+            statusBox.textContent = text;
+        }
+
+        function resetAudioStream() {
+            audioQueue = [];
+            sourceBuffer = null;
+            streamDone = false;
+            mediaSource = new MediaSource();
+            audio.src = URL.createObjectURL(mediaSource);
+
+            mediaSource.addEventListener("sourceopen", () => {
+                sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
+                sourceBuffer.mode = "sequence";
+                sourceBuffer.addEventListener("updateend", appendNextAudioChunk);
+                appendNextAudioChunk();
+            }, { once: true });
+        }
+
+        function base64ToBytes(base64) {
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let index = 0; index < binary.length; index += 1) {
+                bytes[index] = binary.charCodeAt(index);
+            }
+            return bytes;
+        }
+
+        function appendNextAudioChunk() {
+            if (!sourceBuffer || sourceBuffer.updating || audioQueue.length === 0) {
+                if (streamDone && mediaSource && mediaSource.readyState === "open" && sourceBuffer && !sourceBuffer.updating && audioQueue.length === 0) {
+                    try {
+                        mediaSource.endOfStream();
+                    } catch (error) {
+                        console.warn(error);
+                    }
+                }
+                return;
+            }
+
+            sourceBuffer.appendBuffer(audioQueue.shift());
+            audio.play().catch(() => {});
+        }
+
+        function handleAudioChunk(base64Audio) {
+            audioQueue.push(base64ToBytes(base64Audio));
+            appendNextAudioChunk();
+        }
+
+        function connect() {
+            socket = new WebSocket("ws://127.0.0.1:8000/ws");
+
+            socket.addEventListener("open", () => {
+                setStatus("Connected");
+                connectBtn.disabled = true;
+                sendBtn.disabled = false;
+                micBtn.disabled = !getSpeechRecognition();
+            });
+
+            socket.addEventListener("message", (event) => {
+                const data = JSON.parse(event.data);
+
+                if (data.type === "text_token") {
+                    responseBox.textContent += data.content;
+                }
+
+                if (data.type === "audio_chunk") {
+                    handleAudioChunk(data.audio_base64);
+                }
+
+                if (data.type === "done") {
+                    streamDone = true;
+                    appendNextAudioChunk();
+                    setStatus("Done");
+                    sendBtn.disabled = false;
+                    micBtn.disabled = !getSpeechRecognition();
+                }
+            });
+
+            socket.addEventListener("close", () => {
+                setStatus("Disconnected");
+                connectBtn.disabled = false;
+                sendBtn.disabled = true;
+                micBtn.disabled = true;
+            });
+        }
+
+        function sendMessage(text) {
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                setStatus("Connect first");
+                return;
+            }
+
+            resetAudioStream();
+            responseBox.textContent = "";
+            streamDone = false;
+            sendBtn.disabled = true;
+            micBtn.disabled = true;
+            setStatus("Thinking and speaking...");
+
+            socket.send(JSON.stringify({
+                action: "send_message",
+                text,
+                session_id: sessionId,
+            }));
+        }
+
+        function getSpeechRecognition() {
+            return window.SpeechRecognition || window.webkitSpeechRecognition;
+        }
+
+        function startMic() {
+            const SpeechRecognition = getSpeechRecognition();
+            if (!SpeechRecognition) {
+                setStatus("Speech recognition is unavailable in this browser");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = "en-US";
+            recognition.interimResults = false;
+            recognition.continuous = false;
+
+            recognition.addEventListener("start", () => setStatus("Listening..."));
+            recognition.addEventListener("result", (event) => {
+                const transcript = event.results[0][0].transcript;
+                messageInput.value = transcript;
+                sendMessage(transcript);
+            });
+            recognition.addEventListener("error", (event) => setStatus(`Mic error: ${event.error}`));
+            recognition.start();
+        }
+
+        connectBtn.addEventListener("click", connect);
+        micBtn.addEventListener("click", startMic);
+        sendBtn.addEventListener("click", () => sendMessage(messageInput.value.trim()));
+        resetBtn.addEventListener("click", resetAudioStream);
+
+        resetAudioStream();
+    </script>
+</body>
+</html>
