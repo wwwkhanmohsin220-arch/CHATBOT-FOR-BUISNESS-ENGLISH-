@@ -63,6 +63,64 @@ def _parse_websocket_message(raw_message: str) -> str:
     return payload.get("text", "")
 
 
+def _parse_websocket_payload(raw_message: str) -> dict:
+    try:
+        payload = json.loads(raw_message)
+    except json.JSONDecodeError:
+        return {
+            "text": raw_message,
+            "session_id": "default_session",
+            "error": None,
+        }
+
+    if payload.get("action") != "send_message":
+        return {
+            "text": "",
+            "session_id": payload.get("session_id") or "default_session",
+            "error": "Unsupported WebSocket action.",
+        }
+
+    return {
+        "text": payload.get("text", ""),
+        "session_id": payload.get("session_id") or "default_session",
+        "error": None,
+    }
+
+
+async def _archive_session_later(session_id: str, history: list[dict]) -> None:
+    if not history:
+        return
+
+    try:
+        from arq import create_pool
+        from backend.tasks import get_redis_settings
+
+        redis = await create_pool(get_redis_settings())
+        await redis.enqueue_job("archive_session", session_id, history)
+        try:
+            await redis.close()
+        except TypeError:
+            redis.close()
+    except Exception:
+        from backend.models.database import DatabaseManager
+
+        database_manager = DatabaseManager()
+        await database_manager.save_session(
+            {
+                "session_id": session_id,
+                "messages": history,
+            }
+        )
+
+
+async def _archive_active_session(active_session_id: str | None) -> None:
+    if not active_session_id:
+        return
+
+    history = session_manager.get_history(active_session_id)
+    await _archive_session_later(active_session_id, history)
+
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
     history = []
@@ -78,6 +136,10 @@ async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
             payload.session_id,
             "assistant",
             chat_response.response,
+        )
+        await _archive_session_later(
+            payload.session_id,
+            session_manager.get_history(payload.session_id),
         )
 
     return chat_response
@@ -108,6 +170,10 @@ async def chat_stream_endpoint(payload: ChatRequest) -> StreamingResponse:
             complete_reply = "".join(full_response_accumulator)
             session_manager.add_message(session_id, "user", payload.message)
             session_manager.add_message(session_id, "assistant", complete_reply)
+            await _archive_session_later(
+                session_id,
+                session_manager.get_history(session_id),
+            )
         except Exception as exc:
             yield f"Streaming error: {exc}"
 
@@ -117,13 +183,27 @@ async def chat_stream_endpoint(payload: ChatRequest) -> StreamingResponse:
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket) -> None:
     await websocket.accept()
+    active_session_id = None
 
     try:
         while True:
             raw_message = await websocket.receive_text()
-            message_text = _parse_websocket_message(raw_message)
+            websocket_payload = _parse_websocket_payload(raw_message)
+            message_text = websocket_payload["text"]
+            session_id = websocket_payload["session_id"]
+            active_session_id = session_id
 
-            if not message_text or message_text == "Unsupported WebSocket action.":
+            if websocket_payload["error"]:
+                await websocket.send_json(
+                    {
+                        "type": "text_token",
+                        "content": websocket_payload["error"],
+                    }
+                )
+                await websocket.send_json({"type": "done"})
+                continue
+
+            if not message_text:
                 continue
 
             from backend.services.llm_service import LLMService
@@ -134,32 +214,52 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
             rag_service = RAGService()
             tts_service = TTSService()
 
+            history = session_manager.get_history(session_id)
+            prompt = _build_prompt(message_text, history)
+
             # 1. Retrieve Context
-            context = rag_service.retrieve_context(message_text)
+            context = rag_service.retrieve_context(prompt)
 
             # 2. Get the LLM text generator
-            llm_generator = llm_service.generate_response_stream(message_text, rag_context=context)
+            llm_generator = llm_service.generate_response_stream(prompt, rag_context=context)
+            full_response_accumulator = []
 
-            # 3. Intercept the text generator to send text chunks to the frontend 
-            #    WHILE piping them to ElevenLabs
-            async def intercept_text(generator):
-                async for chunk in generator:
-                    await websocket.send_json({
-                        "type": "text_token",
-                        "content": chunk
-                    })
+            async def text_chunks_for_tts():
+                async for chunk in llm_generator:
+                    full_response_accumulator.append(chunk)
+                    await websocket.send_json(
+                        {
+                            "type": "text_token",
+                            "content": chunk,
+                        }
+                    )
                     yield chunk
 
-            # 4. Stream audio from the intercepted text stream
-            audio_generator = tts_service.stream_audio_from_text(intercept_text(llm_generator))
-            
-            if audio_generator:
+            if tts_service.api_key:
+                audio_generator = tts_service.stream_audio_from_text(text_chunks_for_tts())
                 async for audio_chunk in audio_generator:
-                    await websocket.send_json({
-                        "type": "audio_chunk",
-                        "audio_base64": audio_chunk
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "audio_chunk",
+                            "audio_base64": audio_chunk,
+                        }
+                    )
+            else:
+                async for chunk in text_chunks_for_tts():
+                    pass
+
+            complete_reply = "".join(full_response_accumulator)
+            session_manager.add_message(session_id, "user", message_text)
+            session_manager.add_message(session_id, "assistant", complete_reply)
+            await _archive_session_later(
+                session_id,
+                session_manager.get_history(session_id),
+            )
 
             await websocket.send_json({"type": "done"})
     except WebSocketDisconnect:
+        await _archive_active_session(active_session_id)
         return
+    except Exception:
+        await _archive_active_session(active_session_id)
+        raise

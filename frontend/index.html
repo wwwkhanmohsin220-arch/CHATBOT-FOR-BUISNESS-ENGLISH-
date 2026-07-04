@@ -1,16 +1,132 @@
-<!-- TODO (Person 3 - Frontend): Build chat UI structure, mic recording button, and bot typing indicators -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business English Tutor</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="chat-container">
-        <!-- Chat messages will be rendered here -->
+    <div class="app-shell">
+        <aside class="rail">
+            <div class="brand">
+                <div class="brand-mark">BET</div>
+                <div>
+                    <p class="eyebrow">Business English Tutor</p>
+                    <h1>Practice with confidence</h1>
+                </div>
+            </div>
+
+            <div class="rail-card">
+                <div class="rail-head">
+                    <p class="section-title">Session focus</p>
+                    <span class="chip">Live</span>
+                </div>
+                <ul class="focus-list">
+                    <li>Email tone and clarity</li>
+                    <li>Meeting introductions</li>
+                    <li>Short professional replies</li>
+                </ul>
+            </div>
+
+            <div class="rail-card metric-grid">
+                <div>
+                    <span class="metric-value">12</span>
+                    <span class="metric-label">Corrections</span>
+                </div>
+                <div>
+                    <span class="metric-value">4m</span>
+                    <span class="metric-label">Practice time</span>
+                </div>
+            </div>
+
+            <div class="rail-card workflow-card">
+                <div class="rail-head">
+                    <p class="section-title">Workflow</p>
+                    <span class="chip">Today</span>
+                </div>
+                <ol class="workflow-list">
+                    <li>Write a draft</li>
+                    <li>Hear the correction</li>
+                    <li>Repeat more clearly</li>
+                </ol>
+            </div>
+        </aside>
+
+        <main class="workspace">
+            <header class="topbar">
+                <div class="session-copy">
+                    <p class="eyebrow">Live session</p>
+                    <h2>Coach Ava</h2>
+                    <p id="status-note" class="status-note">Connecting to the live session.</p>
+                </div>
+                <div class="status">
+                    <span class="status-dot"></span>
+                    Ready
+                </div>
+            </header>
+
+            <section class="chat" aria-label="Chat conversation">
+                <article class="message bot">
+                    <div class="avatar">A</div>
+                    <div class="bubble">
+                        <div class="bubble-meta">
+                            <span class="name">Ava</span>
+                            <span class="time">09:12</span>
+                        </div>
+                        <p>Let's practice a business introduction.</p>
+                    </div>
+                </article>
+
+                <article class="message user">
+                    <div class="bubble user-bubble">
+                        <div class="bubble-meta">
+                            <span class="name">You</span>
+                            <span class="time">09:13</span>
+                        </div>
+                        <p>I am work in marketing and I want improve my speaking.</p>
+                    </div>
+                    <div class="avatar user-avatar">You</div>
+                </article>
+
+                <article class="message bot">
+                    <div class="avatar">A</div>
+                    <div class="bubble">
+                        <div class="bubble-meta">
+                            <span class="name">Ava</span>
+                            <span class="time">09:13</span>
+                        </div>
+                        <p><strong>Better:</strong> I <mark>work</mark> in marketing and I want to <mark>improve</mark> my speaking.</p>
+                    </div>
+                </article>
+
+                <article class="message bot typing" id="typing-indicator" hidden>
+                    <div class="avatar">A</div>
+                    <div class="bubble typing-bubble">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </article>
+            </section>
+
+            <footer class="composer">
+                <button id="mic-btn" class="icon-btn" type="button" aria-pressed="false" aria-label="Start voice recording">Mic</button>
+                <button id="mute-btn" class="mute-btn" type="button" aria-pressed="false">Sound on</button>
+                <div class="input-shell">
+                    <span class="input-label">Type your message</span>
+                    <div class="input-row">
+                        <input id="message-input" type="text" value="Could you help me sound more professional?" aria-label="Message input">
+                        <button id="send-btn" class="send-btn" type="button">Send</button>
+                    </div>
+                    <div id="transcript-panel" class="transcript-panel" hidden>
+                        <span class="transcript-label">Transcript</span>
+                        <p id="transcript-text">Speech-to-text will appear here soon.</p>
+                    </div>
+                </div>
+            </footer>
+        </main>
     </div>
-    <button id="record-btn">Record Voice</button>
     <script src="app.js"></script>
 </body>
 </html>
