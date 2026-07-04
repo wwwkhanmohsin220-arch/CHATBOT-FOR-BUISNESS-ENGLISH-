@@ -224,14 +224,29 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
             llm_generator = llm_service.generate_response_stream(prompt, rag_context=context)
             full_response_accumulator = []
 
-            async for chunk in llm_generator:
-                full_response_accumulator.append(chunk)
-                await websocket.send_json(
-                    {
-                        "type": "text_token",
-                        "content": chunk
-                    }
-                )
+            async def text_chunks_for_tts():
+                async for chunk in llm_generator:
+                    full_response_accumulator.append(chunk)
+                    await websocket.send_json(
+                        {
+                            "type": "text_token",
+                            "content": chunk,
+                        }
+                    )
+                    yield chunk
+
+            if tts_service.api_key:
+                audio_generator = tts_service.stream_audio_from_text(text_chunks_for_tts())
+                async for audio_chunk in audio_generator:
+                    await websocket.send_json(
+                        {
+                            "type": "audio_chunk",
+                            "audio_base64": audio_chunk,
+                        }
+                    )
+            else:
+                async for chunk in text_chunks_for_tts():
+                    pass
 
             complete_reply = "".join(full_response_accumulator)
             session_manager.add_message(session_id, "user", message_text)
@@ -240,20 +255,6 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                 session_id,
                 session_manager.get_history(session_id),
             )
-
-            async def complete_reply_iterator():
-                if complete_reply:
-                    yield complete_reply
-
-            # 3. Optionally stream audio after the text reply is complete.
-            audio_generator = tts_service.stream_audio_from_text(complete_reply_iterator())
-            
-            if audio_generator:
-                async for audio_chunk in audio_generator:
-                    await websocket.send_json({
-                        "type": "audio_chunk",
-                        "audio_base64": audio_chunk
-                    })
 
             await websocket.send_json({"type": "done"})
     except WebSocketDisconnect:

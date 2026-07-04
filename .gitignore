@@ -41,10 +41,13 @@ venv.bak/
 # OS
 .DS_Store
 Thumbs.db
+*.mp3
+*.wav
 
 # Personal Task Tracking
 phases.md
 WhatsApp Image*.jpeg
+voice_chat_live.html
 
 
 # Vector DB
