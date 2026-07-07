@@ -1,0 +1,358 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Settings - Buslingo</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#f7bd3e",
+                        "on-tertiary-fixed": "#261900",
+                        "surface-tint": "#bdc2ff",
+                        "surface-container-high": "#2a292f",
+                        "on-primary-fixed": "#000767",
+                        "primary-container": "#818cf8",
+                        "on-primary-fixed-variant": "#2f3aa3",
+                        "inverse-primary": "#4953bc",
+                        "outline": "#908f9e",
+                        "on-secondary-fixed-variant": "#464553",
+                        "surface-dim": "#131318",
+                        "inverse-on-surface": "#303036",
+                        "tertiary-fixed-dim": "#f7bd3e",
+                        "on-surface": "#e4e1e9",
+                        "on-primary": "#131e8c",
+                        "on-secondary": "#2f2f3c",
+                        "secondary-fixed": "#e3e1f1",
+                        "on-tertiary": "#402d00",
+                        "on-tertiary-fixed-variant": "#5d4200",
+                        "on-error": "#690005",
+                        "surface-variant": "#35343a",
+                        "inverse-surface": "#e4e1e9",
+                        "tertiary-container": "#c08d00",
+                        "on-surface-variant": "#c6c5d5",
+                        "on-primary-container": "#101b8a",
+                        "surface": "#131318",
+                        "surface-container-highest": "#35343a",
+                        "on-tertiary-container": "#3e2b00",
+                        "secondary": "#c7c5d5",
+                        "surface-container-lowest": "#0e0e13",
+                        "primary": "#bdc2ff",
+                        "surface-container-low": "#1b1b20",
+                        "error-container": "#93000a",
+                        "background": "#131318",
+                        "tertiary-fixed": "#ffdea3",
+                        "on-error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#c7c5d5",
+                        "error": "#ffb4ab",
+                        "outline-variant": "#454653",
+                        "surface-bright": "#39383e",
+                        "on-secondary-fixed": "#1a1b26",
+                        "primary-fixed": "#e0e0ff",
+                        "surface-container": "#1f1f25",
+                        "secondary-container": "#464553",
+                        "primary-fixed-dim": "#bdc2ff",
+                        "on-background": "#e4e1e9",
+                        "on-secondary-container": "#b5b3c3",
+                        "red-500": "#EF4444"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin_tablet": "32px",
+                        "card_padding_std": "20px",
+                        "margin_desktop": "64px",
+                        "gutter": "24px",
+                        "margin_mobile": "20px",
+                        "card_padding_feat": "28px",
+                        "base_grid": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "label-md": ["14px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #0A0A0F; color: #e4e1e9; font-family: 'Inter', sans-serif; }
+        .card-bg { background-color: #131318; border: 1px solid #242430; }
+        .input-bg { background-color: #1C1C23; border: 1px solid #242430; }
+        .input-bg:focus { border-color: #818CF8; outline: none; }
+        .btn-primary { background-color: #818CF8; color: #0A0A0F; }
+        .toggle-active { background-color: #818CF8; }
+        .toggle-inactive { background-color: #242430; }
+        .toggle-circle-active { transform: translateX(1.5rem); }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar -->
+<nav class="w-[220px] h-screen fixed left-0 top-0 bg-surface dark:bg-surface border-r border-outline-variant dark:border-outline-variant flex flex-col h-full py-base_grid z-50 hidden md:flex">
+<div class="px-6 py-4 mb-8">
+<h1 class="text-headline-md font-headline-md font-bold text-primary dark:text-primary tracking-tight">Buslingo</h1>
+<p class="text-label-sm font-label-sm text-on-surface-variant dark:text-on-surface-variant mt-1">Professional English</p>
+</div>
+<div class="flex-1 overflow-y-auto px-4 space-y-2">
+<!-- Navigation Items -->
+<a class="flex items-center px-3 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3 text-lg">home</span>
+                Home
+            </a>
+<a class="flex items-center px-3 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3 text-lg">school</span>
+                Learn
+            </a>
+<a class="flex items-center px-3 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3 text-lg">mic_none</span>
+                Voice
+            </a>
+<a class="flex items-center px-3 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3 text-lg">edit_note</span>
+                Writing
+            </a>
+<a class="flex items-center px-3 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3 text-lg">menu_book</span>
+                Vocabulary
+            </a>
+<a class="flex items-center px-3 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3 text-lg">record_voice_over</span>
+                Roleplay
+            </a>
+<a class="flex items-center px-3 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3 text-lg">analytics</span>
+                Progress
+            </a>
+<a class="flex items-center px-3 py-2 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3 text-lg">emoji_events</span>
+                Achievements
+            </a>
+<a class="flex items-center px-3 py-2 rounded-lg text-primary dark:text-primary font-bold border-r-2 border-primary bg-surface-container-high dark:bg-surface-container-high opacity-90 transition-opacity font-label-md text-label-md" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3 text-lg" style="font-variation-settings: 'FILL' 1;">settings</span>
+                Settings
+            </a>
+</div>
+<div class="px-4 mt-auto">
+<button class="w-full py-3 rounded-[10px] btn-primary font-label-md text-label-md hover:opacity-90 transition-opacity">Start Daily Lesson</button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-[220px] flex flex-col relative w-full">
+<!-- TopAppBar -->
+<header class="sticky top-0 w-full z-40 border-b border-outline-variant dark:border-outline-variant bg-background dark:bg-background flex justify-between items-center h-16 px-margin_desktop md:px-margin_desktop px-margin_mobile">
+<div class="flex items-center md:hidden">
+<h1 class="text-headline-md font-headline-md font-bold text-primary dark:text-primary tracking-tight">Buslingo</h1>
+</div>
+<div class="hidden md:flex items-center w-full max-w-md relative">
+<!-- Search could go here -->
+</div>
+<div class="flex items-center space-x-4 ml-auto">
+<button aria-label="Notifications" class="text-on-surface dark:text-on-surface hover:text-primary dark:hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container-high">
+<span class="material-symbols-outlined">local_fire_department</span>
+</button>
+<button aria-label="Favorites" class="text-on-surface dark:text-on-surface hover:text-primary dark:hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container-high">
+<span class="material-symbols-outlined">grade</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant cursor-pointer">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a confident individual against a dark minimalist background. The lighting is dramatic and low-key, illuminating their face while keeping the background in deep shadows. Modern corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJChr-0vywFC_yV8IWefitPrxPbuJdf4NbSkqtXOlyeK0Pu6fWaa6v5E4QzJSf8ZOtF1YEbLINbsgwq4cpedgoc2zoQGtbOsSkziUwpjL0UjmQm1kUqoKqSSg18w-pRQbiETZYUl3FXgUu47DvUe4-6cV2TwIuhpe6vMpRir8e5AtMtsgv6CNtkmWbQ2edzv304CH-qBpz74xBHC1YOKZRBJ-lafBiSeaAINR1yuICEjM0GcMVjtsi">
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<div class="flex-1 w-full flex justify-center py-10 px-margin_mobile md:px-0 overflow-y-auto">
+<div class="w-full max-w-[720px] space-y-8 pb-20">
+<div class="mb-8">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface tracking-tight">Settings &amp; Profile</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Manage your account details and learning preferences.</p>
+</div>
+<!-- Profile Card -->
+<section class="card-bg rounded-[14px] p-[20px] md:p-[28px] relative">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6">Profile Details</h3>
+<div class="flex flex-col md:flex-row gap-8 items-start">
+<div class="relative flex-shrink-0 group cursor-pointer">
+<div class="w-[80px] h-[80px] rounded-full overflow-hidden border-2 border-primary-container">
+<img alt="Profile Picture" class="w-full h-full object-cover" data-alt="A professional headshot of a confident individual against a dark minimalist background. The lighting is dramatic and low-key, illuminating their face while keeping the background in deep shadows. Modern corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCj_BUKdLPD5b8l0rWuXh0rsehfgRoUI6ED5wCKPuP1gFPkqmRitZW0TawnfHSe8USdiGrmVJlTx8zh8azuHPLAHSKKgJamCf0XmDZUllM8Rk_pYQkGPqxKmEgzwJ22TNG9dXvi5hnqvT3_nUMwJis-wl9PqAlpPSNtoWDMRUYKv_eOn_DmMSfXLiTqdar1aKuViohdQR1u3WvkqEwQDmMTskxIWDvVqt3o17onJzbEGp3jbNN9kkAt">
+</div>
+<div class="absolute bottom-0 right-0 bg-primary-container text-[#0A0A0F] rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</div>
+</div>
+<div class="flex-1 w-full space-y-5">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1.5">Display Name</label>
+<input class="input-bg w-full rounded-[10px] h-[48px] px-4 font-body-md text-on-surface text-body-md transition-colors" type="text" value="Alex Mercer">
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1.5">Email Address</label>
+<div class="relative">
+<input class="input-bg w-full rounded-[10px] h-[48px] px-4 font-body-md text-on-surface-variant text-body-md cursor-not-allowed opacity-80" readonly="" type="email" value="alex.mercer@example.com">
+<div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded text-xs font-medium">
+<span class="material-symbols-outlined text-[14px] mr-1">check_circle</span> Verified
+                                    </div>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1.5">Bio</label>
+<textarea class="input-bg w-full rounded-[10px] p-4 font-body-md text-on-surface text-body-md transition-colors resize-none" rows="3">Senior Developer focusing on improving technical communication for international teams.</textarea>
+</div>
+</div>
+</div>
+<div class="mt-8 flex justify-end">
+<button class="btn-primary rounded-[10px] h-[40px] px-6 font-label-md text-label-md hover:bg-opacity-90 transition-all shadow-lg shadow-indigo-500/20">Save changes</button>
+</div>
+</section>
+<!-- Learning Preferences -->
+<section class="card-bg rounded-[14px] p-[20px] md:p-[28px]">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface">Learning Preferences</h3>
+<span class="bg-surface-container-high border border-outline-variant text-primary-container px-3 py-1 rounded-full font-label-sm text-label-sm">Intermediate</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1.5">Daily XP Goal</label>
+<div class="relative">
+<select class="input-bg w-full rounded-[10px] h-[48px] px-4 appearance-none font-body-md text-on-surface text-body-md cursor-pointer">
+<option value="50">50 XP (Casual)</option>
+<option selected="" value="100">100 XP (Regular)</option>
+<option value="200">200 XP (Intense)</option>
+<option value="300">300 XP (Immersive)</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1.5">Coach Personality</label>
+<div class="relative">
+<select class="input-bg w-full rounded-[10px] h-[48px] px-4 appearance-none font-body-md text-on-surface text-body-md cursor-pointer">
+<option value="encouraging">Encouraging &amp; Gentle</option>
+<option selected="" value="direct">Direct &amp; Professional</option>
+<option value="balanced">Balanced</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Notifications -->
+<section class="card-bg rounded-[14px] p-[20px] md:p-[28px]">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6">Notifications</h3>
+<div class="space-y-6">
+<div class="flex items-center justify-between pb-4 border-b border-outline-variant/30">
+<div>
+<div class="font-body-md text-body-md text-on-surface font-medium">Daily Reminder</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-1">Get a push notification to practice.</div>
+</div>
+<div class="flex items-center space-x-4">
+<input class="input-bg rounded-[6px] px-2 py-1 text-sm font-medium text-on-surface" type="time" value="09:00">
+<button aria-checked="true" class="w-11 h-6 toggle-active rounded-full relative cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#131318] focus:ring-primary-container transition-colors" role="switch" type="button">
+<span class="toggle-circle-active inline-block w-5 h-5 bg-white rounded-full shadow transform ring-0 transition duration-200 ease-in-out mt-0.5 ml-0.5"></span>
+</button>
+</div>
+</div>
+<div class="flex items-center justify-between pb-4 border-b border-outline-variant/30">
+<div>
+<div class="font-body-md text-body-md text-on-surface font-medium">Weekly Progress Report</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-1">Summary of your learning stats.</div>
+</div>
+<button aria-checked="true" class="w-11 h-6 toggle-active rounded-full relative cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#131318] focus:ring-primary-container transition-colors" role="switch" type="button">
+<span class="toggle-circle-active inline-block w-5 h-5 bg-white rounded-full shadow transform ring-0 transition duration-200 ease-in-out mt-0.5 ml-0.5"></span>
+</button>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<div class="font-body-md text-body-md text-on-surface font-medium">Email Marketing</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-1">Updates on new features and courses.</div>
+</div>
+<button aria-checked="false" class="w-11 h-6 toggle-inactive rounded-full relative cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#131318] focus:ring-primary-container transition-colors" role="switch" type="button">
+<span class="translate-x-0.5 inline-block w-5 h-5 bg-[#908f9e] rounded-full shadow transform ring-0 transition duration-200 ease-in-out mt-0.5 ml-0"></span>
+</button>
+</div>
+</div>
+</section>
+<!-- Account -->
+<section class="card-bg rounded-[14px] p-[20px] md:p-[28px]">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6">Account Settings</h3>
+<div class="space-y-4 mb-8">
+<button class="w-full flex items-center justify-between px-4 py-3 bg-[#1C1C23] border border-outline-variant hover:border-primary-container/50 rounded-[10px] transition-colors group">
+<div class="flex items-center">
+<span class="material-symbols-outlined mr-3 text-on-surface-variant group-hover:text-primary-container transition-colors">key</span>
+<span class="font-body-md text-body-md text-on-surface">Change Password</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</button>
+<div class="w-full flex items-center justify-between px-4 py-3 bg-[#1C1C23] border border-outline-variant rounded-[10px]">
+<div class="flex items-center">
+<span class="material-symbols-outlined mr-3 text-on-surface-variant">link</span>
+<span class="font-body-md text-body-md text-on-surface">Google Account</span>
+</div>
+<span class="text-xs font-medium bg-surface-container-high px-2 py-1 rounded text-on-surface-variant">Connected</span>
+</div>
+<button class="w-full flex items-center justify-center px-4 py-3 border border-outline-variant rounded-[10px] hover:bg-surface-container-high transition-colors font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined mr-2 text-[18px]">download</span>
+                            Export My Data
+                        </button>
+</div>
+<div class="pt-6 border-t border-red-500/20">
+<h4 class="font-label-md text-label-md text-red-500 mb-2">Danger Zone</h4>
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">Permanently delete your account and all associated data. This action cannot be undone.</p>
+<button class="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 px-4 py-2 rounded-[10px] font-label-md text-label-md transition-colors whitespace-nowrap flex items-center">
+<span class="material-symbols-outlined mr-2 text-[18px]">delete_forever</span>
+                                Delete Account
+                            </button>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<script>
+        // Simple toggle logic for demo purposes
+        document.querySelectorAll('button[role="switch"]').forEach(button => {
+            button.addEventListener('click', () => {
+                const isChecked = button.getAttribute('aria-checked') === 'true';
+                button.setAttribute('aria-checked', !isChecked);
+                
+                if (isChecked) {
+                    button.classList.remove('toggle-active');
+                    button.classList.add('toggle-inactive');
+                    button.querySelector('span').classList.remove('toggle-circle-active');
+                    button.querySelector('span').classList.add('translate-x-0.5', 'bg-[#908f9e]');
+                    button.querySelector('span').classList.remove('bg-white');
+                } else {
+                    button.classList.add('toggle-active');
+                    button.classList.remove('toggle-inactive');
+                    button.querySelector('span').classList.add('toggle-circle-active', 'bg-white');
+                    button.querySelector('span').classList.remove('translate-x-0.5', 'bg-[#908f9e]');
+                }
+            });
+        });
+    </script>
+</body></html>

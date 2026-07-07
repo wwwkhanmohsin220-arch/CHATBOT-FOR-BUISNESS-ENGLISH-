@@ -1,0 +1,184 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Welcome - Buslingo</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container": "#1f1f25",
+                        "on-tertiary-fixed": "#261900",
+                        "inverse-primary": "#4953bc",
+                        "inverse-on-surface": "#303036",
+                        "tertiary-container": "#c08d00",
+                        "on-tertiary-fixed-variant": "#5d4200",
+                        "on-primary-fixed": "#000767",
+                        "on-surface": "#e4e1e9",
+                        "secondary-fixed-dim": "#c7c5d5",
+                        "surface-container-low": "#1b1b20",
+                        "outline": "#908f9e",
+                        "secondary-container": "#464553",
+                        "on-tertiary": "#402d00",
+                        "on-primary-fixed-variant": "#2f3aa3",
+                        "secondary-fixed": "#e3e1f1",
+                        "surface-variant": "#35343a",
+                        "on-background": "#e4e1e9",
+                        "on-secondary": "#2f2f3c",
+                        "primary": "#bdc2ff",
+                        "tertiary-fixed-dim": "#f7bd3e",
+                        "surface-container-lowest": "#0e0e13",
+                        "surface-container-high": "#2a292f",
+                        "on-primary": "#131e8c",
+                        "background": "#131318",
+                        "tertiary-fixed": "#ffdea3",
+                        "surface": "#131318",
+                        "on-primary-container": "#101b8a",
+                        "secondary": "#c7c5d5",
+                        "on-error": "#690005",
+                        "inverse-surface": "#e4e1e9",
+                        "primary-fixed": "#e0e0ff",
+                        "surface-tint": "#bdc2ff",
+                        "primary-container": "#818cf8",
+                        "on-secondary-fixed-variant": "#464553",
+                        "on-tertiary-container": "#3e2b00",
+                        "on-secondary-fixed": "#1a1b26",
+                        "on-error-container": "#ffdad6",
+                        "outline-variant": "#454653",
+                        "surface-bright": "#39383e",
+                        "error": "#ffb4ab",
+                        "primary-fixed-dim": "#bdc2ff",
+                        "on-surface-variant": "#c6c5d5",
+                        "on-secondary-container": "#b5b3c3",
+                        "surface-dim": "#131318",
+                        "error-container": "#93000a",
+                        "tertiary": "#f7bd3e",
+                        "surface-container-highest": "#35343a",
+                        "layer-0": "#0A0A0F",
+                        "layer-1": "#131318",
+                        "layer-2": "#1C1C23"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "margin_mobile": "20px",
+                        "margin_tablet": "32px",
+                        "card_padding_feat": "28px",
+                        "margin_desktop": "64px",
+                        "gutter": "24px",
+                        "card_padding_std": "20px",
+                        "base_grid": "4px"
+                    },
+                    fontFamily: {
+                        "headline-lg-mobile": ["Inter"],
+                        "display": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"]
+                    },
+                    fontSize: {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0A0A0F;
+            color: #e4e1e9;
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling for splash screen */
+        }
+        .progress-bar-track {
+            background-color: #1C1C23;
+        }
+        .progress-bar-fill {
+            background-color: #818CF8;
+            width: 33%;
+        }
+        .welcome-heading {
+            font-family: 'Inter', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+        .welcome-subtext {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 400;
+            color: #A0A0AB;
+            max-width: 440px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+        .btn-primary {
+            background-color: #818CF8;
+            color: #0A0A0F;
+            height: 48px;
+            width: 200px;
+            border-radius: 10px; /* Standard UI radius */
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-primary:hover {
+            background-color: #939bf9;
+        }
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative">
+<!-- Background Shader -->
+
+<!-- Top Progress Bar -->
+<div class="absolute top-0 left-0 w-full h-[3px] progress-bar-track z-10">
+<div class="h-full progress-bar-fill transition-all duration-500 ease-out"></div>
+</div>
+<!-- Main Content Container -->
+<main class="flex-grow flex items-center justify-center relative z-10 px-margin_mobile md:px-margin_desktop">
+<div class="text-center w-full max-w-2xl flex flex-col items-center">
+<h1 class="welcome-heading mb-[16px]">
+                Welcome to Buslingo, Umer
+            </h1>
+<p class="welcome-subtext mb-[40px]">
+                Let's personalize your learning experience. This takes about 2 minutes.
+            </p>
+<a class="btn-primary group" href="#">
+<span>Let's go</span>
+<span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform" style="font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;">arrow_forward</span>
+</a>
+</div>
+</main>
+
+
+</body></html>

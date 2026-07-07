@@ -1,0 +1,299 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Writing Practice - Buslingo</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed-dim": "#bdc2ff",
+                      "tertiary-fixed": "#ffdea3",
+                      "outline-variant": "#454653",
+                      "primary-fixed": "#e0e0ff",
+                      "on-primary-container": "#101b8a",
+                      "inverse-primary": "#4953bc",
+                      "surface-container-highest": "#35343a",
+                      "surface-container-high": "#2a292f",
+                      "on-surface": "#e4e1e9",
+                      "on-error-container": "#ffdad6",
+                      "on-tertiary-fixed-variant": "#5d4200",
+                      "on-primary-fixed": "#000767",
+                      "on-primary-fixed-variant": "#2f3aa3",
+                      "surface-variant": "#35343a",
+                      "on-secondary-container": "#b5b3c3",
+                      "background": "#131318",
+                      "tertiary-fixed-dim": "#f7bd3e",
+                      "primary": "#bdc2ff",
+                      "outline": "#908f9e",
+                      "tertiary-container": "#c08d00",
+                      "secondary-fixed-dim": "#c7c5d5",
+                      "secondary-fixed": "#e3e1f1",
+                      "on-primary": "#131e8c",
+                      "surface": "#131318",
+                      "error": "#ffb4ab",
+                      "on-secondary": "#2f2f3c",
+                      "surface-dim": "#131318",
+                      "surface-container-lowest": "#0e0e13",
+                      "secondary": "#c7c5d5",
+                      "on-surface-variant": "#c6c5d5",
+                      "primary-container": "#818cf8",
+                      "on-tertiary": "#402d00",
+                      "on-tertiary-fixed": "#261900",
+                      "tertiary": "#f7bd3e",
+                      "surface-container-low": "#1b1b20",
+                      "surface-container": "#1f1f25",
+                      "inverse-on-surface": "#303036",
+                      "secondary-container": "#464553",
+                      "inverse-surface": "#e4e1e9",
+                      "surface-bright": "#39383e",
+                      "on-secondary-fixed": "#1a1b26",
+                      "error-container": "#93000a",
+                      "on-background": "#e4e1e9",
+                      "on-tertiary-container": "#3e2b00",
+                      "on-secondary-fixed-variant": "#464553",
+                      "on-error": "#690005",
+                      "surface-tint": "#bdc2ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "base_grid": "4px",
+                      "card_padding_std": "20px",
+                      "card_padding_feat": "28px",
+                      "margin_tablet": "32px",
+                      "margin_mobile": "20px",
+                      "margin_desktop": "64px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "display": [
+                              "Inter"
+                      ]
+              }
+            }
+          }
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-[#0A0A0F] text-on-surface font-body-md min-h-screen">
+<!-- SideNavBar -->
+<nav class="bg-surface w-[220px] h-screen fixed left-0 top-0 border-r border-outline-variant flex flex-col py-base_grid z-50 hidden md:flex">
+<div class="px-gutter pb-gutter pt-4">
+<div class="flex items-center gap-3 mb-8">
+<img alt="User Profile Avatar" class="w-10 h-10 rounded-lg object-cover" data-alt="A minimalist, geometric wireframe 3D icon of a professional briefcase in deep indigo and subtle neon blue accents, set against a dark background, embodying the corporate tech aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEvlHYqyvZ_64qWmb5enOQzB6mEKwvK5REd4X413hUCGqpPND-lnnuBVtpQZVL30fxqKmyuli3p0mu4dN35sCdcrWDmPY7dBOITkejWtn0o5RDCN6O9hzCf93lkXVxaftqFOKLkpuvwy9Agv0oW6EX_4Aic3klQDx8U6gcw3ynoI_5orirSOpmDcHjMHrle48KHnK-6L7fjr32yrpiCgY9w7O-jqfQhRswfCABshDWdLUVBk_GAcuQ">
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Buslingo</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Professional English</p>
+</div>
+</div>
+</div>
+<ul class="flex-1 overflow-y-auto px-2 space-y-1">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+                    Home
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="school">book_open</span>
+                    Learn
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="mic_none">mic</span>
+                    Voice
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold border-r-2 border-primary bg-surface-container-high opacity-90 transition-opacity font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit</span>
+                    Writing
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">bookmark</span>
+                    Vocabulary
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="record_voice_over">theater_comedy</span>
+                    Roleplay
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">bar_chart</span>
+                    Progress
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="emoji_events">trophy</span>
+                    Achievements
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+<div class="p-4 mt-auto">
+<button class="w-full bg-primary-container text-background font-label-md text-label-md py-3 rounded-[10px] hover:bg-primary-fixed transition-colors font-semibold shadow-sm">
+                Start Daily Lesson
+            </button>
+</div>
+</nav>
+
+<!-- Content Wrapper -->
+<div class="md:ml-[220px] flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-[#0A0A0F] sticky top-0 w-full z-40 border-b border-outline-variant flex justify-between items-center h-16 px-8">
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+<input class="bg-surface-container-low border border-outline-variant rounded-lg pl-10 pr-4 py-2 text-body-sm font-body-sm text-on-surface focus:border-primary-container focus:ring-1 focus:ring-primary-container focus:outline-none w-64 transition-colors" placeholder="Search lessons..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<button aria-label="local_fire_department" class="text-on-surface hover:text-primary transition-colors hover:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="local_fire_department">local_fire_department</span>
+</button>
+<button aria-label="grade" class="text-on-surface hover:text-primary transition-colors hover:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="grade">grade</span>
+</button>
+</div>
+<img alt="User Avatar" class="w-8 h-8 rounded-full border border-outline-variant object-cover cursor-pointer hover:border-primary transition-colors" data-alt="A clean, modern avatar of a professional in a minimalist setting, subtle deep indigo background, high resolution, dark mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuWvFMyntzXHVaEvHQainpYggoVty_jbgxWFovopxH0Y65f71yuSzLTCRvLVb_i4gvHe8b-VJCTTXl2s9ud0qH_-TBHAOAhOkT-2Dwdbnwne0vLDPbhJxRK29EG76cwrNT6NClIrw_mhZ0JhOiLmaV6JBeSMhEdq587B2IDZGy51TQ2L1LA5ePkWUA3P6551l_67RRH5IhJBqew4u1ANoieoRkNskkgJtH9f8z2KlQ_wMBib1KerNG">
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 p-8">
+<div class="max-w-[800px] mx-auto">
+<!-- Header Section -->
+<div class="mb-6 text-left">
+<h2 class="font-headline-lg text-headline-lg text-white mb-2">Writing practice</h2>
+<p class="text-[14px] text-[#A0A0AB]">Improve your professional writing with AI-reviewed exercises.</p>
+</div>
+<!-- Filter Tabs -->
+<div class="flex flex-row flex-wrap gap-1 mb-6">
+<button class="h-[36px] px-4 py-2 bg-[rgba(129,140,248,0.1)] text-[#818CF8] rounded-full text-[13px] font-medium transition-colors">All</button>
+<button class="h-[36px] px-4 py-2 bg-transparent text-[#A0A0AB] rounded-full text-[13px] font-medium hover:bg-[#26262F] transition-colors">Emails</button>
+<button class="h-[36px] px-4 py-2 bg-transparent text-[#A0A0AB] rounded-full text-[13px] font-medium hover:bg-[#26262F] transition-colors">Reports</button>
+<button class="h-[36px] px-4 py-2 bg-transparent text-[#A0A0AB] rounded-full text-[13px] font-medium hover:bg-[#26262F] transition-colors">Messages</button>
+<button class="h-[36px] px-4 py-2 bg-transparent text-[#A0A0AB] rounded-full text-[13px] font-medium hover:bg-[#26262F] transition-colors">Proposals</button>
+</div>
+<!-- Task Cards Stack -->
+<div class="flex flex-col gap-3">
+<!-- Card 1 -->
+<div class="bg-[#131318] border border-[#242430] rounded-[14px] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#3F3F4E] transition-colors group">
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-[18px] text-[#818CF8]">mail</span>
+<h3 class="font-semibold text-[16px] text-white">Write a follow-up email after a client meeting</h3>
+</div>
+<div class="text-[13px] text-[#5F5F6B] mb-2">Emails · Intermediate · ~10 min</div>
+<p class="text-[14px] text-[#A0A0AB]">Practice writing a professional follow-up email after a client meeting.</p>
+</div>
+<button class="text-[#818CF8] text-[14px] font-medium hover:text-white transition-colors flex items-center gap-1 group-hover:translate-x-1 duration-200">
+                        Start <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<!-- Card 2 -->
+<div class="bg-[#131318] border border-[#242430] rounded-[14px] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#3F3F4E] transition-colors group">
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-[18px] text-[#818CF8]">description</span>
+<h3 class="font-semibold text-[16px] text-white">Summarize meeting action items</h3>
+</div>
+<div class="text-[13px] text-[#5F5F6B] mb-2">Reports · Beginner · ~8 min</div>
+<p class="text-[14px] text-[#A0A0AB]">Practice writing a professional follow-up email after a client meeting.</p>
+</div>
+<button class="text-[#818CF8] text-[14px] font-medium hover:text-white transition-colors flex items-center gap-1 group-hover:translate-x-1 duration-200">
+                        Start <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<!-- Card 3 -->
+<div class="bg-[#131318] border border-[#242430] rounded-[14px] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#3F3F4E] transition-colors group">
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-[18px] text-[#818CF8]">chat_bubble</span>
+<h3 class="font-semibold text-[16px] text-white">Respond to an upset customer</h3>
+</div>
+<div class="text-[13px] text-[#5F5F6B] mb-2">Messages · Intermediate · ~12 min</div>
+<p class="text-[14px] text-[#A0A0AB]">Practice writing a professional follow-up email after a client meeting.</p>
+</div>
+<button class="text-[#818CF8] text-[14px] font-medium hover:text-white transition-colors flex items-center gap-1 group-hover:translate-x-1 duration-200">
+                        Start <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<!-- Card 4 -->
+<div class="bg-[#131318] border border-[#242430] rounded-[14px] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#3F3F4E] transition-colors group">
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-[18px] text-[#818CF8]">assignment</span>
+<h3 class="font-semibold text-[16px] text-white">Draft a project proposal executive summary</h3>
+</div>
+<div class="text-[13px] text-[#5F5F6B] mb-2">Proposals · Advanced · ~15 min</div>
+<p class="text-[14px] text-[#A0A0AB]">Practice writing a professional follow-up email after a client meeting.</p>
+</div>
+<button class="text-[#818CF8] text-[14px] font-medium hover:text-white transition-colors flex items-center gap-1 group-hover:translate-x-1 duration-200">
+                        Start <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<!-- Card 5 -->
+<div class="bg-[#131318] border border-[#242430] rounded-[14px] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#3F3F4E] transition-colors group">
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-[18px] text-[#818CF8]">mail</span>
+<h3 class="font-semibold text-[16px] text-white">Decline a meeting invitation politely</h3>
+</div>
+<div class="text-[13px] text-[#5F5F6B] mb-2">Emails · Beginner · ~5 min</div>
+<p class="text-[14px] text-[#A0A0AB]">Practice writing a professional follow-up email after a client meeting.</p>
+</div></div></div></div></main></div></body></html>

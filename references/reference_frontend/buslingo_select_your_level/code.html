@@ -1,0 +1,307 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Buslingo - Onboarding Proficiency</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container": "#1f1f25",
+                      "on-tertiary-fixed": "#261900",
+                      "inverse-primary": "#4953bc",
+                      "inverse-on-surface": "#303036",
+                      "tertiary-container": "#c08d00",
+                      "on-tertiary-fixed-variant": "#5d4200",
+                      "on-primary-fixed": "#000767",
+                      "on-surface": "#e4e1e9",
+                      "secondary-fixed-dim": "#c7c5d5",
+                      "surface-container-low": "#1b1b20",
+                      "outline": "#908f9e",
+                      "secondary-container": "#464553",
+                      "on-tertiary": "#402d00",
+                      "on-primary-fixed-variant": "#2f3aa3",
+                      "secondary-fixed": "#e3e1f1",
+                      "surface-variant": "#35343a",
+                      "on-background": "#e4e1e9",
+                      "on-secondary": "#2f2f3c",
+                      "primary": "#bdc2ff",
+                      "tertiary-fixed-dim": "#f7bd3e",
+                      "surface-container-lowest": "#0e0e13",
+                      "surface-container-high": "#2a292f",
+                      "on-primary": "#131e8c",
+                      "background": "#131318",
+                      "tertiary-fixed": "#ffdea3",
+                      "surface": "#131318",
+                      "on-primary-container": "#101b8a",
+                      "secondary": "#c7c5d5",
+                      "on-error": "#690005",
+                      "inverse-surface": "#e4e1e9",
+                      "primary-fixed": "#e0e0ff",
+                      "surface-tint": "#bdc2ff",
+                      "primary-container": "#818cf8",
+                      "on-secondary-fixed-variant": "#464553",
+                      "on-tertiary-container": "#3e2b00",
+                      "on-secondary-fixed": "#1a1b26",
+                      "on-error-container": "#ffdad6",
+                      "outline-variant": "#454653",
+                      "surface-bright": "#39383e",
+                      "error": "#ffb4ab",
+                      "primary-fixed-dim": "#bdc2ff",
+                      "on-surface-variant": "#c6c5d5",
+                      "on-secondary-container": "#b5b3c3",
+                      "surface-dim": "#131318",
+                      "error-container": "#93000a",
+                      "tertiary": "#f7bd3e",
+                      "surface-container-highest": "#35343a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px",
+                      "standard": "14px"
+              },
+              "spacing": {
+                      "margin_mobile": "20px",
+                      "margin_tablet": "32px",
+                      "card_padding_feat": "28px",
+                      "margin_desktop": "64px",
+                      "gutter": "24px",
+                      "card_padding_std": "20px",
+                      "base_grid": "4px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "display": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0A0A0F;
+        }
+        
+        .card-base {
+            background-color: #131318;
+            border: 1px solid #242430;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        
+        .card-base:hover {
+            background-color: #1C1C23;
+        }
+        
+        .card-selected {
+            border-color: #818CF8;
+            background-color: rgba(129,140,248,0.06);
+        }
+        
+        .card-selected:hover {
+            background-color: rgba(129,140,248,0.1);
+        }
+        
+        .radio-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #52525B;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .radio-filled {
+            border-color: #818CF8;
+            background-color: #818CF8;
+        }
+        
+        .radio-filled::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #131318;
+        }
+    </style>
+</head>
+<body class="text-on-surface font-body-md min-h-screen flex flex-col items-center selection:bg-primary-container selection:text-on-primary-container">
+<!-- Progress Bar -->
+<div class="w-full fixed top-0 left-0 h-[4px] bg-[#242430] z-50">
+<div class="h-full bg-primary-container transition-all duration-500 ease-out" style="width: 66%;"></div>
+</div>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col justify-center items-center w-full px-margin_mobile md:px-margin_desktop py-16 max-w-7xl mx-auto">
+<!-- Heading -->
+<h1 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-on-surface text-center max-w-[500px] mb-8">
+            How comfortable are you with Business English?
+        </h1>
+<!-- Selection Cards -->
+<div class="w-full max-w-[560px] flex flex-col gap-4 mb-12" id="proficiency-options">
+<!-- Option 1 -->
+<div class="card-base rounded-standard p-[20px] px-[24px] flex items-center justify-between group" data-value="beginner" onclick="selectOption(this)">
+<div class="flex-1 pr-6">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-1">Beginner</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">I understand everyday English but struggle in professional settings.</p>
+</div>
+<div class="radio-circle group-hover:border-primary-container"></div>
+</div>
+<!-- Option 2 -->
+<div class="card-base rounded-standard p-[20px] px-[24px] flex items-center justify-between group" data-value="elementary" onclick="selectOption(this)">
+<div class="flex-1 pr-6">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-1">Elementary</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">I can handle basic business conversations but make frequent mistakes.</p>
+</div>
+<div class="radio-circle group-hover:border-primary-container"></div>
+</div>
+<!-- Option 3 -->
+<div class="card-base rounded-standard p-[20px] px-[24px] flex items-center justify-between group" data-value="intermediate" onclick="selectOption(this)">
+<div class="flex-1 pr-6">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-1">Intermediate</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">I communicate well but want to sound more professional and polished.</p>
+</div>
+<div class="radio-circle group-hover:border-primary-container"></div>
+</div>
+<!-- Option 4 -->
+<div class="card-base rounded-standard p-[20px] px-[24px] flex items-center justify-between group" data-value="advanced" onclick="selectOption(this)">
+<div class="flex-1 pr-6">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-1">Advanced</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">I'm mostly fluent but want to master nuance, tone, and executive communication.</p>
+</div>
+<div class="radio-circle group-hover:border-primary-container"></div>
+</div>
+</div>
+<!-- Continue Button -->
+<button class="bg-primary-container text-[#0A0A0F] font-label-md text-label-md h-[48px] w-[200px] rounded-lg opacity-40 transition-all duration-300 flex items-center justify-center disabled:cursor-not-allowed hover:bg-opacity-90" disabled="" id="continue-btn">
+            Continue
+        </button>
+</main>
+<script>
+        function selectOption(selectedElement) {
+            // Reset all options
+            const options = document.querySelectorAll('#proficiency-options > div');
+            options.forEach(opt => {
+                opt.classList.remove('card-selected');
+                const radio = opt.querySelector('.radio-circle');
+                radio.classList.remove('radio-filled');
+            });
+
+            // Set selected option
+            selectedElement.classList.add('card-selected');
+            const selectedRadio = selectedElement.querySelector('.radio-circle');
+            selectedRadio.classList.add('radio-filled');
+
+            // Enable Continue button
+            const continueBtn = document.getElementById('continue-btn');
+            continueBtn.disabled = false;
+            continueBtn.classList.remove('opacity-40');
+            continueBtn.classList.add('opacity-100', 'cursor-pointer');
+        }
+    </script>
+</body></html>

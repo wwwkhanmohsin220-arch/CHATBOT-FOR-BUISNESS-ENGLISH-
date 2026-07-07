@@ -1,0 +1,299 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Buslingo - Voice Practice</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#454653",
+                        "inverse-on-surface": "#303036",
+                        "on-secondary-fixed-variant": "#464553",
+                        "on-primary-fixed": "#000767",
+                        "on-primary-fixed-variant": "#2f3aa3",
+                        "on-tertiary-fixed": "#261900",
+                        "error-container": "#93000a",
+                        "tertiary": "#f7bd3e",
+                        "primary-fixed-dim": "#bdc2ff",
+                        "primary": "#bdc2ff",
+                        "surface-bright": "#39383e",
+                        "background": "#131318",
+                        "on-tertiary-container": "#3e2b00",
+                        "secondary-fixed": "#e3e1f1",
+                        "outline": "#908f9e",
+                        "on-surface": "#e4e1e9",
+                        "on-surface-variant": "#c6c5d5",
+                        "on-background": "#e4e1e9",
+                        "secondary-fixed-dim": "#c7c5d5",
+                        "primary-fixed": "#e0e0ff",
+                        "surface-container-lowest": "#0e0e13",
+                        "on-error": "#690005",
+                        "surface-container": "#1f1f25",
+                        "inverse-surface": "#e4e1e9",
+                        "on-secondary-container": "#b5b3c3",
+                        "tertiary-fixed-dim": "#f7bd3e",
+                        "primary-container": "#818cf8",
+                        "inverse-primary": "#4953bc",
+                        "surface-container-highest": "#35343a",
+                        "on-tertiary": "#402d00",
+                        "on-secondary": "#2f2f3c",
+                        "on-primary-container": "#101b8a",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed": "#ffdea3",
+                        "surface": "#131318",
+                        "on-tertiary-fixed-variant": "#5d4200",
+                        "on-primary": "#131e8c",
+                        "surface-variant": "#35343a",
+                        "surface-container-low": "#1b1b20",
+                        "error": "#ffb4ab",
+                        "surface-tint": "#bdc2ff",
+                        "surface-container-high": "#2a292f",
+                        "tertiary-container": "#c08d00",
+                        "secondary-container": "#464553",
+                        "surface-dim": "#131318",
+                        "secondary": "#c7c5d5",
+                        "on-secondary-fixed": "#1a1b26"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "margin_mobile": "20px",
+                        "card_padding_feat": "28px",
+                        "base_grid": "4px",
+                        "margin_tablet": "32px",
+                        "card_padding_std": "20px",
+                        "margin_desktop": "64px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0A0A0F;
+            color: #e4e1e9;
+        }
+        .blinking-cursor {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-md overflow-hidden antialiased">
+<!-- Top Controls -->
+<header class="w-full h-12 px-6 flex items-center justify-between z-10 shrink-0">
+<button class="flex items-center gap-2 text-[#A0A0AB] hover:text-white transition-colors font-body-sm bg-transparent border-none">
+<span class="material-symbols-outlined text-[18px]">arrow_left</span>
+            Back
+        </button>
+<button class="text-[#A0A0AB] hover:text-white transition-colors font-body-sm bg-transparent border-none">
+            End session
+        </button>
+</header>
+<!-- Center Canvas -->
+<main class="flex-1 flex flex-col items-center relative px-6 py-8 overflow-y-auto w-full max-w-[1280px] mx-auto scrollbar-hide">
+<!-- Session Header -->
+<div class="text-center mb-8 flex flex-col items-center gap-1">
+<span class="text-[11px] font-bold tracking-widest text-[#5F5F6B] uppercase">Voice Practice</span>
+<span class="text-[#A0A0AB] font-body-sm">Meeting Negotiation</span>
+</div>
+<!-- Voice Visualizer -->
+<div class="relative w-[280px] h-[280px] rounded-full overflow-hidden mb-12 flex items-center justify-center shrink-0">
+<!-- STITCH_SHADER_START:ANIMATION_14 class="absolute inset-0 w-full h-full" -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_14" style="display:block;width:100%;height:100%" width="280" height="280"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_14');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+varying vec2 v_texCoord;
+uniform float u_time;
+uniform vec2 u_resolution;
+
+#define PI 3.14159265359
+
+void main() {
+    vec2 uv = (v_texCoord - 0.5) * 2.0;
+    uv.x *= u_resolution.x / u_resolution.y;
+    
+    float t = u_time * 0.4;
+    float finalMask = 0.0;
+    
+    // Create 50 organic strands using sine waves in polar coordinates
+    for(float i = 0.0; i < 50.0; i++) {
+        float phase = i * (2.0 * PI / 50.0);
+        float radius = 0.5 + 0.1 * sin(t + i * 0.5) + 0.05 * sin(t * 2.3 + i);
+        
+        // Add wiggle to each strand
+        float angleOffset = 0.2 * sin(t * 0.8 + i * 0.3);
+        float dist = length(uv);
+        float angle = atan(uv.y, uv.x) + angleOffset * smoothstep(0.0, 0.6, dist);
+        
+        // Define the strand line
+        float strand = smoothstep(0.015, 0.0, abs(dist - radius));
+        
+        // Narrow the strand to segments
+        float angularMask = smoothstep(0.1, 0.0, abs(sin(angle * 3.0 + t + i) - 0.5));
+        
+        finalMask += (strand * angularMask) * (0.4 + 0.6 * sin(t + i));
+    }
+    
+    // Colors: #818CF8 (indigo) and #0EA5E9 (sky blue)
+    vec3 colorA = vec3(0.506, 0.549, 0.973); // #818CF8
+    vec3 colorB = vec3(0.055, 0.647, 0.914); // #0EA5E9
+    
+    vec3 finalColor = mix(colorA, colorB, 0.5 + 0.5 * sin(t * 0.5));
+    
+    // Additive glow effect
+    float glow = smoothstep(0.8, 0.0, length(uv)) * 0.15;
+    
+    gl_FragColor = vec4((finalColor * finalMask * 0.8) + (colorA * glow), finalMask * 0.6);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_14 -->
+</div>
+<!-- Live Text -->
+<div class="w-full max-w-[520px] text-center mb-16 relative">
+<p class="font-medium text-[16px] leading-[24px] text-[#F2F2F2] inline">
+                Let's discuss the budget for the Q3 marketing campaign. What allocation would you propose for digital channels?<span class="inline-block w-[2px] h-[18px] bg-primary-container align-middle ml-[2px] blinking-cursor"></span>
+</p>
+</div>
+<!-- Transcript Area -->
+<div class="w-full max-w-[640px] flex flex-col gap-6 mb-32 pb-8">
+<div class="flex flex-col gap-1">
+<span class="text-primary-container font-label-md">Coach</span>
+<p class="text-[#e4e1e9] font-body-md leading-relaxed">Let's start with a common negotiation scenario. You're discussing the Q3 marketing budget with your team lead.</p>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[#A0A0AB] font-label-md">You</span>
+<p class="text-[#e4e1e9] font-body-md leading-relaxed">I think we should allocate more resources to digital channels this quarter.</p>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-primary-container font-label-md">Coach</span>
+<p class="text-[#e4e1e9] font-body-md leading-relaxed">That's a good start. How would you justify that recommendation to the CFO?</p>
+</div>
+</div>
+</main>
+<!-- Bottom Controls -->
+<footer class="absolute bottom-0 left-0 w-full pb-[80px] pt-8 bg-gradient-to-t from-[#0A0A0F] via-[#0A0A0F] to-transparent flex flex-col items-center justify-end z-20 pointer-events-none">
+<div class="pointer-events-auto flex flex-col items-center gap-4">
+<!-- Mic Button -->
+<button class="w-[64px] h-[64px] rounded-full bg-primary-container hover:bg-primary-container/90 flex items-center justify-center shadow-[0_0_20px_rgba(129,140,248,0.3)] transition-all hover:scale-105 active:scale-95 group">
+<span class="material-symbols-outlined text-white text-[20px] group-hover:scale-110 transition-transform" data-weight="fill" style="font-variation-settings: &quot;FILL&quot; 1;">mic</span>
+</button>
+<!-- Type Instead Link -->
+<button class="flex items-center gap-2 text-[13px] text-[#5F5F6B] hover:text-[#A0A0AB] transition-colors font-medium">
+<span class="material-symbols-outlined text-[16px]">keyboard</span>
+                Type instead
+            </button>
+</div>
+</footer>
+
+
+</body></html>

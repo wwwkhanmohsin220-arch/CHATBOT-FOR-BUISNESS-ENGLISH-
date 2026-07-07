@@ -1,0 +1,174 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Buslingo - Sign Up</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed": "#261900",
+                        "on-tertiary-fixed-variant": "#5d4200",
+                        "primary-fixed-dim": "#bdc2ff",
+                        "secondary-fixed-dim": "#c7c5d5",
+                        "background": "#131318",
+                        "on-tertiary-container": "#3e2b00",
+                        "surface-dim": "#131318",
+                        "on-surface": "#e4e1e9",
+                        "on-primary-fixed-variant": "#2f3aa3",
+                        "surface-container": "#1f1f25",
+                        "secondary-fixed": "#e3e1f1",
+                        "error-container": "#93000a",
+                        "tertiary-fixed": "#ffdea3",
+                        "primary": "#bdc2ff",
+                        "secondary": "#c7c5d5",
+                        "outline": "#908f9e",
+                        "on-secondary-fixed": "#1a1b26",
+                        "tertiary": "#f7bd3e",
+                        "surface-bright": "#39383e",
+                        "surface-variant": "#35343a",
+                        "tertiary-container": "#c08d00",
+                        "on-secondary": "#2f2f3c",
+                        "tertiary-fixed-dim": "#f7bd3e",
+                        "on-error": "#690005",
+                        "surface": "#131318",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-lowest": "#0e0e13",
+                        "inverse-surface": "#e4e1e9",
+                        "on-secondary-container": "#b5b3c3",
+                        "on-surface-variant": "#c6c5d5",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#464553",
+                        "primary-fixed": "#e0e0ff",
+                        "on-primary-fixed": "#000767",
+                        "inverse-primary": "#4953bc",
+                        "surface-tint": "#bdc2ff",
+                        "surface-container-low": "#1b1b20",
+                        "on-primary-container": "#101b8a",
+                        "surface-container-highest": "#35343a",
+                        "surface-container-high": "#2a292f",
+                        "on-tertiary": "#402d00",
+                        "on-secondary-fixed-variant": "#464553",
+                        "on-primary": "#131e8c",
+                        "primary-container": "#818cf8",
+                        "on-background": "#e4e1e9",
+                        "outline-variant": "#454653",
+                        "inverse-on-surface": "#303036",
+                        // Custom additions based on prompt requirements that map to the design system logic
+                        "app-bg": "#0A0A0F",
+                        "app-card": "#131318",
+                        "app-border": "#242430",
+                        "app-input-bg": "#1C1C23",
+                        "app-text-muted": "#A0A0AB",
+                        "app-text-dim": "#5F5F6B",
+                        "app-text": "#F2F2F2",
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem", // 16px
+                        "3xl": "1.25rem", // 20px
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "gutter": "24px",
+                        "margin_mobile": "20px",
+                        "margin_desktop": "64px",
+                        "card_padding_std": "20px",
+                        "base_grid": "4px",
+                        "margin_tablet": "32px",
+                        "card_padding_feat": "28px"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    boxShadow: {
+                        'auth-card': '0 8px 32px rgba(0,0,0,0.5)',
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0A0A0F;
+            background-image: radial-gradient(circle at 50% 50%, rgba(129, 140, 248, 0.03) 0%, transparent 60%);
+        }
+        
+        .custom-input {
+            background-color: #1C1C23;
+            border-color: #242430;
+            color: #F2F2F2;
+        }
+        .custom-input:focus {
+            border-color: #818CF8;
+            outline: none;
+            box-shadow: none;
+        }
+        .custom-input::placeholder {
+            color: #52525B;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-margin_mobile">
+<div class="w-full max-w-[420px] bg-app-card border border-app-border rounded-3xl p-10 shadow-auth-card mx-auto">
+<!-- Logo -->
+<div class="text-center mb-8">
+<h1 class="text-[22px] font-bold text-app-text tracking-tight flex items-center justify-center">
+                Busl<span class="text-primary-container relative inline-block">i<span class="absolute top-[3px] left-[5px] w-[4px] h-[4px] rounded-full bg-primary-container block"></span></span>ngo
+            </h1>
+</div>
+<!-- Heading -->
+<h2 class="text-[22px] font-semibold text-app-text text-center mb-6">Create your account</h2>
+<!-- Google Auth -->
+<button class="w-full h-12 bg-app-input-bg border border-app-border rounded-[10px] flex items-center justify-center gap-3 hover:bg-surface-variant transition-colors duration-200" type="button">
+<svg class="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.14v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.14C1.41 8.53 1 10.2 1 12s.41 3.47 1.14 4.93l3.7-2.84z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.14 7.07l3.7 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+</svg>
+<span class="text-[15px] font-medium text-app-text">Continue with Google</span>
+</button>
+<!-- Divider -->
+
+<!-- Form -->
+
+<!-- Footer -->
+<div class="mt-6 text-center text-[14px] text-app-text-muted">
+            Already have an account? 
+            <a class="text-primary-container hover:underline hover:text-[#9FA8FF] transition-colors" href="/login">Sign in</a>
+</div>
+</div>
+<script>
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eye-icon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+    </script>
+
+
+</body></html>
