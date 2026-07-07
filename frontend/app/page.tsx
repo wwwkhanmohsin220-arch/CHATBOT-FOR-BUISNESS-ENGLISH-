@@ -3,68 +3,115 @@
  * Primary Owner: Umer
  * Talha & Mohsin: Do not modify UI/UX design, only permitted to hook up backend APIs or Voice APIs.
  */
-import Image from "next/image";
+import { Logo } from "@/components/ui/Logo";
+import { getButtonClasses } from "@/components/ui/Button";
+import Link from "next/link";
+import { BookOpen, Mic, Presentation, Mail, Brain, LineChart } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex flex-col min-h-screen">
+      <nav className="fixed top-0 w-full h-16 z-50 border-b border-subtle bg-[#0A0A0F]/80 backdrop-blur-md">
+        <div className="flex justify-between items-center px-5 md:px-16 max-w-7xl mx-auto h-full">
+          <Logo />
+          <div className="flex items-center gap-6">
+            <Link href="/sign-in" className="text-[#c6c5d5] font-medium hover:text-[#bdc2ff] transition-colors duration-200">
+              Sign in
+            </Link>
+            <Link href="/onboarding" className={getButtonClasses("primary")}>
+              Start Learning — Free
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      <main className="flex-grow pt-16">
+        <section className="hero-bg relative flex flex-col items-center justify-center pt-32 pb-24 px-5 md:px-16 text-center overflow-hidden">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight max-w-[680px] mb-6 text-[#F2F2F2]">
+            Master the Language of Business
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-lg leading-relaxed text-[#A0A0AB] max-w-[560px] mb-10">
+            AI-powered coaching for emails, meetings, presentations, and beyond. Build the communication skills that accelerate your career.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+          <Link href="/onboarding" className={getButtonClasses("primary", "lg", "mb-6")}>
+            Start Learning — Free
+          </Link>
+          <p className="text-sm text-[#5F5F6B]">
+            Already have an account? <Link href="/sign-in" className="text-[#818CF8] hover:underline">Sign in</Link>
+          </p>
+          
+          <div className="mt-24 flex flex-col items-center">
+            <p className="text-sm text-[#5F5F6B] mb-6">Trusted by learners preparing for careers at</p>
+            <div className="flex flex-wrap justify-center gap-10 text-sm text-[#5F5F6B] font-medium">
+              <span>Google</span>
+              <span>McKinsey</span>
+              <span>Stripe</span>
+              <span>Deloitte</span>
+              <span>Amazon</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-24 px-5 md:px-16 max-w-7xl mx-auto">
+          <h2 className="text-3xl font-semibold text-[#F2F2F2] mb-12 text-center">Everything you need to communicate with confidence</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <FeatureCard 
+              icon={<BookOpen className="text-[#818CF8]" size={20} />} 
+              title="Industry Vocab" 
+              description="Master the specific terminology and phrasing expected in your target industry." 
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+            <FeatureCard 
+              icon={<Mic className="text-[#818CF8]" size={20} />} 
+              title="Pronunciation" 
+              description="Real-time feedback on your clarity, pacing, and tone during mock calls." 
+            />
+            <FeatureCard 
+              icon={<Presentation className="text-[#818CF8]" size={20} />} 
+              title="Presentations" 
+              description="Structure your narrative and practice delivery for high-stakes meetings." 
+            />
+            <FeatureCard 
+              icon={<Mail className="text-[#818CF8]" size={20} />} 
+              title="Email Drafting" 
+              description="Learn to write concise, professional emails that get fast responses." 
+            />
+            <FeatureCard 
+              icon={<Brain className="text-[#818CF8]" size={20} />} 
+              title="Cultural Nuance" 
+              description="Understand the unspoken rules of international business communication." 
+            />
+            <FeatureCard 
+              icon={<LineChart className="text-[#818CF8]" size={20} />} 
+              title="Progress Tracking" 
+              description="Detailed analytics on your fluency, vocabulary expansion, and confidence." 
+            />
+          </div>
+        </section>
       </main>
+      
+      <footer className="bg-[#131318] py-8 border-t border-subtle w-full mt-auto">
+        <div className="flex flex-col md:flex-row justify-between items-center px-5 md:px-16 max-w-7xl mx-auto gap-4">
+          <div className="text-sm text-[#5F5F6B]">
+            © 2026 Buslingo. Precision Business English.
+          </div>
+          <div className="flex gap-6 text-sm text-[#5F5F6B]">
+            <Link href="#" className="hover:text-[#F2F2F2] transition-colors">Privacy Policy</Link>
+            <Link href="#" className="hover:text-[#F2F2F2] transition-colors">Terms of Service</Link>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
+  return (
+    <div className="bg-layer-1 border border-subtle rounded-[14px] p-7 hover:border-[#3F3F4E] transition-colors">
+      <div className="w-11 h-11 bg-layer-2 rounded-xl flex items-center justify-center mb-5 border border-subtle">
+        {icon}
+      </div>
+      <h3 className="text-lg font-semibold text-[#F2F2F2] mb-2">{title}</h3>
+      <p className="text-[15px] text-[#A0A0AB] leading-relaxed">{description}</p>
     </div>
   );
 }
