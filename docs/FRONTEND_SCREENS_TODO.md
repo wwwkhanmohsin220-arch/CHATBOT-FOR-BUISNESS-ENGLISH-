@@ -15,20 +15,20 @@ This document maps out all the screens we need to build based on the generated r
 ## 2. Core Navigation & Dashboards
 - [x] **Home Dashboard** (`buslingo_home_dashboard`)
 - [x] **Learning Path / Curriculum** (`buslingo_learning_path`)
-- [ ] **Progress & Analytics** (`buslingo_progress_analytics`)
-- [ ] **Settings & Profile** (`buslingo_settings_profile`)
+- [x] **Progress & Analytics** (`buslingo_progress_analytics`)
+- [x] **Settings & Profile** (`buslingo_settings_profile`)
 
 ## 3. Lessons & Practice Interface
-- [ ] **Standard Lesson Screen** (e.g., `buslingo_disagreeing_politely_lesson`)
-- [ ] **Listening Exercise** (`buslingo_listening_exercise`)
-- [ ] **Voice Practice** (`buslingo_voice_practice`) - *Requires WebRTC visualizer hookups.*
-- [ ] **Writing Practice** (`buslingo_writing_practice_fixed_layout`)
-- [ ] **Review Session** (`buslingo_review_session`)
-- [ ] **Lesson Complete / Rewards** (`buslingo_lesson_complete`)
+- [x] **Standard Lesson Screen** (e.g., `buslingo_disagreeing_politely_lesson`)
+- [x] **Listening Exercise** (`buslingo_listening_exercise`)
+- [x] **Voice Practice** (`buslingo_voice_practice`) - *Uses Strands animation.*
+- [x] **Writing Practice** (`buslingo_writing_practice_fixed_layout`)
+- [x] **Review Session** (`buslingo_review_session`)
+- [x] **Lesson Complete / Rewards** (`buslingo_lesson_complete`)
 
 ## 4. Assessments
-- [ ] **Unit Assessment** (`buslingo_unit_3_assessment`)
-- [ ] **Assessment Results** (`buslingo_assessment_results`)
+- [x] **Unit Assessment** (`buslingo_unit_3_assessment`)
+- [x] **Assessment Results** (`buslingo_assessment_results`)
 
 ---
 **Instructions for Umer:**

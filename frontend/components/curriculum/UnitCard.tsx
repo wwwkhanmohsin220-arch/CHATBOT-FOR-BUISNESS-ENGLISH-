@@ -5,6 +5,7 @@
  */
 import { Check, Play, Lock, CheckCircle2, Circle, PenTool } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export type LessonStatus = "completed" | "current" | "locked";
 
@@ -12,6 +13,7 @@ export interface Lesson {
   id: string;
   title: string;
   status: LessonStatus;
+  href?: string;
 }
 
 export type UnitStatus = "completed" | "in_progress" | "locked";
@@ -24,6 +26,7 @@ export interface Unit {
   completedLessons?: number;
   totalLessons: number;
   lessons?: Lesson[];
+  assessmentUnlocked?: boolean;
 }
 
 interface UnitCardProps {
@@ -118,17 +121,35 @@ export function UnitCard({ unit, isLast }: UnitCardProps) {
                 </div>
 
                 {lesson.status === "current" && (
-                  <button className="bg-[#818CF8] text-[#0A0A0F] px-4 py-2 rounded-[10px] text-[14px] font-semibold hover:bg-[#818CF8]/90 transition-colors active:scale-[0.98]">
+                  <Link 
+                    href={lesson.href || "/lesson/theory"}
+                    className="bg-[#818CF8] text-[#0A0A0F] px-4 py-2 rounded-[10px] text-[14px] font-semibold hover:bg-[#818CF8]/90 transition-colors active:scale-[0.98]"
+                  >
                     Continue
-                  </button>
+                  </Link>
                 )}
               </div>
             ))}
             
             {/* Assessment Footer */}
-            <div className="px-5 py-4 bg-[#1a1a21] border-t border-[#242430] flex items-center text-[#c6c5d5] opacity-60 mt-2">
-              <PenTool size={20} className="text-[#5F5F6B] mr-3" />
-              <span className="text-[16px]">Unit Assessment</span>
+            <div className={cn(
+              "px-5 py-4 bg-[#1a1a21] border-t border-[#242430] flex items-center justify-between mt-2",
+              unit.assessmentUnlocked ? "text-[#e4e1e9]" : "text-[#c6c5d5] opacity-60"
+            )}>
+              <div className="flex items-center">
+                <PenTool size={20} className={cn("mr-3", unit.assessmentUnlocked ? "text-[#818cf8]" : "text-[#5F5F6B]")} />
+                <span className={cn("text-[16px]", unit.assessmentUnlocked ? "font-semibold text-white" : "")}>
+                  Unit Assessment
+                </span>
+              </div>
+              {unit.assessmentUnlocked && (
+                <Link 
+                  href="/lesson/assessment"
+                  className="bg-transparent border border-[#818cf8] text-[#818cf8] px-4 py-2 rounded-[10px] text-[14px] font-semibold hover:bg-[#818CF8]/10 transition-colors active:scale-[0.98]"
+                >
+                  Start Assessment
+                </Link>
+              )}
             </div>
           </div>
         </div>

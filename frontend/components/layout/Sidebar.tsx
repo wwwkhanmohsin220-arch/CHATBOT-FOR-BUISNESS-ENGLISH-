@@ -12,15 +12,12 @@ import { Home, GraduationCap, Mic, Edit3, Bookmark, Users, BarChart2, Trophy, Se
 const mainNav = [
   { name: "Home", href: "/home", icon: Home },
   { name: "Learn", href: "/learn", icon: GraduationCap },
-  { name: "Voice", href: "/voice", icon: Mic },
   { name: "Writing", href: "/writing", icon: Edit3 },
-  { name: "Vocabulary", href: "/vocabulary", icon: Bookmark },
-  { name: "Roleplay", href: "/roleplay", icon: Users }
+  { name: "Vocabulary", href: "/vocabulary", icon: Bookmark }
 ];
 
 const meNav = [
   { name: "Progress", href: "/progress", icon: BarChart2 },
-  { name: "Achievements", href: "/achievements", icon: Trophy },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

@@ -29,12 +29,13 @@ const mockCurriculum: Unit[] = [
     status: "in_progress",
     completedLessons: 3,
     totalLessons: 5,
+    assessmentUnlocked: true,
     lessons: [
       { id: "l1", title: "Lesson 1: Structuring an Agenda", status: "completed" },
-      { id: "l2", title: "Lesson 2: Opening and Chairing", status: "completed" },
-      { id: "l3", title: "Lesson 3: Managing Interruptions", status: "completed" },
+      { id: "l2", title: "Lesson 2: Opening and Chairing (Voice)", status: "current", href: "/lesson/voice" },
+      { id: "l3", title: "Lesson 3: Managing Interruptions (Listening)", status: "current", href: "/lesson/listening" },
       { id: "l4", title: "Lesson 4: Proposing Solutions", status: "current" },
-      { id: "l5", title: "Lesson 5: Closing and Action Items", status: "locked" },
+      { id: "l5", title: "Lesson 5: Closing and Action Items", status: "current" },
     ]
   },
   {

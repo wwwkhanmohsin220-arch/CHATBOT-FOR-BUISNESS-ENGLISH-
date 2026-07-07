@@ -16,7 +16,7 @@ export default function HomeDashboardPage() {
 
       {/* Top Row: Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-        
+
         {/* Daily Goal */}
         <div className="bg-[#131318] border border-[#242430] rounded-[14px] p-[20px] flex flex-col justify-between hover:border-[#3F3F4E] transition-colors">
           <div className="flex items-center gap-3 mb-4">
@@ -50,7 +50,7 @@ export default function HomeDashboardPage() {
             {['M', 'T', 'W', 'T', 'F'].map((day, i) => {
               const isPast = i < 2; // M, T
               const isToday = i === 2; // W
-              
+
               return (
                 <div
                   key={i}
@@ -72,11 +72,11 @@ export default function HomeDashboardPage() {
       {/* Continue Learning Card (Hero) */}
       <div className="bg-[#131318] border border-[#242430] rounded-[14px] p-[28px] mb-10 relative overflow-hidden group hover:border-[#818CF8] transition-colors">
         {/* Decorative background pattern */}
-        <div 
-          className="absolute inset-0 opacity-10 pointer-events-none" 
+        <div
+          className="absolute inset-0 opacity-10 pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(#818cf8 1px, transparent 1px)', backgroundSize: '20px 20px' }}
         />
-        
+
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex-1">
             <span className="text-[12px] font-medium text-[#818CF8] uppercase tracking-wider mb-2 block">
@@ -95,10 +95,13 @@ export default function HomeDashboardPage() {
               </div>
             </div>
           </div>
-          
-          <button className="h-10 px-6 rounded-[10px] bg-transparent border border-[#818CF8] text-[#818CF8] text-[14px] font-semibold hover:bg-[#818CF8] hover:text-[#0A0A0F] transition-colors self-start md:self-center flex items-center gap-2 whitespace-nowrap active:scale-[0.98]">
+
+          <Link
+            href="/lesson/theory"
+            className="h-10 px-6 rounded-[10px] bg-transparent border border-[#818CF8] text-[#818CF8] text-[14px] font-semibold hover:bg-[#818CF8] hover:text-[#0A0A0F] transition-colors self-start md:self-center flex items-center gap-2 whitespace-nowrap active:scale-[0.98]"
+          >
             Resume lesson <ArrowRight size={18} />
-          </button>
+          </Link>
         </div>
       </div>
     </main>
