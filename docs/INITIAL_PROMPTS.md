@@ -4,19 +4,19 @@ When pulling this branch for the first time, copy and paste the corresponding pr
 
 ---
 
-## 👨‍💻 For Talha (Backend Architecture & APIs)
+## 👨‍💻 For Mohsin (Backend Architecture & APIs)
 
 **Copy and paste this prompt to your AI:**
 
-> "I am Talha. We have just completed a major restructuring of the Buslingo project. We are pivoting to a structured AI-native learning platform. Please read `docs/project_master.md` and `docs/ROADMAP.md` to understand my role and the new architecture. Also read `.agents/AGENTS.md` and enforce all `@ai-restriction` comments found in the `backend/` files. My primary focus is FastAPI backend architecture, PostgreSQL, and API development. The `old/` directory contains legacy code for reference only—do not modify it. I need you to help me start scaffolding the database models in `backend/models/schema.py` and the curriculum REST endpoints in `backend/api/routes.py` based on `shared/api_contract.md`. Do not modify frontend UI components. Let me know when you've read the docs and are ready to start."
+> "I am Mohsin. We have just completed a major restructuring of the Buslingo project. We are pivoting to a structured AI-native learning platform. Please read `docs/project_master.md` and `docs/ROADMAP.md` to understand my role and the new architecture. Also read `.agents/AGENTS.md` and enforce all `@ai-restriction` comments found in the `backend/` files. My primary focus is FastAPI backend architecture, PostgreSQL, and API development. The `old/` directory contains legacy code for reference only—do not modify it. I need you to help me start scaffolding the database models in `backend/models/schema.py` and the curriculum REST endpoints in `backend/api/routes.py` based on `shared/api_contract.md`. Do not modify frontend UI components. Let me know when you've read the docs and are ready to start."
 
 ---
 
-## 🎧 For Mohsin (Voice Experience, QA, & Deployment)
+## 🎧 For Talha (Voice Experience, QA, & Deployment)
 
 **Copy and paste this prompt to your AI:**
 
-> "I am Mohsin. We have just completed a major restructuring of the Buslingo project. We are pivoting to a structured AI-native learning platform. Please read `docs/project_master.md` and `docs/ROADMAP.md` to understand my role and the new architecture. Also read `.agents/AGENTS.md` and enforce all `@ai-restriction` comments found in the codebase. My primary focus is Voice Experience (ElevenLabs, WebRTC/WebSockets), QA testing, and Deployment. The `old/` directory contains legacy code for reference only—do not modify it. I need you to help me set up the WebSockets voice streaming endpoints in `backend/api/websockets.py` and prepare our testing strategy. Do not modify standard REST routes or frontend UI components unless they are specifically for voice integration. Let me know when you've read the docs and are ready to start."
+> "I am Talha. We have just completed a major restructuring of the Buslingo project. We are pivoting to a structured AI-native learning platform. Please read `docs/project_master.md` and `docs/ROADMAP.md` to understand my role and the new architecture. Also read `.agents/AGENTS.md` and enforce all `@ai-restriction` comments found in the codebase. My primary focus is Voice Experience (ElevenLabs, WebRTC/WebSockets), QA testing, and Deployment. The `old/` directory contains legacy code for reference only—do not modify it. I need you to help me set up the WebSockets voice streaming endpoints in `backend/api/websockets.py` and prepare our testing strategy. Do not modify standard REST routes or frontend UI components unless they are specifically for voice integration. Let me know when you've read the docs and are ready to start."
 
 ---
 

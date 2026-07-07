@@ -1,7 +1,7 @@
 /**
  * @ai-restriction
  * Primary Owner: Umer
- * Talha: Do not modify UI/UX design, only permitted to hook up backend APIs.
+ * Mohsin: Do not modify UI/UX design, only permitted to hook up backend APIs.
  */
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopNav } from "@/components/layout/TopNav";

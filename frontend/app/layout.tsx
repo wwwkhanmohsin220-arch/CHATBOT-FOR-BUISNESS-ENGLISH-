@@ -1,7 +1,8 @@
 /**
  * @ai-restriction
  * Primary Owner: Umer
- * Talha & Mohsin: Do not modify UI/UX design, only permitted to hook up backend APIs or Voice APIs.
+ * Mohsin: Do not modify UI/UX design, only permitted to hook up backend APIs.
+ * Talha: Do not modify UI/UX design, only permitted to hook up Voice APIs.
  */
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
