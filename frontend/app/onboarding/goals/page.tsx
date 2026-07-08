@@ -39,7 +39,7 @@ export default function SetGoalsPage() {
 
       <h1 className="text-2xl font-bold text-white mb-2">What are your primary goals?</h1>
       <p className="text-[15px] text-[#A0A0AB] mb-8">
-        Select the skills you want to improve. We'll prioritize these in your curriculum.
+        Select the skills you want to improve. We&apos;ll prioritize these in your curriculum.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 content-start">
@@ -80,7 +80,7 @@ export default function SetGoalsPage() {
           Back
         </Link>
         {selected.size > 0 ? (
-          <Link href="/home" className={getButtonClasses("primary")}>
+          <Link href="/sign-up" className={getButtonClasses("primary")}>
             Finish Setup
           </Link>
         ) : (

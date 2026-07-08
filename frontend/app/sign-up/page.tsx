@@ -12,10 +12,11 @@ import { Button, getButtonClasses } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { login } from "@/lib/api";
+import { signup } from "@/lib/api";
 
-export default function SignInPage() {
+export default function SignUpPage() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -28,11 +29,8 @@ export default function SignInPage() {
     setError(null);
 
     try {
-      const data = await login({ email, password });
-      localStorage.setItem("buslingo_token", data.access_token);
-      localStorage.setItem("buslingo_user", JSON.stringify(data.user));
-
-      router.push("/home");
+      await signup({ username, email, password });
+      router.push("/sign-in");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
@@ -47,7 +45,10 @@ export default function SignInPage() {
       <Card className="w-full max-w-[420px] p-10 relative z-10 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
         <div className="text-center mb-8">
           <Logo />
-          <h1 className="text-[22px] font-semibold text-white mt-8">Welcome back</h1>
+          <h1 className="text-[22px] font-semibold text-white mt-8">Create Account</h1>
+          <p className="text-[14px] text-[#A0A0AB] mt-3">
+            Awesome! We&apos;ve generated your custom learning path. Create your free account to save it and start your first lesson.
+          </p>
         </div>
 
         <Button variant="secondary" className="w-full mb-6 gap-3 font-medium">
@@ -73,6 +74,17 @@ export default function SignInPage() {
         )}
 
         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+          <div className="space-y-1.5">
+            <label className="text-[13px] text-[#A0A0AB]">Username</label>
+            <Input
+              type="text"
+              placeholder="alexmercer"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+
           <div className="space-y-1.5">
             <label className="text-[13px] text-[#A0A0AB]">Work Email</label>
             <Input
@@ -103,25 +115,20 @@ export default function SignInPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <div className="text-right mt-2">
-              <Link href="#" className="text-[13px] text-[#818CF8] hover:underline">
-                Forgot password?
-              </Link>
-            </div>
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className={getButtonClasses("primary", "default", "w-full mt-2 flex justify-center items-center")}
+            className={getButtonClasses("primary", "default", "w-full mt-4 flex justify-center items-center")}
           >
-            {isLoading ? <Loader2 size={20} className="animate-spin text-[#0A0A0F]" /> : "Sign In"}
+            {isLoading ? <Loader2 size={20} className="animate-spin text-[#0A0A0F]" /> : "Create Account"}
           </button>
         </form>
 
         <div className="mt-6 pt-6 border-t border-[#242430]">
-          <Link href="/onboarding" className={getButtonClasses("secondary", "default", "w-full")}>
-            No Account? Start Learning for Free
+          <Link href="/sign-in" className={getButtonClasses("secondary", "default", "w-full")}>
+            Already have an account? Sign In
           </Link>
         </div>
       </Card>
