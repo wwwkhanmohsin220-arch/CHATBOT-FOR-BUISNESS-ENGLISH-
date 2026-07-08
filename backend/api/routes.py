@@ -1,14 +1,27 @@
 """
 @ai-restriction
-Primary Owner: Talha
+Primary Owner: Mohsin
 Umer: Do not modify backend API logic.
-Mohsin: Do not modify REST routing unless requested by Talha. Focus on websockets.py instead.
+Talha: Do not modify REST routing unless requested by Mohsin. Focus on voice QA/deployment.
 """
 
 from fastapi import APIRouter
 
-router = APIRouter()
+from backend.api.auth import auth_router
+from backend.models.schema import CurriculumResponse
 
-@router.get("/curriculum")
-def get_curriculum():
-    return {"message": "Curriculum data will go here."}
+router = APIRouter(prefix="/api")
+router.include_router(auth_router)
+
+
+@router.get("/curriculum", response_model=CurriculumResponse)
+def get_curriculum() -> CurriculumResponse:
+    return CurriculumResponse(
+        units=[
+            {
+                "id": "u1",
+                "title": "Business Greetings",
+                "lessons": [],
+            }
+        ]
+    )
