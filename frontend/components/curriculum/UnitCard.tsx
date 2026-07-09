@@ -35,6 +35,7 @@ interface UnitCardProps {
 }
 
 export function UnitCard({ unit, isLast }: UnitCardProps) {
+  
   const isCompleted = unit.status === "completed";
   const isInProgress = unit.status === "in_progress";
   const isLocked = unit.status === "locked";
@@ -176,12 +177,22 @@ export function UnitCard({ unit, isLast }: UnitCardProps) {
               </span>
             )}
           </div>
-          <p className="text-[14px] text-[#5F5F6B]">
+          <p className="text-[14px] text-[#5F5F6B] mb-4">
             {isCompleted 
               ? `${unit.completedLessons} lessons completed.` 
               : `Complete previous unit to unlock.`
             }
           </p>
+          
+          {isCompleted && (
+            <div className="flex justify-start">
+              <button 
+                className="bg-transparent border border-[#818cf8] text-[#818cf8] px-4 py-2 rounded-[10px] text-[14px] font-semibold hover:bg-[#818CF8]/10 transition-colors active:scale-[0.98]"
+              >
+                Repeat Unit
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

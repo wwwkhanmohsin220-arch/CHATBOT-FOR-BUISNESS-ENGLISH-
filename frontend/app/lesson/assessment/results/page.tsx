@@ -65,22 +65,6 @@ export default function AssessmentResultsPage() {
           </div>
         </div>
 
-        {/* Skill Breakdown */}
-        <div className="w-full grid grid-cols-3 gap-3 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 fill-mode-both">
-          <div className="bg-[#131318] border border-[#242430] rounded-xl p-4 flex flex-col items-center justify-center text-center">
-            <span className="text-[13px] text-[#908f9e] mb-1 font-medium">Grammar</span>
-            <span className="text-[22px] font-bold text-[#e4e1e9]">90%</span>
-          </div>
-          <div className="bg-[#131318] border border-[#242430] rounded-xl p-4 flex flex-col items-center justify-center text-center">
-            <span className="text-[13px] text-[#908f9e] mb-1 font-medium">Vocabulary</span>
-            <span className="text-[22px] font-bold text-[#e4e1e9]">80%</span>
-          </div>
-          <div className="bg-[#131318] border border-[#242430] rounded-xl p-4 flex flex-col items-center justify-center text-center">
-            <span className="text-[13px] text-[#908f9e] mb-1 font-medium">Tone</span>
-            <span className="text-[22px] font-bold text-[#e4e1e9]">85%</span>
-          </div>
-        </div>
-
         {/* Detailed Feedback */}
         <div className="w-full mb-12 flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both">
           <h2 className="text-[18px] font-semibold text-[#e4e1e9] mb-2">Review your answers</h2>
@@ -140,9 +124,6 @@ export default function AssessmentResultsPage() {
 
         {/* Buttons */}
         <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-[400ms] fill-mode-both">
-          <button className="w-full sm:w-auto h-10 px-6 rounded-[10px] bg-transparent border border-[#818CF8] text-[#818CF8] text-[14px] font-semibold hover:bg-[#818CF8]/10 transition-colors active:scale-95">
-            Review mistakes
-          </button>
           <button 
             onClick={() => router.push('/home')}
             className="w-full sm:w-auto h-10 px-6 rounded-[10px] bg-[#818cf8] text-[#0A0A0F] text-[14px] font-semibold hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 active:scale-95"

@@ -3,7 +3,7 @@
  * @ai-restriction
  * Primary Owner: Umer
  */
-import { Award, Flame, BookOpen, Type } from "lucide-react";
+import { TrendingUp, CalendarDays, BookOpen, FileText } from "lucide-react";
 import { StatCard } from "@/components/analytics/StatCard";
 import { ActivityHeatmap } from "@/components/analytics/ActivityHeatmap";
 import { SkillAssessment } from "@/components/analytics/SkillAssessment";
@@ -27,28 +27,28 @@ export default function ProgressAnalyticsPage() {
         {/* 1. STAT CARDS */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard 
-            icon={Award} 
-            title="Total XP" 
+            icon={TrendingUp} 
+            title="Skill Points" 
             value="2,450" 
             iconColorClass="text-[#818cf8]" 
           />
           <StatCard 
-            icon={Flame} 
-            title="Streak" 
+            icon={CalendarDays} 
+            title="Consistency" 
             value="12" 
             unit="days" 
-            iconColorClass="text-[#f7bd3e]" 
+            iconColorClass="text-[#c6c5d5]" 
           />
           <StatCard 
-            icon={BookOpen} 
-            title="Lessons" 
+            icon={FileText} 
+            title="Lessons Completed" 
             value="24" 
             iconColorClass="text-[#c6c5d5]" 
           />
           <StatCard 
-            icon={Type} 
-            title="Words" 
-            value="156" 
+            icon={BookOpen} 
+            title="Units Completed" 
+            value="2" 
             iconColorClass="text-[#c6c5d5]" 
           />
         </section>

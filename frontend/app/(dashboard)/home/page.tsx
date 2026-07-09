@@ -3,7 +3,7 @@
  * @ai-restriction
  * Primary Owner: Umer
  */
-import { Flag, Flame, ArrowRight } from "lucide-react";
+import { Flag, Flame, ArrowRight, Bookmark } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -104,6 +104,30 @@ export default function HomeDashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Business Lexicon Daily Review Widget */}
+      <div className="bg-[#131318] border border-[#242430] rounded-[14px] p-[24px] flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:border-[#3F3F4E] transition-colors">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-lg bg-[#818CF8]/10 flex items-center justify-center text-[#818CF8] shrink-0">
+            <Bookmark size={24} />
+          </div>
+          <div>
+            <h3 className="text-[18px] font-bold text-white mb-1">Business Lexicon</h3>
+            <p className="text-[15px] text-[#A0A0AB]">
+              <span className="text-[#e4e1e9] font-medium">12 terms</span> due for spaced repetition.
+            </p>
+          </div>
+        </div>
+        
+        <Link 
+          href="/lesson/vocabulary"
+          className="h-10 px-6 rounded-[10px] bg-[#818CF8] text-[#0A0A0F] text-[14px] font-semibold hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 whitespace-nowrap active:scale-[0.98]"
+        >
+          Start 90s Review
+          <ArrowRight size={18} />
+        </Link>
+      </div>
+
     </main>
   );
 }

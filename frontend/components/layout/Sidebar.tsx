@@ -7,13 +7,11 @@ import { Logo } from "@/components/ui/Logo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Home, GraduationCap, Mic, Edit3, Bookmark, Users, BarChart2, Trophy, Settings } from "lucide-react";
+import { Home, GraduationCap, Mic, Users, BarChart2, Trophy, Settings } from "lucide-react";
 
 const mainNav = [
   { name: "Home", href: "/home", icon: Home },
-  { name: "Learn", href: "/learn", icon: GraduationCap },
-  { name: "Writing", href: "/writing", icon: Edit3 },
-  { name: "Vocabulary", href: "/vocabulary", icon: Bookmark }
+  { name: "Learn", href: "/learn", icon: GraduationCap }
 ];
 
 const meNav = [

@@ -3,153 +3,122 @@
  * @ai-restriction
  * Primary Owner: Umer
  */
-import { useEffect } from "react";
-import { Star, Zap, Flame, TrendingUp, BookOpen, Mic, ArrowRight } from "lucide-react";
+import { Star, TrendingUp, CalendarDays, ArrowRight, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { TargetedFixCard, TargetedFix } from "@/components/lesson/TargetedFixCard";
 
-// The Confetti particle system translated to React
-function ConfettiSystem() {
-  useEffect(() => {
-    const container = document.getElementById('confetti-container');
-    if (!container) return;
-    
-    // Clear any existing confetti (React StrictMode defense)
-    container.innerHTML = '';
-    
-    const colors = ['#818CF8', '#22C55E', '#F59E0B'];
-    const particleCount = 80;
+const MOCK_FIXES: TargetedFix[] = [
+  {
+    id: "f1",
+    category: "Vocabulary",
+    issue: "You repeatedly used 'say again' when asking for clarification.",
+    suggestion: "Use 'recap' or 'could you clarify' in professional settings.",
+    microDrillType: "text",
+    microDrillQuestion: "Rewrite this sentence: 'Can you say again what the budget is?'"
+  },
+  {
+    id: "f2",
+    category: "Tone",
+    issue: "You used very direct phrasing: 'I think that's bad'.",
+    suggestion: "Soften the phrasing using mitigation: 'I have some concerns about...'",
+    microDrillType: "text",
+    microDrillQuestion: "Mitigate this statement: 'Your timeline is wrong.'"
+  },
+  {
+    id: "f3",
+    category: "Pronunciation",
+    issue: "Rushed articulation on the word 'specifically'.",
+    suggestion: "Slow down and enunciate the syllables: spe-cif-i-cal-ly.",
+    microDrillType: "text",
+    microDrillQuestion: "Type the phonetic breakdown of 'specifically' (just for testing the drill UI)."
+  }
+];
 
-    for (let i = 0; i < particleCount; i++) {
-      const particle = document.createElement('div');
-      
-      // We inline the CSS animation for ease of portability, 
-      // but it expects keyframes which we add to globals.css or inject here.
-      particle.className = "absolute w-2 h-2 opacity-0 animate-confetti-burst";
-      
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      const angle = Math.random() * Math.PI * 2;
-      const velocity = 50 + Math.random() * 150; 
-      const tx = Math.cos(angle) * velocity + 'px';
-      const ty = Math.sin(angle) * velocity + (Math.random() * 50) + 'px';
-      const rot = (Math.random() * 720 - 360) + 'deg';
-      const shape = Math.random() > 0.5 ? '50%' : '0%';
-
-      particle.style.backgroundColor = color;
-      particle.style.borderRadius = shape;
-      particle.style.setProperty('--tx', tx);
-      particle.style.setProperty('--ty', ty);
-      particle.style.setProperty('--rot', rot);
-      particle.style.animationDelay = (Math.random() * 0.2) + 's';
-
-      container.appendChild(particle);
-    }
-    
-    return () => {
-      if (container) container.innerHTML = '';
-    };
-  }, []);
-
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes burst {
-            0% { transform: translate(0, 0) scale(0) rotate(0deg); opacity: 1; }
-            80% { opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) scale(1) rotate(var(--rot)); opacity: 0; }
-        }
-        .animate-confetti-burst {
-            animation: burst 1.5s ease-out forwards;
-        }
-      `}} />
-      <div 
-        id="confetti-container" 
-        className="fixed top-[20%] left-1/2 -translate-x-1/2 w-[1px] h-[1px] z-50 pointer-events-none"
-      />
-    </>
-  );
-}
-
-export default function LessonCompletePage() {
+export default function SessionReportCardPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-[#e4e1e9] flex flex-col items-center justify-center p-6 md:p-16 relative overflow-hidden font-sans">
-      <ConfettiSystem />
-
-      {/* Geometric background elements (Abstract) */}
-      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center">
-        <svg className="w-full h-full max-w-4xl opacity-10 text-[#242430]" preserveAspectRatio="xMidYMid slice" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" fill="none" r="40" stroke="currentColor" strokeDasharray="2 2" strokeWidth="0.5" />
-          <circle cx="50" cy="50" fill="none" r="30" stroke="currentColor" strokeWidth="0.5" />
-          <path d="M 10 50 L 90 50 M 50 10 L 50 90" stroke="currentColor" strokeDasharray="1 4" strokeWidth="0.5" />
+    <div className="min-h-screen bg-[#0A0A0F] text-[#e4e1e9] flex flex-col font-sans relative overflow-hidden">
+      
+      {/* Background Geometrics (Strictly Professional) */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-[0.03] text-white">
+        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <pattern id="grid" width="4" height="4" patternUnits="userSpaceOnUse">
+            <path d="M 4 0 L 0 0 0 4" fill="none" stroke="currentColor" strokeWidth="0.1" />
+          </pattern>
+          <rect width="100" height="100" fill="url(#grid)" />
         </svg>
       </div>
 
-      <main className="w-full max-w-2xl flex flex-col items-center text-center z-10 relative">
+      <main className="w-full max-w-[700px] mx-auto px-6 py-12 md:py-16 flex flex-col items-center z-10 relative">
         
-        {/* Header */}
-        <div className="mb-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <Star className="text-[#818cf8] w-16 h-16 mb-4 mx-auto" fill="currentColor" />
-          <h1 className="text-[48px] leading-[56px] tracking-[-0.02em] font-bold text-[#e4e1e9] mb-2">
-            ✨ Lesson Complete!
-          </h1>
-          <p className="text-[18px] text-[#c6c5d5]">
-            Disagreeing Politely
+        {/* Header Ribbon */}
+        <div className="w-full flex items-center justify-between mb-12">
+          <button 
+            onClick={() => router.push('/learn')}
+            className="flex items-center gap-2 text-[#908f9e] hover:text-white transition-colors text-[14px] font-semibold"
+          >
+            <ArrowLeft size={16} />
+            Back to Path
+          </button>
+          
+          <div className="flex gap-3 animate-in fade-in slide-in-from-top-4 duration-700">
+            <div className="bg-[#131318] border border-[#242430] rounded-lg px-4 py-2 flex items-center gap-2">
+              <TrendingUp className="text-[#818cf8]" size={16} />
+              <span className="text-[14px] font-bold text-[#818cf8]">+20 Tone</span>
+            </div>
+            <div className="bg-[#131318] border border-[#242430] rounded-lg px-4 py-2 flex items-center gap-2">
+              <TrendingUp className="text-[#22C55E]" size={16} />
+              <span className="text-[14px] font-bold text-[#22C55E]">+15 Diplomacy</span>
+            </div>
+            <div className="bg-[#131318] border border-[#242430] rounded-lg px-4 py-2 flex items-center gap-2">
+              <CalendarDays className="text-[#c6c5d5]" size={16} />
+              <span className="text-[14px] font-bold text-[#c6c5d5]">13 Day Consistency</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Title */}
+        <div className="w-full text-left mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+          <div className="flex items-center gap-3 mb-2">
+            <Star className="text-[#818cf8]" fill="currentColor" size={24} />
+            <h1 className="text-[28px] leading-[34px] tracking-tight font-bold text-[#e4e1e9]">
+              Session Report Card
+            </h1>
+          </div>
+          <p className="text-[16px] text-[#c6c5d5] pl-[36px]">
+            Unit 3 › Lesson 4: Disagreeing Politely
           </p>
         </div>
 
-        {/* Rewards */}
-        <div className="flex gap-4 mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 fill-mode-both">
-          <div className="bg-[#131318] border border-[#242430] rounded-lg px-6 py-3 flex items-center gap-2">
-            <Zap className="text-[#818cf8]" fill="currentColor" size={24} />
-            <span className="text-[20px] font-semibold text-[#818cf8]">+45 XP</span>
-          </div>
-          <div className="bg-[#131318] border border-[#242430] rounded-lg px-6 py-3 flex items-center gap-2">
-            <Flame className="text-[#f7bd3e]" fill="currentColor" size={24} />
-            <span className="text-[20px] font-semibold text-[#f7bd3e]">13 day streak</span>
-          </div>
+        {/* Executive Summary */}
+        <div className="w-full bg-[#1c1c23] border border-[#242430] rounded-[14px] p-6 mb-10 flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+          <h3 className="text-[14px] font-bold text-[#c6c5d5] uppercase tracking-wider mb-1">AI Coach Summary</h3>
+          <p className="text-[15px] text-[#e4e1e9] leading-relaxed">
+            Your ability to soften direct statements has improved significantly during this session. However, during the voice practice, you rushed the explanation of the timeline and used some overly casual vocabulary. Review the prioritized fixes below to tighten your delivery.
+          </p>
         </div>
 
-        {/* Skill Improvements */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 fill-mode-both">
+        {/* Targeted Fixes */}
+        <div className="w-full flex flex-col gap-4 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+          <h2 className="text-[18px] font-bold text-[#e4e1e9] mb-2 flex items-center gap-2">
+            Prioritized Fixes
+            <span className="bg-[#2a292f] text-[#c6c5d5] text-[12px] px-2 py-0.5 rounded-full font-medium">3</span>
+          </h2>
           
-          <div className="bg-[#131318] border border-[#242430] rounded-[14px] p-5 flex flex-col items-center justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-[#22C55E] opacity-0 group-hover:opacity-5 transition-opacity" />
-            <TrendingUp className="text-[#22C55E] mb-2" size={32} />
-            <h3 className="text-[14px] font-semibold text-[#c6c5d5] mb-1">Grammar</h3>
-            <p className="text-[20px] font-semibold text-[#22C55E]">+5%</p>
-          </div>
-          
-          <div className="bg-[#131318] border border-[#242430] rounded-[14px] p-5 flex flex-col items-center justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-[#818cf8] opacity-0 group-hover:opacity-5 transition-opacity" />
-            <BookOpen className="text-[#818cf8] mb-2" size={32} />
-            <h3 className="text-[14px] font-semibold text-[#c6c5d5] mb-1">Vocabulary</h3>
-            <p className="text-[20px] font-semibold text-[#818cf8]">+3 words</p>
-          </div>
-          
-          <div className="bg-[#131318] border border-[#242430] rounded-[14px] p-5 flex flex-col items-center justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-[#908f9e] opacity-0 group-hover:opacity-5 transition-opacity" />
-            <Mic className="text-[#908f9e] mb-2" size={32} />
-            <h3 className="text-[14px] font-semibold text-[#c6c5d5] mb-1">Fluency</h3>
-            <p className="text-[20px] font-semibold text-[#908f9e]">Stable</p>
-          </div>
-          
+          {MOCK_FIXES.map((fix) => (
+            <TargetedFixCard key={fix.id} fix={fix} />
+          ))}
         </div>
 
-        {/* Actions */}
-        <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 fill-mode-both">
+        {/* Footer Actions */}
+        <div className="w-full flex items-center justify-end border-t border-[#242430] pt-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
           <button 
             onClick={() => router.push('/home')}
-            className="w-full sm:w-auto bg-[#818cf8] text-[#0A0A0F] text-[14px] font-semibold h-[40px] px-8 rounded-lg hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 active:scale-95"
+            className="bg-[#818cf8] text-[#0A0A0F] text-[14px] font-semibold h-[48px] px-8 rounded-[10px] hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 active:scale-95"
           >
-            <span>Next lesson</span>
+            <span>Next Lesson</span>
             <ArrowRight size={18} />
-          </button>
-          <button 
-            onClick={() => router.push('/learn')}
-            className="w-full sm:w-auto bg-transparent text-[#818cf8] text-[14px] font-semibold h-[40px] px-8 rounded-lg hover:bg-[#1b1b20] transition-colors flex items-center justify-center active:scale-95"
-          >
-            Back to learning path
           </button>
         </div>
 

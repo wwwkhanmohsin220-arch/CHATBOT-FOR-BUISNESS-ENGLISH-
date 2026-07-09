@@ -34,12 +34,8 @@ export default function SettingsPage() {
           <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Avatar */}
             <div className="relative flex-shrink-0 group cursor-pointer">
-              <div className="w-[80px] h-[80px] rounded-full overflow-hidden border-2 border-[#818cf8]">
-                <img 
-                  src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=256&auto=format&fit=crop" 
-                  alt="Profile" 
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-[80px] h-[80px] rounded-full overflow-hidden border-2 border-[#818cf8] flex items-center justify-center bg-gradient-to-br from-[#818CF8] to-[#4f46e5]">
+                <span className="text-white text-[32px] font-bold">U</span>
               </div>
               <div className="absolute bottom-0 right-0 bg-[#818cf8] text-[#0A0A0F] rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
                 <Edit2 size={16} />
@@ -95,30 +91,11 @@ export default function SettingsPage() {
         <section className="bg-[#131318] border border-[#242430] rounded-[14px] p-[20px] md:p-[28px]">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-[20px] font-semibold text-[#e4e1e9]">Learning Preferences</h3>
-            <span className="bg-[#2a292f] border border-[#454653] text-[#818cf8] px-3 py-1 rounded-full text-[12px] font-medium">
-              Intermediate
-            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-[12px] font-medium text-[#c6c5d5] mb-1.5">Daily XP Goal</label>
-              <div className="relative">
-                <select 
-                  defaultValue="100"
-                  className="bg-[#1C1C23] border border-[#242430] focus:border-[#818cf8] outline-none w-full rounded-[10px] h-[48px] px-4 appearance-none text-[16px] text-[#e4e1e9] cursor-pointer"
-                >
-                  <option value="50">50 XP (Casual)</option>
-                  <option value="100">100 XP (Regular)</option>
-                  <option value="200">200 XP (Intense)</option>
-                  <option value="300">300 XP (Immersive)</option>
-                </select>
-                <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c6c5d5] pointer-events-none" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[12px] font-medium text-[#c6c5d5] mb-1.5">Coach Personality</label>
+              <label className="block text-[12px] font-medium text-[#c6c5d5] mb-1.5">Coach Voice</label>
               <div className="relative">
                 <select 
                   defaultValue="direct"
@@ -183,21 +160,6 @@ export default function SettingsPage() {
                 <span className="text-[16px] text-[#e4e1e9]">Change Password</span>
               </div>
               <ChevronDown size={20} className="text-[#c6c5d5] -rotate-90" />
-            </button>
-
-            <div className="w-full flex items-center justify-between px-4 py-3 bg-[#1C1C23] border border-[#454653] rounded-[10px]">
-              <div className="flex items-center">
-                <LinkIcon size={20} className="mr-3 text-[#c6c5d5]" />
-                <span className="text-[16px] text-[#e4e1e9]">Google Account</span>
-              </div>
-              <span className="text-xs font-medium bg-[#2a292f] px-2 py-1 rounded text-[#c6c5d5]">
-                Connected
-              </span>
-            </div>
-
-            <button className="w-full flex items-center justify-center px-4 py-3 border border-[#454653] rounded-[10px] hover:bg-[#2a292f] transition-colors text-[14px] font-semibold text-[#e4e1e9]">
-              <Download size={18} className="mr-2" />
-              Export My Data
             </button>
           </div>
 

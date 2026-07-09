@@ -3,9 +3,27 @@
  * @ai-restriction
  * Primary Owner: Umer
  */
-import { Search, Flame, Star, Menu } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Search, Flame, Star, Menu, LogOut, Settings as SettingsIcon } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export function TopNav() {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <header className="h-[56px] bg-[#131318] border-b border-[#1A1A22] sticky top-0 z-30 flex items-center justify-between px-6">
       <div className="flex items-center">
@@ -35,9 +53,37 @@ export function TopNav() {
           <span className="text-[14px] font-bold text-white">2,450</span>
         </div>
         
-        <button className="w-8 h-8 rounded-full bg-gradient-to-br from-[#818CF8] to-[#4f46e5] flex items-center justify-center text-white text-[14px] font-bold ml-2 active:scale-95 transition-transform">
-          U
-        </button>
+        <div className="relative ml-2" ref={dropdownRef}>
+          <button 
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="w-8 h-8 rounded-full bg-gradient-to-br from-[#818CF8] to-[#4f46e5] flex items-center justify-center text-white text-[14px] font-bold active:scale-95 transition-transform"
+          >
+            U
+          </button>
+          
+          {isDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-[#1c1c23] border border-[#242430] rounded-[10px] shadow-xl py-1 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+              <Link 
+                href="/settings"
+                onClick={() => setIsDropdownOpen(false)}
+                className="flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-[#c6c5d5] hover:bg-[#2a292f] hover:text-white transition-colors"
+              >
+                <SettingsIcon size={16} />
+                Profile & Settings
+              </Link>
+              <button 
+                onClick={() => {
+                  setIsDropdownOpen(false);
+                  router.push('/sign-in');
+                }}
+                className="w-full flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-red-400 hover:bg-[#2a292f] transition-colors"
+              >
+                <LogOut size={16} />
+                Log Out
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
