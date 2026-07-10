@@ -8,6 +8,7 @@ import { ThreadedTheory } from "@/components/lesson/ThreadedTheory";
 import { InteractiveQnA } from "@/components/lesson/InteractiveQnA";
 import { ThreadedVoice } from "@/components/lesson/ThreadedVoice";
 import { ThreadedMCQ } from "@/components/lesson/ThreadedMCQ";
+import { QnADrawer } from "@/components/lesson/QnADrawer";
 
 type BlockType = "theory" | "mcq" | "qna" | "voice" | "targeted_fix";
 
@@ -34,7 +35,9 @@ export default function UnifiedLessonPage() {
   // 1. Fetch current node on mount
   const fetchCurrentNode = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/lesson-instances/${instanceId}/nodes/current`);
+      const res = await fetch(`http://localhost:8000/api/lesson-instances/${instanceId}/nodes/current`, {
+        cache: "no-store"
+      });
       const data = await res.json();
       
       if (data.status === "completed") {
@@ -68,7 +71,8 @@ export default function UnifiedLessonPage() {
       const res = await fetch(`http://localhost:8000/api/lesson-instances/${instanceId}/nodes/${nodeId}/attempt`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        cache: "no-store"
       });
       const data = await res.json();
 
@@ -99,7 +103,7 @@ export default function UnifiedLessonPage() {
   };
 
   const handleAskExample = () => {
-    console.log("User asked for an example. In future, this hits QnA endpoint.");
+    window.dispatchEvent(new CustomEvent('open-qna-drawer', { detail: { question: "Can you give me an example?" } }));
   };
 
   const advanceNextBlock = () => {
@@ -207,6 +211,8 @@ export default function UnifiedLessonPage() {
         </AnimatePresence>
 
       </main>
+
+      <QnADrawer instanceId={instanceId} />
     </div>
   );
 }

@@ -52,6 +52,12 @@ MOCK_DB = {
                             "'Let's meet' is too informal for a first impression."
                         ]
                     }
+                },
+                {
+                    "node_id": "node_3",
+                    "type": "voice",
+                    "concept_tag": "tone_formality",
+                    "content": {}
                 }
             ]
         }
@@ -136,4 +142,68 @@ def submit_attempt(instance_id: str, node_id: str, payload: AttemptIn):
         "correct": correct,
         "explanation": explanation,
         "advance_to": instance["current_cursor"]
+    }
+
+class QnAIn(BaseModel):
+    question: str
+
+@router.post("/lesson-instances/{instance_id}/qna")
+def ask_question(instance_id: str, payload: QnAIn):
+    instance = MOCK_DB["instances"].get(instance_id)
+    if not instance:
+        raise HTTPException(status_code=404, detail="Instance not found")
+        
+    import time
+    time.sleep(1.5) # Simulate LLM delay
+
+    q_lower = payload.question.lower()
+    
+    if "weather" in q_lower or "movie" in q_lower:
+        return {
+            "answer_markdown": "I am an AI business coach, so I'm not great at small talk about the weather or movies! But let's get back to our lesson on polite disagreement.",
+            "scope": "off_topic",
+            "related_concept_tag": None,
+            "bridge_line": "Let's focus on the lesson content for now."
+        }
+        
+    # If it's a core question, we mock the 'Director rule #2 branch-miss' by injecting a JIT drill MCQ!
+    current_cursor = int(instance["current_cursor"])
+    
+    # We only inject if we haven't already injected a drill to prevent infinite loops in the mock
+    has_injected = any(n["node_id"].startswith("injected_drill") for n in instance["nodes"])
+    
+    if not has_injected:
+        injected_node = {
+            "node_id": f"injected_drill_{int(time.time())}",
+            "type": "mcq",
+            "concept_tag": "tone_formality_drill",
+            "content": {
+                "question": "Since you just asked about 'would' vs 'want', let's do a quick drill! How would you rewrite: 'I want a refund'?",
+                "options": [
+                    "Give me a refund.",
+                    "I would like to request a refund.",
+                    "I want a refund please."
+                ],
+                "correct_index": 1,
+                "explanations": [
+                    "Too aggressive.",
+                    "Perfectly polite and professional.",
+                    "Adding 'please' helps, but 'want' is still too direct."
+                ]
+            }
+        }
+        # Insert right after the current node!
+        instance["nodes"].insert(current_cursor + 1, injected_node)
+
+        return {
+            "answer_markdown": "That's a great question! In business English, using words like **'would'** and **'could'** softens your tone and makes you sound more professional compared to **'want'** or **'can'**.\n\n*I've just added a quick practice question to your lesson so we can practice this!*",
+            "scope": "core",
+            "related_concept_tag": "tone_formality",
+            "injected_drill": True
+        }
+
+    return {
+        "answer_markdown": "That's a great question! In business English, using words like **'would'** and **'could'** softens your tone and makes you sound more professional compared to **'want'** or **'can'**.",
+        "scope": "core",
+        "related_concept_tag": "tone_formality"
     }
