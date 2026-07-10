@@ -1,27 +1,37 @@
-# Initial AI Prompts for the Team
+# AI Handoff Prompts for Mohsin and Talha
 
-When pulling this branch for the first time, copy and paste the corresponding prompt into your AI IDE (Cursor, Copilot, etc.) to ensure it understands the new structure, its boundaries, and the current state of the project.
-
----
-
-## 👨‍💻 For Mohsin (Backend Architecture & APIs)
-
-**Copy and paste this prompt to your AI:**
-
-> "I am Mohsin. We have just completed a major restructuring of the Buslingo project. We are pivoting to a structured AI-native learning platform. Please read `docs/project_master.md` and `docs/ROADMAP.md` to understand my role and the new architecture. Also read `.agents/AGENTS.md` and enforce all `@ai-restriction` comments found in the `backend/` files. My primary focus is FastAPI backend architecture, PostgreSQL, and API development. The `old/` directory contains legacy code for reference only—do not modify it. I need you to help me start scaffolding the database models in `backend/models/schema.py` and the curriculum REST endpoints in `backend/api/routes.py` based on `shared/api_contract.md`. Do not modify frontend UI components. Let me know when you've read the docs and are ready to start."
+When you pass this branch (`test_concept`) to Mohsin and Talha, they can copy-paste the exact prompts below to their respective AI IDEs. These prompts give their AI immediate, perfectly-scoped context on exactly what they need to build next without breaking the frontend we just perfected.
 
 ---
 
-## 🎧 For Talha (Voice Experience, QA, & Deployment)
+## Prompt for Mohsin's AI (Backend & Database)
 
-**Copy and paste this prompt to your AI:**
+```text
+Hello! Umer just finished Phase 1 on the `test_concept` branch. I am Mohsin, and we need to start my part of the backend work. The Next.js frontend is fully wired up to a fake "Mock Backend" (`backend/api/routes.py`). It currently serves fake JSON and handles progress locally in memory.
 
-> "I am Talha. We have just completed a major restructuring of the Buslingo project. We are pivoting to a structured AI-native learning platform. Please read `docs/project_master.md` and `docs/ROADMAP.md` to understand my role and the new architecture. Also read `.agents/AGENTS.md` and enforce all `@ai-restriction` comments found in the codebase. My primary focus is Voice Experience (ElevenLabs, WebRTC/WebSockets), QA testing, and Deployment. The `old/` directory contains legacy code for reference only—do not modify it. I need you to help me set up the WebSockets voice streaming endpoints in `backend/api/websockets.py` and prepare our testing strategy. Do not modify standard REST routes or frontend UI components unless they are specifically for voice integration. Let me know when you've read the docs and are ready to start."
+Your job is to execute **Phase 2** (The Database & Deterministic Runtime).
+
+1. Please read `docs/buslingo_implementation_blueprint.md` first. This is the ultimate source of truth for our massive new architecture.
+2. Read `docs/project_master.md` and `docs/ROADMAP.md` to understand our overall team goals and design methodologies.
+3. Read `docs/phases_mohsin.md` to see your exact task list.
+4. Throughout the codebase (especially in the skeleton files Umer just pushed), look for `@ai-restriction` tags at the top of the files. You MUST strictly obey these ownership rules so we don't break each other's code.
+5. Your main goal right now is to connect to Supabase, implement the real `LessonBundle` JSON storage, and replace the fake endpoints in `backend/api/routes.py` with real Postgres transactions. 
+6. DO NOT touch the frontend code. Umer has already made it perfect. The API contract is strictly defined in the blueprint. Let's get started on Phase 2!
+```
 
 ---
 
-## 🎨 For Umer (Frontend Architecture & AI Integration)
+## Prompt for Talha's AI (AI Integrations & Infrastructure)
 
-**Copy and paste this prompt to your AI:**
+```text
+Hello! Umer just finished Phase 1 on the `test_concept` branch. I am Talha, and we need to start my part of the AI engineering. The Next.js frontend is fully built and wired up to a dummy backend.
 
-> "I am Umer. We have just completed a major restructuring of the Buslingo project. We are pivoting to a structured AI-native learning platform. Please read `docs/project_master.md` and `docs/ROADMAP.md` to understand my role and the new architecture. Also read `.agents/AGENTS.md` and enforce all `@ai-restriction` comments found in the codebase. My primary focus is Frontend Architecture (Next.js, Tailwind), UI/UX, and AI integration into the frontend. The `old/` directory contains legacy code for reference only—do not modify it. We have scaffolding in `frontend/` and our API shape defined in `shared/api_contract.md`. I need you to help me start building out the global design system and routing layout in Next.js. Do not make architectural changes to the FastAPI backend. Let me know when you've read the docs and are ready to start."
+Your job is to execute your tasks in **Phase 2 & Phase 3** (The AI Compiler & Prompts).
+
+1. Please read `docs/buslingo_implementation_blueprint.md` first. This is the ultimate source of truth. We are NOT calling the LLM synchronously during lessons; we are pre-compiling JSON bundles.
+2. Read `docs/project_master.md` and `docs/ROADMAP.md` to understand the full team scope.
+3. Read `docs/phases_talha.md` to see your exact task list.
+4. Throughout the codebase, look for `@ai-restriction` tags at the top of the files. You MUST strictly obey these ownership rules so we don't break Umer or Mohsin's code.
+5. Your main goal right now is to build `backend/utils/llm.py`. You need to write the `generate_validated()` wrapper that uses Groq (Llama 70b) and strictly enforces Pydantic schemas using our self-correction loop. 
+6. Do NOT touch the frontend UI or the REST API routes. Your job is strictly the Python AI logic, the compiler background tasks, and the Whisper/TTS voice pipeline. Let's get started!
+```

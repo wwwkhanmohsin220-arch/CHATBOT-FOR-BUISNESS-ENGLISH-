@@ -1,0 +1,34 @@
+{
+  "units": [
+    {
+      "id": 1,
+      "position": 1,
+      "title": "Unit 1: The First Impression",
+      "slots": [
+        {
+          "slot_key": "u1l1",
+          "position": 1,
+          "objectives": [
+            "Introduce yourself clearly in a professional setting",
+            "Exchange pleasantries without being overly informal"
+          ],
+          "concept_tags": [
+            "small_talk",
+            "tone_formality"
+          ],
+          "key_vocabulary": [
+            "Pleasure to meet you",
+            "I'm responsible for",
+            "Looking forward to"
+          ],
+          "grammar_points": [
+            "Present simple for roles and responsibilities"
+          ],
+          "example_phrases": [
+            "Hello, my name is Alex. I'm responsible for the marketing team here."
+          ]
+        }
+      ]
+    }
+  ]
+}

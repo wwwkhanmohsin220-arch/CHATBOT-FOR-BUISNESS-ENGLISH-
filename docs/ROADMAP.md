@@ -1,101 +1,77 @@
-# Team Roadmap
+# Team Roadmap (Implementation Blueprint)
 
-This document breaks down the project milestones across the three primary team members (Umer, Mohsin, and Talha). While everyone is expected to contribute across the full stack, the tasks below reflect primary ownership areas.
+This document breaks down the project milestones across the three primary team members (Umer, Mohsin, and Talha) according to the definitive `buslingo_implementation_blueprint.md`.
 
-## Milestone 1: Foundation
-**Umer:**
-- Initialize Next.js frontend, install Tailwind CSS, shadcn/ui, and Framer Motion.
-- Set up core routing (Splash, Login, Signup, Dashboard).
-- Establish consistent frontend design system and global styles.
+## Phase 1: Skeleton
+*Goal: The whole clickable lesson flow with hand-written fake lessons and zero AI code — proves database + endpoints first.*
 
-**Mohsin:**
-- Initialize FastAPI backend with basic routing and configuration.
-- Set up PostgreSQL and Redis connections.
-- Scaffold basic authentication APIs (Login/Signup).
+**Umer (Frontend & Supabase Auth):**
+- Hook up the Next.js frontend `/lesson/[id]` flow to the new REST endpoints.
+- Ensure the Progress Bar uses the deterministic `completed_spine/total_spine` math.
+- **Supabase Task:** Install `@supabase/supabase-js` in Next.js. Build the frontend Auth UI to log in directly via Supabase Auth and manage the client-side session JWT.
 
-**Talha:**
-- Set up GitHub Actions CI for both frontend and backend.
-- Define testing strategy and configure initial test environments (e.g., Pytest, Jest).
-- Prepare staging environment on Vercel and Render/Railway.
+**Mohsin (Backend DB/Architecture & Supabase SQL):**
+- Refactor `api/routes.py` into domain routers.
+- Build the `POST /attempt` transaction that evaluates mock answers and advances the server-side cursor idempotently.
+- **Supabase Task:** Apply the `schema.sql` (Units, Slots, Instances, Nodes, Attempts) to the Supabase project. Configure Row Level Security (RLS) and build the FastAPI `get_current_user` dependency to verify Supabase JWTs.
 
-## Milestone 2: Learning Platform
-**Umer:**
-- Build Dashboard UI, Curriculum navigation, and Unit/Lesson layouts.
-- Connect frontend components to backend API endpoints.
+**Talha (AI & Infrastructure & Supabase Seeding):**
+- Setup GitHub Actions CI/CD to protect the `main` branch.
+- **Supabase Task:** Write Python `scripts/seed_curriculum.py` and `scripts/seed_fixtures.py` that connect directly to the Supabase Postgres instance to insert the mock dummy data.
 
-**Mohsin:**
-- Design database schemas for Units, Lessons, and Curriculum.
-- Build REST APIs for fetching curriculum and lesson details.
-- Implement RAG integration (ChromaDB) for content retrieval.
+---
 
-**Talha:**
-- Create and run integration tests for the curriculum fetching APIs.
-- Assist Umer with UI polish and responsive layouts.
-- Assist Mohsin in populating the database with mock/starter lesson content.
+## Phase 2: Brain
+*Goal: The Compiler + Quick Fix injection (fake lessons become generated ones).*
 
-## Milestone 3: Voice Experience
-**Umer:**
-- Design and integrate the Voice Practice interface.
-- Hook up live visualizer UI and coordinate states.
+**Umer (Frontend):**
+- Build polished async polling UI (e.g. "Personalizing your lesson...") handling the 202 `compiling` HTTP response.
+- Ensure the Quick Fix (TargetedFixCard) dynamically renders when the backend injects it.
 
-**Mohsin:**
-- Extend WebSockets support for real-time streaming.
-- Integrate the AI conversational logic and maintain conversation states.
+**Mohsin (Backend DB/Architecture):**
+- Implement `FastAPI BackgroundTasks` to trigger the AI generation pipeline at the end of a lesson.
+- Build the **Director Rule** into the attempt transaction: automatically injecting a branch on the 2nd failed attempt.
+- Handle concurrent requests with optimistic cursor updates.
 
-**Talha:**
-- Integrate ElevenLabs TTS and handle Web Speech API configuration.
-- Build the Transcript management layer and Voice interruption logic.
-- Conduct extensive testing on voice latency and robustness.
+**Talha (AI & Infrastructure):**
+- Build the `Groq` client wrapper.
+- Implement the vital `generate_validated` function to force strict Pydantic JSON outputs.
+- Write the `prompts/compile.py` to generate the entire `LessonBundle`.
 
-## Milestone 4: Writing
-**Umer:**
-- Build the Writing interface/editor.
-- Implement UI for AI grammar feedback and rewrite suggestions.
+---
 
-**Mohsin:**
-- Develop the AI coach prompts for writing evaluation.
-- Build backend endpoints to assess grammar and provide suggestions.
+## Phase 3: Assessment
+*Goal: Writing grading, QnA, radar chart, SRS flashcards.*
 
-**Talha:**
-- Write QA tests for different writing inputs (good grammar, bad grammar, edge cases).
-- Fine-tune prompting latency and ensure smooth AI fallback logic.
+**Umer (Frontend):**
+- Connect the `/progress` Radar Chart to the 6-axis backend data.
+- Connect `WritingAssessmentPage` to the new grading endpoint, showing the JSON rubric.
+- Hook up the "Ask Anything" interactive QnA drawer to the backend.
 
-## Milestone 5: Progress
-**Umer:**
-- Build UI components for XP, Levels, Streaks, and Achievements.
-- Integrate progress metrics into the Dashboard and Profile pages.
+**Mohsin (Backend DB/Architecture):**
+- Implement the Exponential Moving Average (EMA) math for `user_stats` radar axes.
+- Implement the SuperMemo-2 (SM-2) math in the SRS `/reviews` endpoint.
+- Connect the writing submit endpoint to the LLM.
 
-**Mohsin:**
-- Architect the progress tracking engine (XP, streaks, levels) in PostgreSQL.
-- Build backend APIs for logging progress and unlocking achievements.
+**Talha (AI & Infrastructure):**
+- Write the `prompts/grade.py` to output strictly formatted `WritingRubric` JSON.
+- Write the `prompts/qna.py` to classify and answer user questions.
+- Write the `prompts/summary.py` for the async coach summary.
 
-**Talha:**
-- Test streak edge cases (timezones, consecutive days).
-- Help integrate progress milestones into the deployed staging app.
+---
 
-## Milestone 6: Analytics
-**Umer:**
-- Build the Performance Analytics Dashboard and Skill tracking UI.
-- Implement personalized recommendation views.
+## Phase 4: Voice & Polish
+*Goal: Voice + dashboard aggregate + demo video.*
 
-**Mohsin:**
-- Develop the analytics engine to aggregate student memory and weakness detection.
-- Build API endpoints to serve performance metrics.
+**Umer (Frontend):**
+- Implement the "Walkie-Talkie" tap-to-talk voice UI, sending blobs to `/transcribe`.
+- Hook up the Home Dashboard widgets to the massive `/api/dashboard` aggregate endpoint.
 
-**Talha:**
-- Write end-to-end (E2E) tests for the complete user journey through lessons to analytics.
-- Ensure analytical data is accurately reflected in staging.
+**Mohsin (Backend DB/Architecture):**
+- Build the `/api/dashboard` endpoint to serve Streak, XP, SRS counts, and Next Lesson in one call.
+- Provide the clean REST Interface for the Voice pipeline (`/voice/turn`).
 
-## Milestone 7: Deployment
-**Umer:**
-- Finalize responsive improvements and UI polish.
-- Final portfolio presentation adjustments.
-
-**Mohsin:**
-- Optimize database queries and API response times.
-- Ensure backend stability under simulated load.
-
-**Talha:**
-- Final production deployments (Docker, Render, Vercel).
-- Set up monitoring and alerting (e.g., Sentry).
-- Final bug fixing and overall Quality Assurance sign-off.
+**Talha (AI & Infrastructure):**
+- Integrate Groq's Whisper API for `POST /api/transcribe`.
+- Build the TTS decision tree (Groq TTS -> Browser `speechSynthesis` -> ElevenLabs).
+- Monitor `llm_failures` table for prompt degradation.

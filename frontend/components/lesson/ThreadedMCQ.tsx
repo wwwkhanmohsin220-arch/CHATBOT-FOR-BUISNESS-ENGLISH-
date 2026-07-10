@@ -1,34 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { Bot, CheckCircle2, AlertCircle } from "lucide-react";
+import { Bot, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MultipleChoice } from "./MultipleChoice";
 
 interface ThreadedMCQProps {
   question: string;
-  options: { id: string; text: string; isCorrect?: boolean; explanation?: string }[];
-  onComplete: () => void;
+  options: string[];
+  onSubmitAttempt: (answerIndex: number) => Promise<void>;
+  feedback: { correct: boolean; explanation?: string } | null;
+  onAdvance: () => void;
 }
 
-type FeedbackState = "idle" | "result";
+export function ThreadedMCQ({ question, options, onSubmitAttempt, feedback, onAdvance }: ThreadedMCQProps) {
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-export function ThreadedMCQ({ question, options, onComplete }: ThreadedMCQProps) {
-  const [selectedId, setSelectedId] = useState<string>("");
-  const [state, setState] = useState<FeedbackState>("idle");
-
-  const handleSubmit = () => {
-    if (!selectedId) return;
-    setState("result");
+  const handleSubmit = async () => {
+    if (selectedIdx === null) return;
+    setIsSubmitting(true);
+    await onSubmitAttempt(selectedIdx);
+    setIsSubmitting(false);
   };
 
-  const selectedOption = options.find(o => o.id === selectedId);
-  const isCorrect = selectedOption?.isCorrect;
+  const isCorrect = feedback?.correct;
 
   // We map the options to the format MultipleChoice expects
-  const mcqOptions = options.map(o => ({
-    id: o.id,
-    text: o.text
+  const mcqOptions = options.map((optText, idx) => ({
+    id: idx.toString(),
+    text: optText
   }));
 
   return (
@@ -55,24 +56,24 @@ export function ThreadedMCQ({ question, options, onComplete }: ThreadedMCQProps)
         <MultipleChoice 
           name={`mcq-${question.length}`}
           options={mcqOptions}
-          selectedValue={selectedId}
-          onChange={state === "idle" ? setSelectedId : () => {}}
+          selectedValue={selectedIdx !== null ? selectedIdx.toString() : ""}
+          onChange={(id) => { if (!feedback && !isSubmitting) setSelectedIdx(parseInt(id)); }}
         />
         
-        {state === "idle" && (
+        {!feedback && (
           <button 
             onClick={handleSubmit}
-            disabled={!selectedId}
+            disabled={selectedIdx === null || isSubmitting}
             className="self-end bg-[#818cf8] text-[#0A0A0F] text-[14px] font-semibold h-[40px] px-6 rounded-[10px] hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:active:scale-100 mt-2"
           >
-            Submit Answer
+            {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : "Submit Answer"}
           </button>
         )}
       </div>
 
       {/* Feedback Result */}
       <AnimatePresence>
-        {state === "result" && selectedOption && (
+        {feedback && (
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -94,14 +95,14 @@ export function ThreadedMCQ({ question, options, onComplete }: ThreadedMCQProps)
                 </span>
               </div>
               
-              {selectedOption.explanation && (
+              {feedback.explanation && (
                 <p className="text-[15px] text-[#c6c5d5] leading-relaxed">
-                  {selectedOption.explanation}
+                  {feedback.explanation}
                 </p>
               )}
 
               <button 
-                onClick={onComplete}
+                onClick={onAdvance}
                 className="mt-3 self-start bg-[#2a292f] text-white border border-[#464553] text-[14px] font-semibold h-[40px] px-6 rounded-[10px] hover:bg-[#35343a] transition-colors active:scale-95"
               >
                 Continue Lesson

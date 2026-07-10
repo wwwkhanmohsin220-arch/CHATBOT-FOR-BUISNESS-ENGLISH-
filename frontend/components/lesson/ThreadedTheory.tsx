@@ -1,18 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bot, Lightbulb } from "lucide-react";
+import { Bot, Lightbulb, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface ThreadedTheoryProps {
   content: string;
-  onComplete: () => void;
+  onSubmitAttempt: () => Promise<void>;
   onAskExample: () => void;
 }
 
-export function ThreadedTheory({ content, onComplete, onAskExample }: ThreadedTheoryProps) {
+export function ThreadedTheory({ content, onSubmitAttempt, onAskExample }: ThreadedTheoryProps) {
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Typewriter effect
   useEffect(() => {
@@ -31,6 +32,12 @@ export function ThreadedTheory({ content, onComplete, onAskExample }: ThreadedTh
 
     return () => clearInterval(intervalId);
   }, [content]);
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    await onSubmitAttempt();
+    setIsSubmitting(false);
+  };
 
   return (
     <motion.div 
@@ -63,17 +70,19 @@ export function ThreadedTheory({ content, onComplete, onAskExample }: ThreadedTh
         >
           <button 
             onClick={onAskExample}
-            className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-[#818cf8] border border-[#818cf8] hover:bg-[#818cf8]/10 transition-colors text-[14px] font-semibold"
+            disabled={isSubmitting}
+            className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-[#818cf8] border border-[#818cf8] hover:bg-[#818cf8]/10 transition-colors text-[14px] font-semibold disabled:opacity-50"
           >
             <Lightbulb size={16} />
             Give me an example
           </button>
           
           <button 
-            onClick={onComplete}
-            className="bg-[#818cf8] text-[#0A0A0F] text-[14px] font-semibold h-[40px] px-6 rounded-[10px] hover:bg-[#bdc2ff] transition-colors flex items-center justify-center active:scale-95"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="bg-[#818cf8] text-[#0A0A0F] text-[14px] font-semibold h-[40px] px-6 rounded-[10px] hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
           >
-            Got it, let's practice
+            {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : "Got it, let's practice"}
           </button>
         </motion.div>
       )}
