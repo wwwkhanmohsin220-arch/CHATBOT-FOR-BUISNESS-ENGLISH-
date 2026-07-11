@@ -38,6 +38,7 @@ class VoiceState:
     coach_voice: str
     ai_persona: str
     objectives: list[str]
+    scenario: str = ""
     objectives_hit: set[str] = field(default_factory=set)
     history: list[VoiceMessage] = field(default_factory=list)
     turn_count: int = 0
@@ -138,6 +139,7 @@ async def generate_voice_reply(state: VoiceState, transcript: str) -> tuple[str,
             transcript=transcript,
             objectives=state.objectives,
             ai_persona=state.ai_persona,
+            scenario=state.scenario,
             coach_voice=state.coach_voice,
             level=state.level,
         )
@@ -182,6 +184,7 @@ async def get_or_create_state(
         level=(profile["level"] if profile else "beginner"),
         coach_voice=(profile["coach_voice"] if profile else "balanced"),
         ai_persona=str(content.get("ai_persona") or "A supportive business English coach."),
+        scenario=str(content.get("scenario") or ""),
         objectives=list(content.get("objectives") or []),
     )
     opening_line = content.get("opening_line")

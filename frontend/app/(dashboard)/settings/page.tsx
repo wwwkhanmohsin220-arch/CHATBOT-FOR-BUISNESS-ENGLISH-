@@ -1,7 +1,7 @@
 "use client";
 /**
  * @ai-restriction
- * Primary Owner: Umer
+ * Primary Owner: Mohsin
  */
 import { useState } from "react";
 import { Edit2, CheckCircle, ChevronDown, Key, Link as LinkIcon, Download, Trash2 } from "lucide-react";
@@ -48,7 +48,7 @@ export default function SettingsPage() {
                 <label className="block text-[12px] font-medium text-[#c6c5d5] mb-1.5">Display Name</label>
                 <input 
                   type="text" 
-                  defaultValue="Umer"
+                  defaultValue="Alex Mercer"
                   className="bg-[#1C1C23] border border-[#242430] focus:border-[#818cf8] outline-none w-full rounded-[10px] h-[48px] px-4 text-[16px] text-[#e4e1e9] transition-colors"
                 />
               </div>
@@ -58,7 +58,7 @@ export default function SettingsPage() {
                 <div className="relative">
                   <input 
                     type="email" 
-                    defaultValue="umer@buslingo.com"
+                    defaultValue="alex.mercer@example.com"
                     readOnly
                     className="bg-[#1C1C23] border border-[#242430] w-full rounded-[10px] h-[48px] px-4 text-[16px] text-[#c6c5d5] cursor-not-allowed opacity-80"
                   />

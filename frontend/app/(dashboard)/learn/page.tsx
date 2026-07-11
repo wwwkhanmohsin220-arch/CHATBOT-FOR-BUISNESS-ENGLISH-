@@ -9,27 +9,40 @@ import { UnitCard, Unit } from "@/components/curriculum/UnitCard";
 const mockCurriculum: Unit[] = [
   {
     id: "unit-1",
-    title: "Unit 1: The First Impression",
-    status: "in_progress",
-    completedLessons: 1,
-    totalLessons: 3,
-    lessons: [
-      { id: "u1l1", title: "Lesson 1: Professional Introductions", status: "completed", href: "/lesson/u1l1" },
-      { id: "u1l2", title: "Lesson 2: Small Talk with Clients", status: "current", href: "/lesson/u1l2" },
-      { id: "u1l3", title: "Lesson 3: Exchanging Contact Info", status: "locked" }
-    ]
+    title: "Unit 1: Professional Introductions",
+    status: "completed",
+    score: 92,
+    completedLessons: 4,
+    totalLessons: 4,
   },
   {
     id: "unit-2",
     title: "Unit 2: Email Communication",
-    status: "locked",
+    status: "completed",
+    score: 85,
+    completedLessons: 5,
     totalLessons: 5,
   },
   {
     id: "unit-3",
     title: "Unit 3: Meeting Communication",
-    status: "locked",
+    status: "in_progress",
+    completedLessons: 3,
     totalLessons: 5,
+    assessmentUnlocked: true,
+    lessons: [
+      { id: "l1", title: "Lesson 1: Structuring an Agenda", status: "completed" },
+      { id: "l2", title: "Lesson 2: Opening and Chairing", status: "completed" },
+      { id: "l3", title: "Lesson 3: Managing Interruptions", status: "completed" },
+      { id: "l4", title: "Lesson 4: Disagreeing Politely", status: "current", href: "/lesson/unit3-lesson4" },
+      { id: "l5", title: "Lesson 5: Closing and Action Items", status: "locked" },
+    ]
+  },
+  {
+    id: "unit-4",
+    title: "Unit 4: Presentations",
+    status: "locked",
+    totalLessons: 6,
   }
 ];
 

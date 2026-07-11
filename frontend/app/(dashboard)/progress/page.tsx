@@ -1,7 +1,7 @@
 "use client";
 /**
  * @ai-restriction
- * Primary Owner: Umer
+ * Primary Owner: Mohsin
  */
 import { TrendingUp, CalendarDays, BookOpen, FileText } from "lucide-react";
 import { StatCard } from "@/components/analytics/StatCard";

@@ -11,9 +11,10 @@ interface ThreadedMCQProps {
   onSubmitAttempt: (answerIndex: number) => Promise<void>;
   feedback: { correct: boolean; explanation?: string } | null;
   onAdvance: () => void;
+  onTryAgain?: () => void;
 }
 
-export function ThreadedMCQ({ question, options, onSubmitAttempt, feedback, onAdvance }: ThreadedMCQProps) {
+export function ThreadedMCQ({ question, options, onSubmitAttempt, feedback, onAdvance, onTryAgain }: ThreadedMCQProps) {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -102,10 +103,10 @@ export function ThreadedMCQ({ question, options, onSubmitAttempt, feedback, onAd
               )}
 
               <button 
-                onClick={onAdvance}
+                onClick={isCorrect ? onAdvance : (onTryAgain || onAdvance)}
                 className="mt-3 self-start bg-[#2a292f] text-white border border-[#464553] text-[14px] font-semibold h-[40px] px-6 rounded-[10px] hover:bg-[#35343a] transition-colors active:scale-95"
               >
-                Continue Lesson
+                {isCorrect ? "Continue Lesson" : "Try Again"}
               </button>
             </div>
           </motion.div>

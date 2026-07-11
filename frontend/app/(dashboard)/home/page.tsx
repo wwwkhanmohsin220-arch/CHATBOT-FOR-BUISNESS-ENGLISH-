@@ -1,7 +1,7 @@
 "use client";
 /**
  * @ai-restriction
- * Primary Owner: Umer
+ * Primary Owner: Mohsin
  */
 import { Flag, Flame, ArrowRight, Bookmark } from "lucide-react";
 import Link from "next/link";

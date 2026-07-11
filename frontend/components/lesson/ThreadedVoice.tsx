@@ -1,4 +1,8 @@
 "use client";
+/**
+ * @ai-restriction
+ * Primary Owner: Talha
+ */
 
 import { useState, useRef, useEffect } from "react";
 import { Mic, Bot } from "lucide-react";
@@ -175,13 +179,16 @@ export function ThreadedVoice({ instanceId, nodeId, onEndSession }: ThreadedVoic
   };
 
   const handleEndSession = async () => {
+    setIsProcessing(true);
     try {
       await fetch(`http://localhost:8000/api/lesson-instances/${instanceId}/voice/finish`, {
         method: "POST",
       });
       onEndSession();
     } catch (error) {
-      console.error("Error ending voice session:", error);
+      console.error("Error ending session:", error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 

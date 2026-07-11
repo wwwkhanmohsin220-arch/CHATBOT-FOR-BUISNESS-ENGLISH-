@@ -115,8 +115,8 @@ async def transcribe_audio(
             temperature=temperature,
         )
 
-async def generate_voice_reply(*, transcript: str, objectives: list[str], ai_persona: str, coach_voice: str, level: str) -> dict[str, Any]:
-    messages = build_voice_reply_messages(transcript, objectives, ai_persona, coach_voice, level)
+async def generate_voice_reply(*, transcript: str, objectives: list[str], ai_persona: str, scenario: str, coach_voice: str, level: str) -> dict[str, Any]:
+    messages = build_voice_reply_messages(transcript, objectives, ai_persona, scenario, coach_voice, level)
     reply_text = await chat(messages)
     
     try:
@@ -124,7 +124,8 @@ async def generate_voice_reply(*, transcript: str, objectives: list[str], ai_per
         
         # Select voice based on coach_voice
         voice_id = None
-        if coach_voice.lower() == "male":
+        safe_voice = coach_voice or "female"
+        if safe_voice.lower() == "male":
             voice_id = "CwhRBWXzGAHq8TQ4Fs17" # Rogers
         else:
             voice_id = "EST9Ui6982FZPSi7gCHi" # Elise (female default)

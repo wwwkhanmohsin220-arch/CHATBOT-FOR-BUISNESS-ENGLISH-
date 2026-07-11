@@ -176,25 +176,28 @@ The entire `scripts/` directory **does not exist**. The blueprint requires:
 
 > **Exit criterion:** A user can click through 6 different lessons from the curriculum map, with content coming from Postgres. Zero AI code runs.
 
-#### Mohsin (Backend Architect)
+#### Mohsin (Backend)
 - [ ] Apply the full DDL (`schema.sql` + `qna_exchanges` table) to the live Supabase database
 - [ ] Add RLS policies (`user_id = auth.uid()`) on all user-owned tables
+- [ ] Build `GET /api/curriculum` — returns units → slots with per-user status (completed/in_progress/available/locked)
 - [ ] Build `POST /api/lessons/{slot_id}/start` — get-or-create instance, return 202 if compiling
 - [ ] Build `GET /api/lesson-instances/{id}` — status + progress (compile poll + crash resume)
+- [ ] Build `GET /api/me` and `PATCH /api/me/settings`
 - [ ] Build `POST /api/lesson-instances/{id}/complete` — full transaction: status update, idempotent XP, activity/streak upsert, fire background compile for next slot
 - [ ] Fix `POST /attempt` to use real `spine_progress()` calculation from DB (not hardcoded)
 
-#### Talha (AI Brain & Voice API)
+#### Talha (AI/Infrastructure)
 - [ ] Create `scripts/seed_curriculum.py` — parse `curriculum.json` → upsert `units` + `lesson_slots`
 - [ ] Create `scripts/seed_fixtures.py` — insert 6 hand-written lesson bundles (2 units × 3 lessons) with status `ready` into the database for testing
 - [ ] Expand `curriculum.json` to 2 units × 3 lessons with proper `node_template`, full `concept_tags`, vocabulary, grammar, and examples per slot
 - [ ] Create `scripts/seed_vocab.py` — populate `vocab_terms` table with terms from curriculum
 
-#### Umer (Full-Stack RAG Lead & Core UX)
-- [ ] **Build RAG pgvector Database Schema** — define vector columns and indexing strategy in Supabase
+#### Umer (Frontend)
 - [ ] **Rewrite `/learn` page** — replace `mockCurriculum` with `fetch('GET /api/curriculum')`, render real unlock states, each lesson links to `/lesson/{slot_key}`
 - [ ] **Rewrite `/lesson/[id]/page.tsx`** — remove `instanceId = "test"`, call `POST /api/lessons/{slot_id}/start`, handle 202 compiling status with a "Personalizing your lesson…" animation, read `total_spine` from backend
 - [ ] **Build cold-start animation** — poll `GET /api/lesson-instances/{id}` every 1.5s while `status === "compiling"`, show animated loading screen
+- [ ] **Connect `/home` dashboard** — replace all mocked data with `fetch('GET /api/dashboard')` (greeting, daily goal, streak, weekly dots, continue lesson card, SRS due count)
+- [ ] **Connect Settings page** — wire level, coach_voice, daily_goal dropdowns to `PATCH /api/me/settings`
 - [ ] **Connect Onboarding** — after onboarding completes, call `POST /api/auth/sync` to create the user profile with the chosen level and goals
 - [ ] **Add MCQ Retry button** — allow re-attempt after wrong answer (Director fires on 2nd fail)
 - [ ] **Fix progress bar** — read `completed_spine` and `total_spine` from attempt response
@@ -217,8 +220,7 @@ The entire `scripts/` directory **does not exist**. The blueprint requires:
 - [ ] Write `prompts/voice.py` — the voice system prompt per §7.2: persona, max 2 sentences, objective steering, coach_voice variants
 - [ ] Test compile end-to-end: slot context → Groq → `LessonBundle` validates → persisted → frontend loads
 
-#### Umer (Full-Stack RAG Lead & Core UX)
-- [ ] **Build RAG Data Ingestion pipeline** — (chunking PDF/Docs, generating embeddings via Groq/OpenAI, and inserting into `pgvector`)
+#### Umer (Frontend)
 - [ ] **Build error boundaries** — if compile fails, show "We couldn't build this lesson, tap to retry" instead of a crash
 - [ ] **Validate Targeted Fix rendering** — ensure `TargetedFixCard.tsx` renders beautifully when the backend returns an `injected_node` with real compiled content (not just the demo Quick Fix)
 - [ ] **Test the full loop** — sign up → onboarding → first lesson compiles → complete → next lesson auto-compiles → resume after browser close
@@ -229,27 +231,26 @@ The entire `scripts/` directory **does not exist**. The blueprint requires:
 
 > **Exit criterion:** `/progress` radar moves after a session. QnA drawer gives live AI answers. Writing gets graded. SRS reviews work.
 
-#### Mohsin (Backend DB & Dashboard Frontend)
+#### Mohsin (Backend)
 - [ ] Build `POST /api/lesson-instances/{id}/qna` — full route per §5.5: call `generate_validated(QnAResponse)`, persist to `qna_exchanges`, track consecutive off_topic for productive-redirect, implement Director rule #2 (question cluster → injection)
 - [ ] Build `GET /api/progress` — `{radar: {6 axes from user_stats}, activity: [{day, minutes, xp}] x 7}`
 - [ ] Build `GET /api/lesson-instances/{id}/summary` — poll endpoint for async coach summary
 - [ ] Wire `POST /api/lesson-instances/{id}/complete` to fire `generate_coach_summary()` as a background task
 - [ ] Build `POST /api/transcribe` as a standalone utility route (audio blob → Groq Whisper → text)
-- [ ] **Connect Radar Chart** — replace mock data in `/progress` with `fetch('GET /api/progress')`, wire 6 axes (writing, listening, grammar, vocabulary, tone, fluency)
-- [ ] **Connect Writing Assessment** — when user submits draft on writing node, call `POST /api/lesson-instances/{id}/writing/submit`, show loading spinner (2-4s), render the returned `WritingRubric` (tone/clarity/structure scores + suggested rewrite + overall comment)
-- [ ] **Connect SRS Vocabulary page** — replace `mockVocabulary` with `fetch('GET /api/srs/due')`, wire "Got It" / "Still Learning" buttons to `POST /api/srs/reviews`, show due count
-- [ ] **Build Session Report Card (dynamic)** — replace `MOCK_FIXES` with polling `GET /api/lesson-instances/{id}/summary`, show confetti animation while `status === "pending"`, render real `prioritized_fixes` and `summary_markdown` when ready
-- [ ] **Connect Activity Heatmap** — wire to real `activity` data from `/api/progress`
 
-#### Talha (AI Brain & Voice API)
+#### Talha (AI/Infrastructure)
 - [ ] **Rewrite `prompts/grade.py`** to match blueprint §8: literal JSON example, anchored score criteria (9-10/5-6/0-4), `suggested_rewrite` instruction, `detected_concept_errors` with canonical tags, per-`coach_voice` delivery
 - [ ] **Rewrite `prompts/qna.py`** to match blueprint §5.5: scope policy (core = full answer, adjacent = brief + bridge_line, off_topic = friendly + bridge), never-scold rule, grounding in current node + slot context
 - [ ] **Rewrite `prompts/coach.py`** to match blueprint §8: `CoachSummary` schema with `overall_scores`, `summary_markdown`, `prioritized_fixes: [{concept_tag, why, example_from_user}]`, `next_lesson_focus`
 - [ ] Build the `CoachSummary` Pydantic schema in `models/schema.py`
 
-#### Umer (Full-Stack RAG Lead & Core UX)
-- [ ] **Build RAG Retrieval API (`POST /api/qna/semantic-search`)** — receive query, create embedding, perform Cosine Similarity search on `pgvector`, return relevant chunks
+#### Umer (Frontend)
+- [ ] **Connect Radar Chart** — replace mock data in `/progress` with `fetch('GET /api/progress')`, wire 6 axes (writing, listening, grammar, vocabulary, tone, fluency)
+- [ ] **Connect Writing Assessment** — when user submits draft on writing node, call `POST /api/lesson-instances/{id}/writing/submit`, show loading spinner (2-4s), render the returned `WritingRubric` (tone/clarity/structure scores + suggested rewrite + overall comment)
 - [ ] **Wire QnA Drawer to backend** — `QnADrawer.tsx` should call `POST /api/lesson-instances/{id}/qna` with the user's question, display the markdown answer, handle `scope` display (show bridge_line for adjacent/off_topic), render injected_node if returned
+- [ ] **Connect SRS Vocabulary page** — replace `mockVocabulary` with `fetch('GET /api/srs/due')`, wire "Got It" / "Still Learning" buttons to `POST /api/srs/reviews`, show due count
+- [ ] **Build Session Report Card (dynamic)** — replace `MOCK_FIXES` with polling `GET /api/lesson-instances/{id}/summary`, show confetti animation while `status === "pending"`, render real `prioritized_fixes` and `summary_markdown` when ready
+- [ ] **Connect Activity Heatmap** — wire to real `activity` data from `/api/progress`
 
 ---
 
@@ -257,21 +258,21 @@ The entire `scripts/` directory **does not exist**. The blueprint requires:
 
 > **Exit criterion:** Full session start-to-confetti with voice. Demo video recorded.
 
-#### Mohsin (Backend DB & Dashboard Frontend)
-- [ ] Build `GET /api/dashboard` aggregate endpoint — ensure it returns real `daily_goal`, `streak`, `next_lesson`, `srs_due_count`
+#### Mohsin (Backend)
 - [ ] Finalize `POST /api/lesson-instances/{id}/voice/turn` — wire to real Groq Whisper + LLM reply (not the fake string)
 - [ ] Finalize `POST /api/lesson-instances/{id}/voice/finish` — advance cursor, fire async `score_voice_session()` background task
 - [ ] Wire `score_voice_session()` to `generate_validated(VoiceScore)` → fan out to `stat_events`
+- [ ] Build `GET /api/dashboard` aggregate endpoint (if not done in Phase 1) — ensure it returns real `daily_goal`, `streak`, `next_lesson`, `srs_due_count`
 
-#### Talha (AI Brain, Voice API & Voice Frontend)
-- [ ] **Build Walkie-Talkie Voice UI** — tap-to-talk button using `MediaRecorder` API, record webm/opus blob, send to `POST /api/lesson-instances/{id}/voice/turn`, receive and play back `reply_audio_b64` (or fall back to `speechSynthesis` if null), show waveform/visualizer animation
+#### Talha (AI/Infrastructure)
 - [ ] **Build the TTS provider interface** — `TTS_PROVIDER=groq|browser|elevenlabs` with runtime selection per §7.5
 - [ ] Wire `services/tts.py` to support all 3 backends: Groq TTS (first choice), browser speechSynthesis fallback (frontend), ElevenLabs (demo only)
 - [ ] Wire `generate_voice_reply()` in `client.py` to use the real Groq 70B with the voice system prompt (replace the fake string)
 - [ ] Wire `generate_voice_score()` in `client.py` to use `generate_validated(VoiceScore)` (replace hardcoded scores)
 - [ ] Set up basic CI/CD: GitHub Actions to run `next build` and `pytest` on every commit
 
-#### Umer (Full-Stack RAG Lead & Core UX)
+#### Umer (Frontend)
+- [ ] **Build Walkie-Talkie Voice UI** — tap-to-talk button using `MediaRecorder` API, record webm/opus blob, send to `POST /api/lesson-instances/{id}/voice/turn`, receive and play back `reply_audio_b64` (or fall back to `speechSynthesis` if null), show waveform/visualizer animation
 - [ ] **Voice node objectives** — display the scenario, AI persona, and objectives list; check off objectives as `objectives_hit` comes back from each turn; auto-wrap when all met or turn_count ≥ 12
 - [ ] **Confetti + coach summary on complete** — celebratory animation, poll for async summary, render when ready
 - [ ] **Final polish pass** — responsive layout testing, micro-animation tuning, loading state consistency, edge case handling (network errors, empty states)
@@ -284,8 +285,7 @@ The entire `scripts/` directory **does not exist**. The blueprint requires:
 | Area | Owner | Key Files |
 |---|---|---|
 | Database DDL + RLS | Mohsin | `backend/schema.sql`, Supabase SQL Editor |
-| API Routes (Stateful) | Mohsin | `backend/api/lessons.py`, `backend/api/auth.py` |
-| API Routes (Read-Only) | Umer | `backend/api/dashboard.py`, `backend/api/me.py`, `backend/api/curriculum.py` |
+| API Routes | Mohsin | `backend/api/*.py` |
 | Pydantic Schemas | Mohsin + Talha | `backend/models/schema.py` |
 | AI Prompts | Talha | `backend/prompts/*.py` |
 | AI Client + generate_validated | Talha | `backend/utils/llm.py`, `backend/app/ai/*.py` |

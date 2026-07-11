@@ -200,11 +200,11 @@ async def get_dashboard(
             ),
             next_lesson=NextLessonSchema(
                 instance_id="test",
-                slot_key="u1l2",
-                title="Unit 1: Small Talk with Clients",
+                slot_key="u1l1",
+                title="Unit 1: The First Impression",
                 status="in_progress",
                 current_node_index=2.0,
-                lesson_position=2
+                lesson_position=1
             ),
             srs_due_count=14
         )

@@ -92,10 +92,8 @@ export default function UnifiedLessonPage() {
       // But we DO append injected nodes if they were returned.
       if (data.injected_node) {
          setNodes(prev => [...prev, data.injected_node]);
-      } else if (data.correct) {
-         // Only fetch next if we got it right
-         await fetchCurrentNode();
       }
+      return data;
 
     } catch (error) {
       console.error("Error submitting attempt:", error);
@@ -140,25 +138,52 @@ export default function UnifiedLessonPage() {
         {block.type === "theory" && (
           <ThreadedTheory 
             content={block.content?.text || ""}
-            onSubmitAttempt={() => submitAttempt(block.node_id)}
+            onSubmitAttempt={async () => {
+              const data = await submitAttempt(block.node_id);
+              if (data?.correct) {
+                await fetchCurrentNode();
+              }
+            }}
             onAskExample={handleAskExample}
           />
         )}
         
         {block.type === "mcq" && (
-          <ThreadedMCQ
-            question={block.content?.question || ""}
-            options={block.content?.options || []}
-            onSubmitAttempt={(idx) => submitAttempt(block.node_id, idx)}
-            feedback={feedback}
-            onAdvance={advanceNextBlock}
+          <ThreadedMCQ 
+            question={block.content.question}
+            options={block.content.options}
+            onSubmitAttempt={async (idx) => {
+              const data = await submitAttempt(block.node_id, idx);
+              // We handle next steps in onAdvance or Try Again
+            }}
+            feedback={feedbacks[block.node_id]}
+            onAdvance={async () => {
+              // Check if it was correct
+              const f = feedbacks[block.node_id];
+              if (f?.correct) {
+                await fetchCurrentNode();
+              }
+            }}
+            onTryAgain={() => {
+              // Clear feedback so they can try again
+              setFeedbacks(prev => {
+                const next = { ...prev };
+                delete next[block.node_id];
+                return next;
+              });
+            }}
           />
         )}
 
         {block.type === "targeted_fix" && (
            <ThreadedTheory 
              content={block.content?.text || "Quick fix: Let's review this concept."}
-             onSubmitAttempt={() => submitAttempt(block.node_id)}
+             onSubmitAttempt={async () => {
+               const data = await submitAttempt(block.node_id);
+               if (data?.correct) {
+                 await fetchCurrentNode();
+               }
+             }}
              onAskExample={handleAskExample}
            />
         )}

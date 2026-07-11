@@ -1,0 +1,42 @@
+Umer owns
+RAG end to end
+document chunking and embedding
+pgvector / vector schema
+semantic search API like POST /api/qna/semantic-search
+qna_exchanges and retrieval storage
+the core lesson UI, especially threaded lesson components
+anything that makes the lesson feel interactive on the frontend
+Mohsin own
+the main Supabase/Postgres backend schema
+user_stats, lesson_instances, lesson_nodes, lesson_branches
+FastAPI state machines like POST /attempt
+dashboard and progress APIs
+dashboard frontend wiring
+progress/radar chart data flow
+settings and home-page backend integration
+So the clean boundary is:
+Umer = knowledge retrieval and lesson presentation
+Mohsin = user runtime, progress tracking, and dashboard/backend state
+That means the handoff point between Mohsin two is simple:
+Umer prepares lesson content through RAG and exposes it through retrieval APIs
+Mohsin consume that content inside the lesson runtime and track what the user does with it
+A practical way to think about it:
+If it answers “what should the AI say or retrieve?” → Umer
+If it answers “what does this user see next, and how is progress stored?” → Mohsin
+For files, the split would look like this:
+Umer’s side
+backend/app/ai/* only if it is RAG-related
+backend/prompts/* for retrieval and context generation
+backend/api/qna.py
+vector/schema work for pgvector and qna_exchanges
+frontend lesson components and threaded UI
+Mohsinr side
+backend/api/lessons.py
+backend/api/dashboard.py
+backend/api/progress.py
+backend/core/* for runtime, stats, auth, database state
+backend/models/* for the main relational schema
+dashboard/progress frontend wiring
+The important thing is: Mohsin should not be waiting on each other for the same layer.
+Umer can build retrieval, and Mohsin can build the runtime around it.
+If Mohsin want, I can turn this into a clean phase checklist next so Mohsin have a “done / waiting / next” tracker for just Mohsin and Umer

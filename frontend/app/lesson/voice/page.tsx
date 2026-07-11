@@ -1,7 +1,7 @@
 "use client";
 /**
  * @ai-restriction
- * Primary Owner: Umer
+ * Primary Owner: Talha
  */
 import { useState, useEffect } from "react";
 import { ArrowLeft, Mic, Keyboard } from "lucide-react";

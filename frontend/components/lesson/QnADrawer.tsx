@@ -242,8 +242,8 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
                 
                 {messages.map(msg => (
                   <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                    <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${msg.role === "user" ? "bg-gradient-to-br from-[#818CF8] to-[#4f46e5]" : "bg-[#818cf8]/20 border border-[#818cf8]/30"}`}>
-                      {msg.role === "user" ? <span className="text-white text-[14px] font-bold">U</span> : <Bot size={14} className="text-[#818cf8]" />}
+                    <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${msg.role === "user" ? "bg-[#35343a]" : "bg-[#818cf8]/20 border border-[#818cf8]/30"}`}>
+                      {msg.role === "user" ? <User size={14} className="text-[#c6c5d5]" /> : <Bot size={14} className="text-[#818cf8]" />}
                     </div>
                     <div className={`flex flex-col gap-2 max-w-[75%] ${msg.role === "user" ? "items-end" : "items-start"}`}>
                       <div className={`p-3 rounded-[14px] text-[15px] leading-relaxed ${
