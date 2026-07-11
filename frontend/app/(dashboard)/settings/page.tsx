@@ -48,7 +48,7 @@ export default function SettingsPage() {
                 <label className="block text-[12px] font-medium text-[#c6c5d5] mb-1.5">Display Name</label>
                 <input 
                   type="text" 
-                  defaultValue="Alex Mercer"
+                  defaultValue="Umer"
                   className="bg-[#1C1C23] border border-[#242430] focus:border-[#818cf8] outline-none w-full rounded-[10px] h-[48px] px-4 text-[16px] text-[#e4e1e9] transition-colors"
                 />
               </div>
@@ -58,7 +58,7 @@ export default function SettingsPage() {
                 <div className="relative">
                   <input 
                     type="email" 
-                    defaultValue="alex.mercer@example.com"
+                    defaultValue="umer@buslingo.com"
                     readOnly
                     className="bg-[#1C1C23] border border-[#242430] w-full rounded-[10px] h-[48px] px-4 text-[16px] text-[#c6c5d5] cursor-not-allowed opacity-80"
                   />
@@ -98,12 +98,11 @@ export default function SettingsPage() {
               <label className="block text-[12px] font-medium text-[#c6c5d5] mb-1.5">Coach Voice</label>
               <div className="relative">
                 <select 
-                  defaultValue="direct"
+                  defaultValue="female"
                   className="bg-[#1C1C23] border border-[#242430] focus:border-[#818cf8] outline-none w-full rounded-[10px] h-[48px] px-4 appearance-none text-[16px] text-[#e4e1e9] cursor-pointer"
                 >
-                  <option value="encouraging">Encouraging & Gentle</option>
-                  <option value="direct">Direct & Professional</option>
-                  <option value="balanced">Balanced</option>
+                  <option value="female">Female (Default)</option>
+                  <option value="male">Male</option>
                 </select>
                 <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c6c5d5] pointer-events-none" />
               </div>

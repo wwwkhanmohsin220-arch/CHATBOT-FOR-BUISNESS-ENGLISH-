@@ -32,9 +32,9 @@ If backend changes require frontend updates (e.g., adding a new component or alt
 
 The project is divided between three engineers. To prevent destructive overlapping edits, files are tagged with `@ai-restriction Primary Owner: [Name]`.
 
-- **Umer (Frontend Lead & PM)**: Primary owner of the entire `frontend/` directory. Responsible for maintaining the pristine UX/UI and connecting it to the backend.
-- **Mohsin (Backend Architect & DB)**: Primary owner of `backend/models/`, `backend/api/`, and `backend/core/`. Responsible for the deterministic FastAPI runtime and Supabase schema.
-- **Talha (AI & Infrastructure)**: Primary owner of `backend/app/ai/`, `backend/prompts/`, and `backend/scripts/`. Responsible for Groq integration, Whisper STT, and enforcing JSON schema output from the LLMs.
+- **Umer (Frontend Lead & Read APIs)**: Primary owner of the entire `frontend/` directory. Responsible for maintaining the pristine UX/UI and connecting it to the backend. Also responsible for Backend "Read-Only" APIs (e.g. `GET /api/dashboard`, `GET /api/me`, `GET /api/curriculum`) to gain full-stack exposure.
+- **Mohsin (Backend Architect & DB)**: Primary owner of `backend/models/`, `backend/api/` (Core Stateful APIs), and `backend/core/`. Responsible for the deterministic FastAPI runtime, state machines, and Supabase schema.
+- **Talha (AI Brain, Voice & RAG)**: Primary owner of `backend/app/ai/`, `backend/prompts/`, and `backend/scripts/`. Responsible for Groq integration, Whisper STT, Curriculum generation via RAG pipeline, and enforcing JSON schema output.
 
 # 7. Phased Build Order
 

@@ -109,11 +109,15 @@ async def transcribe_audio_bytes(audio_bytes: bytes) -> str:
             result = await maybe_result
         else:
             result = maybe_result
-    except Exception:
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()
         return _fallback_transcript(audio_bytes)
 
     if isinstance(result, str):
         return result
+    if hasattr(result, "text"):
+        return str(result.text)
     if isinstance(result, dict):
         return str(result.get("text") or result.get("transcript") or _fallback_transcript(audio_bytes))
     return _fallback_transcript(audio_bytes)

@@ -14,11 +14,13 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any
 
-from backend.utils.llm import DEFAULT_GROQ_MODEL, groq_chat, groq_chat_stream
+from backend.utils.llm import DEFAULT_GROQ_MODEL, groq_chat, groq_chat_stream, generate_validated
+from backend.prompts.voice import build_voice_reply_messages, build_voice_score_messages
+from backend.services.tts import build_tts_provider
+from backend.models.schema import VoiceScore
 
 GROQ_AUDIO_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
 _SEMAPHORE = asyncio.Semaphore(4)
-
 
 @dataclass(slots=True)
 class TranscriptionResult:
@@ -82,6 +84,7 @@ def _groq_transcribe_sync(
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": f"multipart/form-data; boundary={boundary}",
+            "User-Agent": "Buslingo/1.0",
         },
         method="POST",
     )
@@ -112,22 +115,39 @@ async def transcribe_audio(
             temperature=temperature,
         )
 
-
 async def generate_voice_reply(*, transcript: str, objectives: list[str], ai_persona: str, coach_voice: str, level: str) -> dict[str, Any]:
-    reply_text = f"{ai_persona} Thanks. Let's keep it {coach_voice.replace('_', ' ')} and continue from: {transcript[:120]}"
-    return {"reply_text": reply_text, "reply_audio_b64": None, "objectives_hit": objectives[:1], "level": level}
+    messages = build_voice_reply_messages(transcript, objectives, ai_persona, coach_voice, level)
+    reply_text = await chat(messages)
+    
+    try:
+        tts_provider = build_tts_provider()
+        
+        # Select voice based on coach_voice
+        voice_id = None
+        if coach_voice.lower() == "male":
+            voice_id = "CwhRBWXzGAHq8TQ4Fs17" # Rogers
+        else:
+            voice_id = "EST9Ui6982FZPSi7gCHi" # Elise (female default)
+            
+        tts_result = await tts_provider.synthesize(reply_text, voice_id_override=voice_id)
+        reply_audio_b64 = tts_result.audio_b64
+    except Exception as e:
+        print(f"TTS synthesis failed (e.g. quota exceeded): {e}")
+        reply_audio_b64 = None
+    
+    return {
+        "reply_text": reply_text,
+        "reply_audio_b64": reply_audio_b64,
+        "objectives_hit": [],  # Let backend.core.voice compute this
+        "level": level
+    }
 
 
 async def generate_voice_score(*, transcript: str, objectives: list[str], concept_tag: str | None = None) -> dict[str, Any]:
-    word_count = len(transcript.split())
-    return {
-        "tone": 70,
-        "fluency": 65 if word_count >= 15 else 50,
-        "vocabulary": 60 if word_count >= 10 else 45,
-        "grammar": 70 if transcript.endswith((".", "?")) else 55,
-        "listening": 70 if objectives else 55,
-        "objectives_met": objectives[:],
-        "notable_errors": [],
-        "one_line_feedback": "Fallback voice scoring is active until the AI voice grader is wired in.",
-    }
-
+    messages = build_voice_score_messages(transcript, objectives, concept_tag)
+    score: VoiceScore = await generate_validated(
+        messages=messages,
+        schema=VoiceScore,
+        task="voice_score"
+    )
+    return score.model_dump()

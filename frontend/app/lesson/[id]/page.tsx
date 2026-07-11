@@ -171,7 +171,11 @@ export default function UnifiedLessonPage() {
         )}
 
         {block.type === "voice" && (
-          <ThreadedVoice onEndSession={endLesson} />
+          <ThreadedVoice 
+            instanceId={instanceId} 
+            nodeId={block.node_id} 
+            onEndSession={endLesson}
+          />
         )}
       </motion.div>
     );

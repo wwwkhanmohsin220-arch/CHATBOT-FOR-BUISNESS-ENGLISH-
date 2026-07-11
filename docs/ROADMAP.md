@@ -5,9 +5,9 @@ This document breaks down the project milestones across the three primary team m
 ## Phase 1: Skeleton
 *Goal: The whole clickable lesson flow with hand-written fake lessons and zero AI code — proves database + endpoints first.*
 
-**Umer (Frontend & Supabase Auth):**
+**Umer (Frontend & Backend Read APIs):**
 - Hook up the Next.js frontend `/lesson/[id]` flow to the new REST endpoints.
-- Ensure the Progress Bar uses the deterministic `completed_spine/total_spine` math.
+- Build the initial `/api/curriculum` API and wire the UI to it.
 - **Supabase Task:** Install `@supabase/supabase-js` in Next.js. Build the frontend Auth UI to log in directly via Supabase Auth and manage the client-side session JWT.
 
 **Mohsin (Backend DB/Architecture & Supabase SQL):**
@@ -15,8 +15,9 @@ This document breaks down the project milestones across the three primary team m
 - Build the `POST /attempt` transaction that evaluates mock answers and advances the server-side cursor idempotently.
 - **Supabase Task:** Apply the `schema.sql` (Units, Slots, Instances, Nodes, Attempts) to the Supabase project. Configure Row Level Security (RLS) and build the FastAPI `get_current_user` dependency to verify Supabase JWTs.
 
-**Talha (AI & Infrastructure & Supabase Seeding):**
+**Talha (AI Brain & RAG):**
 - Setup GitHub Actions CI/CD to protect the `main` branch.
+- Design the Curriculum RAG architecture (where lessons are sourced from).
 - **Supabase Task:** Write Python `scripts/seed_curriculum.py` and `scripts/seed_fixtures.py` that connect directly to the Supabase Postgres instance to insert the mock dummy data.
 
 ---
@@ -33,9 +34,9 @@ This document breaks down the project milestones across the three primary team m
 - Build the **Director Rule** into the attempt transaction: automatically injecting a branch on the 2nd failed attempt.
 - Handle concurrent requests with optimistic cursor updates.
 
-**Talha (AI & Infrastructure):**
+**Talha (AI Brain & RAG):**
 - Build the `Groq` client wrapper.
-- Implement the vital `generate_validated` function to force strict Pydantic JSON outputs.
+- Implement the Curriculum RAG pipeline to dynamically feed context to the compiler.
 - Write the `prompts/compile.py` to generate the entire `LessonBundle`.
 
 ---
@@ -63,15 +64,16 @@ This document breaks down the project milestones across the three primary team m
 ## Phase 4: Voice & Polish
 *Goal: Voice + dashboard aggregate + demo video.*
 
-**Umer (Frontend):**
+**Umer (Frontend & Backend Read APIs):**
 - Implement the "Walkie-Talkie" tap-to-talk voice UI, sending blobs to `/transcribe`.
-- Hook up the Home Dashboard widgets to the massive `/api/dashboard` aggregate endpoint.
+- Hook up the Home Dashboard widgets.
+- Build the Backend `GET /api/dashboard` and `GET /api/me` aggregate endpoints.
 
 **Mohsin (Backend DB/Architecture):**
-- Build the `/api/dashboard` endpoint to serve Streak, XP, SRS counts, and Next Lesson in one call.
 - Provide the clean REST Interface for the Voice pipeline (`/voice/turn`).
+- Hook up Row Level Security for Dashboard views.
 
-**Talha (AI & Infrastructure):**
+**Talha (AI Brain & Voice):**
 - Integrate Groq's Whisper API for `POST /api/transcribe`.
 - Build the TTS decision tree (Groq TTS -> Browser `speechSynthesis` -> ElevenLabs).
-- Monitor `llm_failures` table for prompt degradation.
+- Implement advanced Voice WebSockets for realtime mode.

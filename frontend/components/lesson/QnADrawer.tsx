@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageSquare, X, Send, Bot, User } from "lucide-react";
+import { MessageSquare, X, Send, Bot, User, Mic, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 
@@ -21,7 +21,28 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
+  const ignoreTranscriptionRef = useRef(false);
+
+  const playTTS = (text: string) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    // Remove markdown symbols (asterisks, hashes, etc) for cleaner speech
+    utterance.text = text.replace(/[*#_`~]/g, "");
+    
+    // Try to find a female voice
+    const voices = window.speechSynthesis.getVoices();
+    const femaleVoice = voices.find(v => v.name.toLowerCase().includes("female") || v.name.toLowerCase().includes("zira") || v.name.toLowerCase().includes("samantha") || v.name.toLowerCase().includes("victoria"));
+    if (femaleVoice) {
+      utterance.voice = femaleVoice;
+    }
+    
+    window.speechSynthesis.cancel(); // Stop any current speech
+    window.speechSynthesis.speak(utterance);
+  };
 
   useEffect(() => {
     const handleOpen = (e: CustomEvent) => {
@@ -40,9 +61,92 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
     }
   }, [messages, isTyping, isOpen]);
 
+  const toggleRecording = async () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+      }
+      setIsRecording(false);
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          stream.getTracks().forEach(track => track.stop());
+          
+          if (ignoreTranscriptionRef.current) {
+            ignoreTranscriptionRef.current = false;
+            return;
+          }
+
+          setIsTyping(true); // show thinking indicator while transcribing
+          try {
+            const formData = new FormData();
+            formData.append("audio", audioBlob, "recording.webm");
+            const res = await fetch("http://localhost:8000/api/transcribe", {
+              method: "POST",
+              body: formData,
+            });
+            const data = await res.json();
+            if (data.transcript) {
+              setInput(data.transcript);
+              // We could auto-submit, but letting them review is safer.
+            }
+          } catch (error) {
+            console.error("Transcription error:", error);
+          } finally {
+            setIsTyping(false);
+          }
+        };
+
+        // Initialize SpeechRecognition for real-time display
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (SpeechRecognition) {
+          const recognition = new SpeechRecognition();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.onresult = (event: any) => {
+            let transcript = "";
+            for (let i = 0; i < event.results.length; i++) {
+              transcript += event.results[i][0].transcript;
+            }
+            setInput(transcript);
+          };
+          recognition.start();
+          recognitionRef.current = recognition;
+        }
+
+        mediaRecorder.start();
+        setIsRecording(true);
+      } catch (error) {
+        console.error("Microphone access error:", error);
+      }
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
     
+    if (isRecording) {
+      ignoreTranscriptionRef.current = true;
+      mediaRecorderRef.current?.stop();
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+      }
+      setIsRecording(false);
+    }
+
     const userMsg = input.trim();
     setInput("");
     
@@ -138,8 +242,8 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
                 
                 {messages.map(msg => (
                   <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                    <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${msg.role === "user" ? "bg-[#35343a]" : "bg-[#818cf8]/20 border border-[#818cf8]/30"}`}>
-                      {msg.role === "user" ? <User size={14} className="text-[#c6c5d5]" /> : <Bot size={14} className="text-[#818cf8]" />}
+                    <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${msg.role === "user" ? "bg-gradient-to-br from-[#818CF8] to-[#4f46e5]" : "bg-[#818cf8]/20 border border-[#818cf8]/30"}`}>
+                      {msg.role === "user" ? <span className="text-white text-[14px] font-bold">U</span> : <Bot size={14} className="text-[#818cf8]" />}
                     </div>
                     <div className={`flex flex-col gap-2 max-w-[75%] ${msg.role === "user" ? "items-end" : "items-start"}`}>
                       <div className={`p-3 rounded-[14px] text-[15px] leading-relaxed ${
@@ -156,11 +260,22 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
                         )}
                       </div>
                       
-                      {msg.isOffTopic && (
-                        <button className="bg-[#818cf8]/10 text-[#818cf8] text-[12px] font-medium px-3 py-1.5 rounded-full border border-[#818cf8]/30 hover:bg-[#818cf8]/20 transition-colors" onClick={() => setIsOpen(false)}>
-                          Return to Lesson
-                        </button>
-                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        {msg.role === "ai" && (
+                          <button 
+                            onClick={() => playTTS(msg.text)}
+                            className="text-[#A0A0AB] hover:text-[#818cf8] transition-colors p-1"
+                            title="Listen"
+                          >
+                            <Volume2 size={14} />
+                          </button>
+                        )}
+                        {msg.isOffTopic && (
+                          <button className="bg-[#818cf8]/10 text-[#818cf8] text-[12px] font-medium px-3 py-1.5 rounded-full border border-[#818cf8]/30 hover:bg-[#818cf8]/20 transition-colors" onClick={() => setIsOpen(false)}>
+                            Return to Lesson
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -181,25 +296,46 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
 
               {/* Input Area */}
               <div className="p-4 border-t border-[#3F3F4E] bg-[#1a1a24]">
-                <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
-                  <input 
-                    type="text"
-                    value={input}
-                    onChange={e => setInput(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && handleSend()}
-                    placeholder="Ask a question..."
-                    disabled={isTyping}
-                    style={{ paddingRight: "48px" }}
-                    className="w-full bg-[#0e0e13] border border-[#3F3F4E] rounded-full pl-5 py-3.5 text-[15px] text-white placeholder:text-[#52525B] focus:outline-none focus:border-[#818cf8] disabled:opacity-50 transition-colors"
-                  />
+                <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%", gap: "8px" }}>
                   <button 
-                    onClick={handleSend}
-                    disabled={!input.trim() || isTyping}
-                    style={{ position: "absolute", right: "8px" }}
-                    className="w-9 h-9 bg-[#818cf8] rounded-full flex items-center justify-center text-[#0A0A0F] disabled:bg-[#35343a] disabled:text-[#52525B] transition-colors"
+                    onClick={toggleRecording}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                      isRecording 
+                        ? "bg-red-500 text-white animate-pulse" 
+                        : "bg-[#242430] text-[#A0A0AB] hover:text-white"
+                    }`}
                   >
-                    <Send size={14} />
+                    <Mic size={18} />
                   </button>
+                  <div style={{ position: "relative", flex: 1, display: "flex", alignItems: "center" }}>
+                    <textarea 
+                      value={input}
+                      onChange={e => {
+                        setInput(e.target.value);
+                        e.target.style.height = 'inherit';
+                        e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSend();
+                        }
+                      }}
+                      placeholder={isRecording ? "Listening..." : "Ask a question..."}
+                      disabled={isTyping || isRecording}
+                      rows={1}
+                      style={{ paddingRight: "48px", overflowY: "auto", minHeight: "48px" }}
+                      className="w-full bg-[#0e0e13] border border-[#3F3F4E] rounded-[24px] pl-5 py-3 text-[15px] text-white placeholder:text-[#52525B] focus:outline-none focus:border-[#818cf8] disabled:opacity-50 transition-colors resize-none"
+                    />
+                    <button 
+                      onClick={handleSend}
+                      disabled={!input.trim() || isTyping}
+                      style={{ position: "absolute", right: "8px" }}
+                      className="w-9 h-9 bg-[#818cf8] rounded-full flex items-center justify-center text-[#0A0A0F] disabled:bg-[#35343a] disabled:text-[#52525B] transition-colors"
+                    >
+                      <Send size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
