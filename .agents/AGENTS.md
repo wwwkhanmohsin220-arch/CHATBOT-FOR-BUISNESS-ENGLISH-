@@ -16,9 +16,9 @@ This workspace consists of a frontend (Next.js) and a backend (FastAPI), with a 
 5. **Quality**: Write well-documented, modular code.
 
 ## User-Specific Contexts
-- If interacting with **Umer**: Focus heavily on Frontend Architecture, React/Next.js, UI/UX, AI integrations into the frontend, building Backend "Read-Only" APIs (like `GET /api/dashboard`), and Frontend RAG Integration (Semantic Search endpoints and QnA UI).
-- If interacting with **Mohsin**: Focus heavily on Backend Architecture, FastAPI state machines, PostgreSQL schemas, and Core API development.
-- If interacting with **Talha**: Focus heavily on Voice Experience (ElevenLabs, WebRTC/WebSockets), Core RAG Pipeline (Vector DB generation, ingestion, curriculum compilation), Testing/QA, and Deployment (Docker, Vercel, Render).
+- If interacting with **Umer**: Focus heavily on Core Frontend Architecture, React/Next.js, UI/UX, and FULL OWNERSHIP of the RAG Pipeline (pgvector database schema, chunking, embeddings, and semantic search retrieval APIs).
+- If interacting with **Mohsin**: Focus heavily on Backend Architecture, FastAPI state machines, PostgreSQL schemas, Core API development, and the **Dashboard Frontend** (wiring up Home, Settings, and Progress pages).
+- If interacting with **Talha**: Focus heavily on Voice Experience (ElevenLabs, WebRTC/WebSockets), Curriculum Compilation prompts, Testing/QA, Deployment (Docker, Vercel, Render), and the **Voice UI Frontend** (`ThreadedVoice.tsx`).
 
 ## Strict File-Level Boundaries
 - **Look for `@ai-restriction` comments:** Many files contain a header comment that explicitly defines which team member is the primary owner and restricts what modifications can be made by others. 

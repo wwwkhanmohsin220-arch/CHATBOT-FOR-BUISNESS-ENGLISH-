@@ -32,9 +32,9 @@ If backend changes require frontend updates (e.g., adding a new component or alt
 
 The project is divided between three engineers. To prevent destructive overlapping edits, files are tagged with `@ai-restriction Primary Owner: [Name]`.
 
-- **Umer (Frontend Lead & Read APIs)**: Primary owner of the entire `frontend/` directory. Responsible for maintaining the pristine UX/UI and connecting it to the backend. Also responsible for Backend "Read-Only" APIs (e.g. `GET /api/dashboard`, `GET /api/me`, `GET /api/curriculum`) and RAG Retrieval APIs (`POST /api/qna/semantic-search`) to gain full-stack and RAG exposure.
-- **Mohsin (Backend Architect & DB)**: Primary owner of `backend/models/`, `backend/api/` (Core Stateful APIs), and `backend/core/`. Responsible for the deterministic FastAPI runtime, state machines, and Supabase schema.
-- **Talha (AI Brain, Voice & Core RAG)**: Primary owner of `backend/app/ai/`, `backend/prompts/`, and `backend/scripts/`. Responsible for Groq integration, Whisper STT, Core RAG pipeline (Vector DB generation, ingestion, curriculum compilation), and enforcing JSON schema output.
+- **Umer (Full-Stack RAG Lead & Core UX)**: Primary owner of the core `frontend/` architecture. FULL OWNERSHIP of the RAG Pipeline (pgvector database schema, chunking, embeddings, and semantic search retrieval APIs).
+- **Mohsin (Backend DB & Dashboard Frontend)**: Primary owner of `backend/models/`, `backend/api/` (Core Stateful APIs), and `backend/core/`. Responsible for the deterministic FastAPI runtime, state machines, Supabase schema, and the **Dashboard Frontend** (wiring up Home, Settings, and Progress pages).
+- **Talha (AI Brain, Voice API & Voice Frontend)**: Primary owner of `backend/app/ai/`, `backend/prompts/`, and `backend/scripts/`. Responsible for Groq integration, Whisper STT, Curriculum Compilation prompts, enforcing JSON schema output, and the **Voice UI Frontend** (`ThreadedVoice.tsx`).
 
 # 7. Phased Build Order
 
