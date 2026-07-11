@@ -5,11 +5,19 @@ Umer: Do not modify routing logic or application state here. You may read this f
 Talha: You may add websocket routing configurations but do not change core REST application setup.
 """
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
 from backend.api.routes import router as api_router
 from backend.api.websockets import ws_router
+
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+_WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
+load_dotenv(_WORKSPACE_ROOT / ".env")
+load_dotenv(_PROJECT_ROOT / ".env", override=False)
 
 app = FastAPI(title="Buslingo API")
 
