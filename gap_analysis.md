@@ -232,20 +232,22 @@ The entire `scripts/` directory **does not exist**. The blueprint requires:
 
 > **Exit criterion:** `/progress` radar moves after a session. QnA drawer gives live AI answers. Writing gets graded. SRS reviews work.
 
-#### Mohsin (Backend)
+#### Mohsin (Backend DB/Architecture)
 - [ ] Build `POST /api/lesson-instances/{id}/qna` — full route per §5.5: call `generate_validated(QnAResponse)`, persist to `qna_exchanges`, track consecutive off_topic for productive-redirect, implement Director rule #2 (question cluster → injection)
 - [ ] Build `GET /api/progress` — `{radar: {6 axes from user_stats}, activity: [{day, minutes, xp}] x 7}`
 - [ ] Build `GET /api/lesson-instances/{id}/summary` — poll endpoint for async coach summary
 - [ ] Wire `POST /api/lesson-instances/{id}/complete` to fire `generate_coach_summary()` as a background task
 - [ ] Build `POST /api/transcribe` as a standalone utility route (audio blob → Groq Whisper → text)
 
-#### Talha (AI/Infrastructure)
+#### Talha (AI Brain & Core RAG)
 - [ ] **Rewrite `prompts/grade.py`** to match blueprint §8: literal JSON example, anchored score criteria (9-10/5-6/0-4), `suggested_rewrite` instruction, `detected_concept_errors` with canonical tags, per-`coach_voice` delivery
 - [ ] **Rewrite `prompts/qna.py`** to match blueprint §5.5: scope policy (core = full answer, adjacent = brief + bridge_line, off_topic = friendly + bridge), never-scold rule, grounding in current node + slot context
 - [ ] **Rewrite `prompts/coach.py`** to match blueprint §8: `CoachSummary` schema with `overall_scores`, `summary_markdown`, `prioritized_fixes: [{concept_tag, why, example_from_user}]`, `next_lesson_focus`
 - [ ] Build the `CoachSummary` Pydantic schema in `models/schema.py`
+- [ ] Build RAG Data Pipeline (chunking PDF/Docs, generating embeddings via Groq/OpenAI, and inserting into `pgvector`)
 
-#### Umer (Frontend)
+#### Umer (Frontend & Backend Read APIs)
+- [ ] **Build RAG Retrieval API (`POST /api/qna/semantic-search`)** — receive query, create embedding, perform Cosine Similarity search on `pgvector`, return relevant chunks
 - [ ] **Connect Radar Chart** — replace mock data in `/progress` with `fetch('GET /api/progress')`, wire 6 axes (writing, listening, grammar, vocabulary, tone, fluency)
 - [ ] **Connect Writing Assessment** — when user submits draft on writing node, call `POST /api/lesson-instances/{id}/writing/submit`, show loading spinner (2-4s), render the returned `WritingRubric` (tone/clarity/structure scores + suggested rewrite + overall comment)
 - [ ] **Wire QnA Drawer to backend** — `QnADrawer.tsx` should call `POST /api/lesson-instances/{id}/qna` with the user's question, display the markdown answer, handle `scope` display (show bridge_line for adjacent/off_topic), render injected_node if returned

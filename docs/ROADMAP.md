@@ -44,20 +44,22 @@ This document breaks down the project milestones across the three primary team m
 ## Phase 3: Assessment
 *Goal: Writing grading, QnA, radar chart, SRS flashcards.*
 
-**Umer (Frontend):**
+**Umer (Frontend & Backend Read APIs):**
 - Connect the `/progress` Radar Chart to the 6-axis backend data.
 - Connect `WritingAssessmentPage` to the new grading endpoint, showing the JSON rubric.
 - Hook up the "Ask Anything" interactive QnA drawer to the backend.
+- Build the RAG Retrieval API (`POST /api/qna/semantic-search`) to fetch relevant vectors.
 
 **Mohsin (Backend DB/Architecture):**
 - Implement the Exponential Moving Average (EMA) math for `user_stats` radar axes.
 - Implement the SuperMemo-2 (SM-2) math in the SRS `/reviews` endpoint.
 - Connect the writing submit endpoint to the LLM.
 
-**Talha (AI & Infrastructure):**
+**Talha (AI Brain & Core RAG):**
 - Write the `prompts/grade.py` to output strictly formatted `WritingRubric` JSON.
 - Write the `prompts/qna.py` to classify and answer user questions.
 - Write the `prompts/summary.py` for the async coach summary.
+- Build the RAG Ingestion pipeline (chunking documents and inserting into pgvector).
 
 ---
 
