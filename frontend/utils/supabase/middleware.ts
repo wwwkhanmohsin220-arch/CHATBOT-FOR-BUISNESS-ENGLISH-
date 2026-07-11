@@ -34,6 +34,7 @@ export async function updateSession(request: NextRequest) {
 
   const isAuthPage = request.nextUrl.pathname === '/sign-in' || request.nextUrl.pathname === '/sign-up';
   const isLandingPage = request.nextUrl.pathname === '/';
+  const isOnboarding = request.nextUrl.pathname.startsWith('/onboarding');
   
   // Exclude static files, API routes, etc.
   const isPublicRoute = request.nextUrl.pathname.startsWith('/_next') || 
@@ -41,7 +42,7 @@ export async function updateSession(request: NextRequest) {
                         request.nextUrl.pathname.includes('.');
 
   if (!isPublicRoute) {
-    if (!user && !isAuthPage && !isLandingPage) {
+    if (!user && !isAuthPage && !isLandingPage && !isOnboarding) {
       // User is NOT logged in and trying to access a protected route
       const url = request.nextUrl.clone();
       url.pathname = '/sign-in';
