@@ -1,77 +1,79 @@
 # Team Roadmap (Implementation Blueprint)
 
-This document breaks down the project milestones across the three primary team members (Umer, Mohsin, and Talha) according to the definitive `buslingo_implementation_blueprint.md`.
+This document breaks down the project milestones across the three primary team members (Umer, Mohsin, and Talha) according to the definitive `buslingo_implementation_blueprint.md`. We have adopted a feature-based "vertical slicing" approach.
 
 ## Phase 1: Skeleton
 *Goal: The whole clickable lesson flow with hand-written fake lessons and zero AI code — proves database + endpoints first.*
 
-**Umer (Frontend & Supabase Auth):**
-- Hook up the Next.js frontend `/lesson/[id]` flow to the new REST endpoints.
-- Ensure the Progress Bar uses the deterministic `completed_spine/total_spine` math.
-- **Supabase Task:** Install `@supabase/supabase-js` in Next.js. Build the frontend Auth UI to log in directly via Supabase Auth and manage the client-side session JWT.
+**Umer (Full-Stack RAG Lead & Core UX):**
+- Hook up the Next.js frontend `/lesson/[id]` flow to the REST endpoints.
+- Manage the Core Aesthetic and the complex `ThreadedTheory`/`ThreadedMCQ` lesson components.
+- Install `@supabase/supabase-js` and build the frontend Auth UI to log in via Supabase Auth.
 
-**Mohsin (Backend DB/Architecture & Supabase SQL):**
-- Refactor `api/routes.py` into domain routers.
+**Mohsin (Backend DB & Dashboard Frontend):**
 - Build the `POST /attempt` transaction that evaluates mock answers and advances the server-side cursor idempotently.
-- **Supabase Task:** Apply the `schema.sql` (Units, Slots, Instances, Nodes, Attempts) to the Supabase project. Configure Row Level Security (RLS) and build the FastAPI `get_current_user` dependency to verify Supabase JWTs.
+- Apply the core `schema.sql` (Units, Slots, Instances, Nodes, Attempts) to Supabase.
+- Wire up `home/page.tsx` and `settings/page.tsx` to the backend REST endpoints.
 
-**Talha (AI & Infrastructure & Supabase Seeding):**
-- Setup GitHub Actions CI/CD to protect the `main` branch.
-- **Supabase Task:** Write Python `scripts/seed_curriculum.py` and `scripts/seed_fixtures.py` that connect directly to the Supabase Postgres instance to insert the mock dummy data.
+**Talha (AI Brain, Voice API & Voice Frontend):**
+- Write Python `scripts/seed_curriculum.py` and `scripts/seed_fixtures.py` to insert mock dummy data into Supabase.
+- Build the initial Walkie-Talkie Voice UI in `ThreadedVoice.tsx` without AI wiring.
 
 ---
 
 ## Phase 2: Brain
 *Goal: The Compiler + Quick Fix injection (fake lessons become generated ones).*
 
-**Umer (Frontend):**
-- Build polished async polling UI (e.g. "Personalizing your lesson...") handling the 202 `compiling` HTTP response.
-- Ensure the Quick Fix (TargetedFixCard) dynamically renders when the backend injects it.
+**Umer (Full-Stack RAG Lead & Core UX):**
+- Build polished async polling UI (e.g., "Personalizing your lesson...") handling the 202 `compiling` HTTP response.
+- Ensure the Quick Fix (`TargetedFixCard`) dynamically renders when the backend injects it.
+- Initialize the `pgvector` extension in Supabase and define the vector schema for RAG.
 
-**Mohsin (Backend DB/Architecture):**
+**Mohsin (Backend DB & Dashboard Frontend):**
 - Implement `FastAPI BackgroundTasks` to trigger the AI generation pipeline at the end of a lesson.
 - Build the **Director Rule** into the attempt transaction: automatically injecting a branch on the 2nd failed attempt.
-- Handle concurrent requests with optimistic cursor updates.
+- Begin wiring the `/progress` route to test basic stat displays.
 
-**Talha (AI & Infrastructure):**
-- Build the `Groq` client wrapper.
-- Implement the vital `generate_validated` function to force strict Pydantic JSON outputs.
-- Write the `prompts/compile.py` to generate the entire `LessonBundle`.
+**Talha (AI Brain, Voice API & Voice Frontend):**
+- Build the `Groq` client wrapper and the `generate_validated` function to force strict Pydantic JSON outputs.
+- Write `prompts/compile.py` to generate the entire `LessonBundle`.
 
 ---
 
 ## Phase 3: Assessment
 *Goal: Writing grading, QnA, radar chart, SRS flashcards.*
 
-**Umer (Frontend):**
-- Connect the `/progress` Radar Chart to the 6-axis backend data.
-- Connect `WritingAssessmentPage` to the new grading endpoint, showing the JSON rubric.
-- Hook up the "Ask Anything" interactive QnA drawer to the backend.
+**Umer (Full-Stack RAG Lead & Core UX):**
+- Own the entire RAG pipeline from end to end.
+- Chunk documents, generate embeddings via OpenAI/Groq.
+- Write the retrieval APIs (`POST /api/qna/semantic-search`) and connect the "Ask Anything" interactive QnA drawer to it.
 
-**Mohsin (Backend DB/Architecture):**
+**Mohsin (Backend DB & Dashboard Frontend):**
 - Implement the Exponential Moving Average (EMA) math for `user_stats` radar axes.
+- Connect the `/progress` Radar Chart UI to the 6-axis backend data.
+- Connect `WritingAssessmentPage` to the new grading endpoint, showing the JSON rubric.
 - Implement the SuperMemo-2 (SM-2) math in the SRS `/reviews` endpoint.
-- Connect the writing submit endpoint to the LLM.
 
-**Talha (AI & Infrastructure):**
-- Write the `prompts/grade.py` to output strictly formatted `WritingRubric` JSON.
-- Write the `prompts/qna.py` to classify and answer user questions.
-- Write the `prompts/summary.py` for the async coach summary.
+**Talha (AI Brain, Voice API & Voice Frontend):**
+- Write `prompts/grade.py` to output strictly formatted `WritingRubric` JSON.
+- Write `prompts/summary.py` for the async coach summary.
+- Begin integrating the WebSocket frontend in `ThreadedVoice.tsx`.
 
 ---
 
 ## Phase 4: Voice & Polish
 *Goal: Voice + dashboard aggregate + demo video.*
 
-**Umer (Frontend):**
-- Implement the "Walkie-Talkie" tap-to-talk voice UI, sending blobs to `/transcribe`.
-- Hook up the Home Dashboard widgets to the massive `/api/dashboard` aggregate endpoint.
+**Umer (Full-Stack RAG Lead & Core UX):**
+- Polish the global Core UX flows.
+- Refine the retrieval logic for grammar/theory lookups.
 
-**Mohsin (Backend DB/Architecture):**
+**Mohsin (Backend DB & Dashboard Frontend):**
+- Finalize the Dashboard and Progress frontend logic.
 - Build the `/api/dashboard` endpoint to serve Streak, XP, SRS counts, and Next Lesson in one call.
-- Provide the clean REST Interface for the Voice pipeline (`/voice/turn`).
 
-**Talha (AI & Infrastructure):**
-- Integrate Groq's Whisper API for `POST /api/transcribe`.
+**Talha (AI Brain, Voice API & Voice Frontend):**
+- Finalize the "Walkie-Talkie" tap-to-talk voice UI, sending blobs via WebSockets.
 - Build the TTS decision tree (Groq TTS -> Browser `speechSynthesis` -> ElevenLabs).
+- Integrate Groq's Whisper API for Speech-to-Text.
 - Monitor `llm_failures` table for prompt degradation.

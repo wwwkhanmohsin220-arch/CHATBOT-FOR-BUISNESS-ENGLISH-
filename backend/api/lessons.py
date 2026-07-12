@@ -37,6 +37,9 @@ class AttemptIn(BaseModel):
     answer_index: Optional[int] = None
     read_ack: Optional[bool] = None
 
+class QnARequest(BaseModel):
+    question: str
+
 
 @dataclass(slots=True)
 class LessonInstanceContext:
@@ -799,3 +802,50 @@ async def complete_lesson(
         raise
     except Exception as exc:
         raise _db_error(exc) from exc
+
+@router.post("/lesson-instances/{instance_id}/qna")
+async def lesson_qna(
+    instance_id: str,
+    req: QnARequest,
+    current_user: CurrentUser | None = Depends(get_optional_current_user),
+):
+    try:
+        pool = await database.pool()
+        async with pool.acquire() as connection:
+            context = await get_db_user_instance(connection, instance_id, current_user)
+            instance = context.instance_row
+            
+            node_row = await connection.fetchrow(
+                """
+                SELECT id, node_type, concept_tag, content, position
+                FROM lesson_nodes
+                WHERE lesson_instance_id = $1
+                  AND status = 'pending'
+                  AND position >= $2
+                ORDER BY position ASC
+                LIMIT 1
+                """,
+                context.instance_id,
+                instance["current_node_index"],
+            )
+            
+            if not node_row:
+                raise HTTPException(status_code=404, detail="No active node found")
+                
+            node_dict = dict(node_row)
+            if node_dict.get("content"):
+                node_dict["content"] = json.loads(node_dict["content"])
+                
+            from backend.app.ai.qna import qna_prompt
+            messages = qna_prompt(question=req.question, current_node=node_dict, slot_context={})
+            
+            from backend.utils.llm import generate_validated
+            from backend.models.schema import QnAResponse
+            
+            res = await generate_validated(messages, schema=QnAResponse, task="qna")
+            return res
+            
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))

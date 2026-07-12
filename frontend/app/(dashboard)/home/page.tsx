@@ -1,17 +1,51 @@
 "use client";
 /**
  * @ai-restriction
- * Primary Owner: Umer
+ * Primary Owner: Mohsin
  */
 import { Flag, Flame, ArrowRight, Bookmark } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+import { useEffect, useState } from "react";
+
 export default function HomeDashboardPage() {
+  const [dashboard, setDashboard] = useState<any>(null);
+  const [me, setMe] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [dashRes, meRes] = await Promise.all([
+          fetch("http://localhost:8000/api/dashboard"),
+          fetch("http://localhost:8000/api/me")
+        ]);
+        setDashboard(await dashRes.json());
+        setMe(await meRes.json());
+      } catch (e) {
+        console.error("Failed to fetch dashboard data:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <main className="flex-1 p-6 md:p-8 max-w-[960px] mx-auto w-full"><div className="text-[#8e8d9b] py-4">Loading dashboard...</div></main>;
+  }
+
+  const name = me?.name || "Umer";
+  const daily = dashboard?.daily_goal || { minutes: 0, target: 20 };
+  const streak = dashboard?.streak || { count: 0, week_days: [] };
+  const next = dashboard?.next_lesson || { title: "No upcoming lesson", slot_key: "" };
+  const srsCount = dashboard?.srs_due_count || 0;
+
   return (
     <main className="flex-1 p-6 md:p-8 max-w-[960px] mx-auto w-full">
       <h1 className="text-[32px] leading-[40px] tracking-[-0.02em] font-bold text-white mb-8">
-        Good evening, Umer 👋
+        Good evening, {name} 👋
       </h1>
 
       {/* Top Row: Stats */}
@@ -26,12 +60,12 @@ export default function HomeDashboardPage() {
             <div>
               <h3 className="text-[14px] font-semibold text-[#c6c5d5]">Daily Goal</h3>
               <p className="text-[20px] font-bold text-white">
-                13 <span className="text-[14px] text-[#A0A0AB] font-normal">/ 20 mins</span>
+                {daily.minutes} <span className="text-[14px] text-[#A0A0AB] font-normal">/ {daily.target} mins</span>
               </p>
             </div>
           </div>
           <div className="w-full h-2 bg-[#242430] rounded-full overflow-hidden">
-            <div className="h-full bg-[#818CF8] rounded-full w-[65%]" />
+            <div className="h-full bg-[#818CF8] rounded-full" style={{ width: `${Math.min(100, (daily.minutes / daily.target) * 100)}%` }} />
           </div>
         </div>
 
@@ -43,28 +77,29 @@ export default function HomeDashboardPage() {
             </div>
             <div>
               <h3 className="text-[14px] font-semibold text-[#c6c5d5]">Current Streak</h3>
-              <p className="text-[20px] font-bold text-white">12 Days</p>
+              <p className="text-[20px] font-bold text-white">{streak.count} Days</p>
             </div>
           </div>
           <div className="flex gap-1">
-            {['M', 'T', 'W', 'T', 'F'].map((day, i) => {
-              const isPast = i < 2; // M, T
-              const isToday = i === 2; // W
-
+            {streak.week_days.length > 0 ? streak.week_days.map((dayObj: any, i: number) => {
+              const dayStr = new Date(dayObj.day).toLocaleDateString('en-US', { weekday: 'short' }).charAt(0);
+              const isActive = dayObj.active;
               return (
                 <div
                   key={i}
                   className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold",
-                    isPast && "bg-[#f7bd3e]/20 text-[#f7bd3e]",
-                    isToday && "bg-[#f7bd3e] text-[#0A0A0F]",
-                    !isPast && !isToday && "bg-[#1c1c23] border border-[#242430] text-[#c6c5d5] font-medium"
+                    isActive ? "bg-[#f7bd3e] text-[#0A0A0F]" : "bg-[#1c1c23] border border-[#242430] text-[#c6c5d5] font-medium"
                   )}
                 >
-                  {day}
+                  {dayStr}
                 </div>
               );
-            })}
+            }) : ['M', 'T', 'W', 'T', 'F'].map((day, i) => (
+              <div key={i} className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold bg-[#1c1c23] border border-[#242430] text-[#c6c5d5] font-medium">
+                {day}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -83,21 +118,21 @@ export default function HomeDashboardPage() {
               Up Next
             </span>
             <h2 className="text-[20px] font-bold text-white mb-1">
-              Unit 3: Meeting Communication
+              {next.title}
             </h2>
             <p className="text-[16px] text-[#A0A0AB] mb-6 max-w-lg">
-              Mastering interruptions, clarifications, and holding the floor in high-stakes environments.
+              Continue your learning path.
             </p>
             <div className="flex items-center gap-4 w-full max-w-md">
-              <span className="text-[12px] font-medium text-[#A0A0AB]">60%</span>
+              <span className="text-[12px] font-medium text-[#A0A0AB]">0%</span>
               <div className="flex-1 h-1.5 bg-[#242430] rounded-full overflow-hidden">
-                <div className="h-full bg-[#818CF8] rounded-full w-[60%]" />
+                <div className="h-full bg-[#818CF8] rounded-full w-[0%]" />
               </div>
             </div>
           </div>
 
           <Link
-            href="/lesson/theory"
+            href={next.slot_key ? `/lesson/${next.slot_key}` : "#"}
             className="h-10 px-6 rounded-[10px] bg-transparent border border-[#818CF8] text-[#818CF8] text-[14px] font-semibold hover:bg-[#818CF8] hover:text-[#0A0A0F] transition-colors self-start md:self-center flex items-center gap-2 whitespace-nowrap active:scale-[0.98]"
           >
             Resume lesson <ArrowRight size={18} />

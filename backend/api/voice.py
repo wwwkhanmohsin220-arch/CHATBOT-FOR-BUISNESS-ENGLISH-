@@ -14,7 +14,7 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
 
 from backend.api.lessons import CURRICULUM_PATH, get_db_user_instance
-from backend.core.auth import CurrentUser, get_current_user
+from backend.core.auth import CurrentUser, get_current_user, get_optional_current_user
 from backend.core.database import DatabaseNotConfigured, database
 from backend.core.jobs import compile_lesson_background
 from backend.core.srs import ensure_srs_cards_for_terms
@@ -160,7 +160,7 @@ async def _advance_after_voice_finish(
 @router.post("/transcribe", response_model=TranscribeResponse)
 async def transcribe_route(
     audio: UploadFile = File(...),
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: CurrentUser | None = Depends(get_optional_current_user),
 ) -> TranscribeResponse:
     try:
         audio_bytes = await audio.read()
@@ -178,7 +178,7 @@ async def transcribe_route(
 async def voice_turn_route(
     instance_id: str,
     audio: UploadFile = File(...),
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: CurrentUser | None = Depends(get_optional_current_user),
 ) -> VoiceTurnResponse:
     try:
         audio_bytes = await audio.read()
@@ -235,7 +235,7 @@ async def voice_turn_route(
 async def voice_finish_route(
     instance_id: str,
     background_tasks: BackgroundTasks,
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: CurrentUser | None = Depends(get_optional_current_user),
 ) -> VoiceFinishResponse:
     try:
         pool = await database.pool()

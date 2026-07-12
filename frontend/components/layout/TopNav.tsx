@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 
 export function TopNav() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -72,14 +73,29 @@ export function TopNav() {
                 Profile & Settings
               </Link>
               <button 
-                onClick={() => {
-                  setIsDropdownOpen(false);
-                  router.push('/sign-in');
+                disabled={isLoggingOut}
+                onClick={async () => {
+                  setIsLoggingOut(true);
+                  const { createClient } = await import('@/utils/supabase/client');
+                  const supabase = createClient();
+                  await supabase.auth.signOut();
+                  // Force a hard redirect instead of router.push to ensure middleware runs 
+                  // and clears the Next.js client-side router cache (fixing the back-button bug)
+                  window.location.href = '/sign-in';
                 }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-red-400 hover:bg-[#2a292f] transition-colors"
+                className="w-full flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-red-400 hover:bg-[#2a292f] transition-colors disabled:opacity-50"
               >
-                <LogOut size={16} />
-                Log Out
+                {isLoggingOut ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                    Signing out...
+                  </>
+                ) : (
+                  <>
+                    <LogOut size={16} />
+                    Log Out
+                  </>
+                )}
               </button>
             </div>
           )}

@@ -1,7 +1,7 @@
 "use client";
 /**
  * @ai-restriction
- * Primary Owner: Umer
+ * Primary Owner: Talha
  */
 import { useState, useEffect } from "react";
 import { ArrowLeft, Mic, Keyboard } from "lucide-react";
@@ -100,7 +100,8 @@ export default function VoicePracticePage() {
         <div className="relative w-[240px] h-[240px] md:w-[280px] md:h-[280px] rounded-full overflow-hidden shrink-0 animate-in fade-in duration-700">
           <div className="absolute inset-0 w-full h-full">
             <Strands
-              colors={["#818CF8", "#0EA5E9"]}
+              style={{}}
+              colors={isRecording ? ["#ef4444", "#f43f5e"] : ["#818CF8", "#0EA5E9"]}
               count={25}
               speed={0.5}
               amplitude={1.2}

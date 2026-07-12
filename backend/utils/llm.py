@@ -120,6 +120,7 @@ def _groq_chat_sync(
     model: str = DEFAULT_GROQ_MODEL,
     temperature: float = 0.3,
     timeout: float = 60.0,
+    json_mode: bool = False,
 ) -> GroqChatResult:
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
@@ -129,13 +130,19 @@ def _groq_chat_sync(
         "model": model,
         "messages": messages,
         "temperature": temperature,
-        "response_format": {"type": "json_object"},
     }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
+        
     data = json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(
         GROQ_API_URL,
         data=data,
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        headers={
+            "Authorization": f"Bearer {api_key}", 
+            "Content-Type": "application/json",
+            "User-Agent": "Buslingo/1.0"
+        },
         method="POST",
     )
     try:
@@ -162,6 +169,7 @@ async def groq_chat(
     model: str = DEFAULT_GROQ_MODEL,
     temperature: float = 0.3,
     timeout: float = 60.0,
+    json_mode: bool = False,
 ) -> str:
     result = await asyncio.to_thread(
         _groq_chat_sync,
@@ -169,6 +177,7 @@ async def groq_chat(
         model=model,
         temperature=temperature,
         timeout=timeout,
+        json_mode=json_mode,
     )
     return result.raw_text
 
@@ -189,7 +198,11 @@ async def groq_chat_stream(
     request = urllib.request.Request(
         GROQ_API_URL,
         data=data,
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        headers={
+            "Authorization": f"Bearer {api_key}", 
+            "Content-Type": "application/json",
+            "User-Agent": "Buslingo/1.0"
+        },
         method="POST",
     )
 
@@ -245,7 +258,7 @@ async def generate_validated(
 ) -> T:
     convo = list(messages)
     for _attempt in range(max_repairs + 1):
-        raw = await groq_chat(convo, model=model)
+        raw = await groq_chat(convo, model=model, json_mode=True)
         text = _extract_json(raw)
         try:
             return schema.model_validate_json(text)

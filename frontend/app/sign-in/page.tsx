@@ -12,7 +12,7 @@ import { Button, getButtonClasses } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { login } from "@/lib/api";
+import { createClient } from "@/utils/supabase/client";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -22,19 +22,26 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const supabase = createClient();
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await login({ email, password });
-      localStorage.setItem("buslingo_token", data.access_token);
-      localStorage.setItem("buslingo_user", JSON.stringify(data.user));
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        throw signInError;
+      }
 
       router.push("/home");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred");
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }

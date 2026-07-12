@@ -33,12 +33,14 @@ class BrowserSpeechProvider:
 
 
 class ElevenLabsSpeechProvider:
-    async def synthesize(self, text: str) -> SpeechResult:
-        api_key = os.getenv("ELEVENLABS_API_KEY")
-        voice_id = os.getenv("ELEVENLABS_VOICE_ID")
-        if not api_key or not voice_id:
-            return SpeechResult(audio_b64=None, provider="elevenlabs_unconfigured")
+    def __init__(self):
+        self.api_key = os.getenv("ELEVENLABS_API_KEY")
 
+    async def synthesize(self, text: str, voice_id_override: str = None) -> SpeechResult:
+        if not self.api_key:
+            return SpeechResult(audio_b64=None, provider="elevenlabs_missing_key")
+
+        voice_id = voice_id_override or os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
         model_id = os.getenv("ELEVENLABS_MODEL_ID", "eleven_multilingual_v2")
         output_format = os.getenv("ELEVENLABS_OUTPUT_FORMAT", "mp3_44100_128")
         optimize_streaming_latency = os.getenv("ELEVENLABS_OPTIMIZE_STREAMING_LATENCY", "3")
@@ -66,7 +68,7 @@ class ElevenLabsSpeechProvider:
             url,
             data=payload,
             headers={
-                "xi-api-key": api_key,
+                "xi-api-key": self.api_key,
                 "Content-Type": "application/json",
                 "Accept": "audio/mpeg",
             },
@@ -75,10 +77,25 @@ class ElevenLabsSpeechProvider:
 
         try:
             audio_bytes = await asyncio.to_thread(self._fetch_audio_bytes, request)
-        except Exception:
+        except urllib.error.HTTPError as exc:
+            print(f"ElevenLabs HTTPError: {exc.code} for voice {voice_id}")
+            if hasattr(exc, 'read'):
+                print(exc.read().decode('utf-8', errors='replace'))
+            
+            # If the voice is not free or fails, fallback to Rachel
+            RACHEL_ID = "21m00Tcm4TlvDq8ikWAM"
+            if voice_id != RACHEL_ID:
+                print(f"Falling back to Rachel ({RACHEL_ID})...")
+                return await self.synthesize(text, voice_id_override=RACHEL_ID)
+                
+            return SpeechResult(audio_b64=None, provider="elevenlabs_error")
+        except Exception as exc:
+            import traceback
+            traceback.print_exc()
             return SpeechResult(audio_b64=None, provider="elevenlabs_error")
 
         if not audio_bytes:
+            print("ElevenLabs returned empty audio bytes")
             return SpeechResult(audio_b64=None, provider="elevenlabs_empty")
 
         return SpeechResult(audio_b64=base64.b64encode(audio_bytes).decode("ascii"), provider="elevenlabs")

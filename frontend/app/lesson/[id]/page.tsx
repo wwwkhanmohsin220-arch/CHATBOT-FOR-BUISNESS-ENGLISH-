@@ -8,6 +8,7 @@ import { ThreadedTheory } from "@/components/lesson/ThreadedTheory";
 import { InteractiveQnA } from "@/components/lesson/InteractiveQnA";
 import { ThreadedVoice } from "@/components/lesson/ThreadedVoice";
 import { ThreadedMCQ } from "@/components/lesson/ThreadedMCQ";
+import { QnADrawer } from "@/components/lesson/QnADrawer";
 
 type BlockType = "theory" | "mcq" | "qna" | "voice" | "targeted_fix";
 
@@ -34,7 +35,9 @@ export default function UnifiedLessonPage() {
   // 1. Fetch current node on mount
   const fetchCurrentNode = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/lesson-instances/${instanceId}/nodes/current`);
+      const res = await fetch(`http://localhost:8000/api/lesson-instances/${instanceId}/nodes/current`, {
+        cache: "no-store"
+      });
       const data = await res.json();
       
       if (data.status === "completed") {
@@ -68,7 +71,8 @@ export default function UnifiedLessonPage() {
       const res = await fetch(`http://localhost:8000/api/lesson-instances/${instanceId}/nodes/${nodeId}/attempt`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        cache: "no-store"
       });
       const data = await res.json();
 
@@ -88,10 +92,8 @@ export default function UnifiedLessonPage() {
       // But we DO append injected nodes if they were returned.
       if (data.injected_node) {
          setNodes(prev => [...prev, data.injected_node]);
-      } else if (data.correct) {
-         // Only fetch next if we got it right
-         await fetchCurrentNode();
       }
+      return data;
 
     } catch (error) {
       console.error("Error submitting attempt:", error);
@@ -99,7 +101,7 @@ export default function UnifiedLessonPage() {
   };
 
   const handleAskExample = () => {
-    console.log("User asked for an example. In future, this hits QnA endpoint.");
+    window.dispatchEvent(new CustomEvent('open-qna-drawer', { detail: { question: "Can you give me an example?" } }));
   };
 
   const advanceNextBlock = () => {
@@ -136,25 +138,52 @@ export default function UnifiedLessonPage() {
         {block.type === "theory" && (
           <ThreadedTheory 
             content={block.content?.text || ""}
-            onSubmitAttempt={() => submitAttempt(block.node_id)}
+            onSubmitAttempt={async () => {
+              const data = await submitAttempt(block.node_id);
+              if (data?.correct) {
+                await fetchCurrentNode();
+              }
+            }}
             onAskExample={handleAskExample}
           />
         )}
         
         {block.type === "mcq" && (
-          <ThreadedMCQ
-            question={block.content?.question || ""}
-            options={block.content?.options || []}
-            onSubmitAttempt={(idx) => submitAttempt(block.node_id, idx)}
-            feedback={feedback}
-            onAdvance={advanceNextBlock}
+          <ThreadedMCQ 
+            question={block.content.question}
+            options={block.content.options}
+            onSubmitAttempt={async (idx) => {
+              const data = await submitAttempt(block.node_id, idx);
+              // We handle next steps in onAdvance or Try Again
+            }}
+            feedback={feedbacks[block.node_id]}
+            onAdvance={async () => {
+              // Check if it was correct
+              const f = feedbacks[block.node_id];
+              if (f?.correct) {
+                await fetchCurrentNode();
+              }
+            }}
+            onTryAgain={() => {
+              // Clear feedback so they can try again
+              setFeedbacks(prev => {
+                const next = { ...prev };
+                delete next[block.node_id];
+                return next;
+              });
+            }}
           />
         )}
 
         {block.type === "targeted_fix" && (
            <ThreadedTheory 
              content={block.content?.text || "Quick fix: Let's review this concept."}
-             onSubmitAttempt={() => submitAttempt(block.node_id)}
+             onSubmitAttempt={async () => {
+               const data = await submitAttempt(block.node_id);
+               if (data?.correct) {
+                 await fetchCurrentNode();
+               }
+             }}
              onAskExample={handleAskExample}
            />
         )}
@@ -167,7 +196,11 @@ export default function UnifiedLessonPage() {
         )}
 
         {block.type === "voice" && (
-          <ThreadedVoice onEndSession={endLesson} />
+          <ThreadedVoice 
+            instanceId={instanceId} 
+            nodeId={block.node_id} 
+            onEndSession={endLesson}
+          />
         )}
       </motion.div>
     );
@@ -207,6 +240,8 @@ export default function UnifiedLessonPage() {
         </AnimatePresence>
 
       </main>
+
+      <QnADrawer instanceId={instanceId} />
     </div>
   );
 }
