@@ -7,88 +7,110 @@ import { Logo } from "@/components/ui/Logo";
 import { getButtonClasses } from "@/components/ui/Button";
 import Link from "next/link";
 import { BookOpen, Mic, Presentation, Mail, Brain, LineChart } from "lucide-react";
+import ColorBends from "@/components/ui/ColorBends";
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
-      <nav className="fixed top-0 w-full h-16 z-50 border-b border-subtle bg-[#0A0A0F]/80 backdrop-blur-md">
+      <nav className="fixed top-0 w-full h-16 z-50 border-b border-white/10 bg-black/30 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.1)] supports-[backdrop-filter]:bg-black/30">
         <div className="flex justify-between items-center px-5 md:px-16 max-w-7xl mx-auto h-full">
           <Logo />
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
             <Link href="/sign-in" className="text-[#c6c5d5] font-medium hover:text-[#bdc2ff] transition-colors duration-200">
               Sign in
             </Link>
             <Link href="/onboarding" className={getButtonClasses("primary")}>
-              Start Learning — Free
+              Start Learning
             </Link>
           </div>
         </div>
       </nav>
 
-      <main className="flex-grow pt-16">
-        <section className="hero-bg relative flex flex-col items-center justify-center pt-32 pb-24 px-5 md:px-16 text-center overflow-hidden">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight max-w-[680px] mb-6 text-[#F2F2F2]">
-            Master the Language of Business
-          </h1>
-          <p className="text-lg leading-relaxed text-[#A0A0AB] max-w-[560px] mb-10">
-            AI-powered coaching for emails, meetings, presentations, and beyond. Build the communication skills that accelerate your career.
-          </p>
-          <Link href="/onboarding" className={getButtonClasses("primary", "lg", "mb-6")}>
-            Start Learning — Free
-          </Link>
-          <p className="text-sm text-[#5F5F6B]">
-            Already have an account? <Link href="/sign-in" className="text-[#818CF8] hover:underline">Sign in</Link>
-          </p>
-          
-          <div className="mt-24 flex flex-col items-center">
-            <p className="text-sm text-[#5F5F6B] mb-6">Trusted by learners preparing for careers at</p>
-            <div className="flex flex-wrap justify-center gap-10 text-sm text-[#5F5F6B] font-medium">
-              <span>Google</span>
-              <span>McKinsey</span>
-              <span>Stripe</span>
-              <span>Deloitte</span>
-              <span>Amazon</span>
+      <main className="flex-grow">
+        <section className="relative flex flex-col items-center justify-center pt-32 md:pt-48 pb-16 md:pb-24 px-5 md:px-16 text-center overflow-hidden min-h-[500px] md:min-h-[600px]">
+          <div className="absolute inset-0 z-0 opacity-40" style={{ maskImage: "linear-gradient(to bottom, white 50%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, white 50%, transparent 100%)" }}>
+            <ColorBends
+              colors={["#838CF1", "#8a5cff", "#00ffd1"]}
+              rotation={-20}
+              speed={0.97}
+              scale={3.2}
+              frequency={1.8}
+              warpStrength={1}
+              mouseInfluence={1}
+              noise={0.54}
+              parallax={0.5}
+              iterations={1}
+              intensity={1.5}
+              bandWidth={6}
+              transparent={true}
+              autoRotate={0}
+            />
+          </div>
+
+          <div className="relative z-10 flex flex-col items-center">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight max-w-[680px] mb-4 md:mb-6 text-[#F2F2F2]">
+              Master the Language of Business
+            </h1>
+            <p className="text-base md:text-lg leading-relaxed text-[#A0A0AB] max-w-[560px] mb-8 md:mb-10">
+              AI-powered coaching for emails, meetings, presentations, and beyond. Build the communication skills that accelerate your career.
+            </p>
+            <Link href="/onboarding" className={getButtonClasses("primary", "lg", "mb-6")}>
+              Start Learning
+            </Link>
+            <p className="text-sm text-[#5F5F6B]">
+              Already have an account? <Link href="/sign-in" className="text-[#818CF8] hover:underline">Sign in</Link>
+            </p>
+
+            <div className="mt-16 md:mt-24 flex flex-col items-center">
+              <p className="text-sm text-[#5F5F6B] mb-6">Trusted by learners preparing for careers at</p>
+              <div className="flex flex-wrap justify-center gap-5 md:gap-10 text-sm text-[#5F5F6B] font-medium">
+                <span>Google</span>
+                <span>McKinsey</span>
+                <span>Stripe</span>
+                <span>Deloitte</span>
+                <span>Amazon</span>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="py-24 px-5 md:px-16 max-w-7xl mx-auto">
+        <section className="py-16 md:py-24 px-5 md:px-16 max-w-7xl mx-auto">
           <h2 className="text-3xl font-semibold text-[#F2F2F2] mb-12 text-center">Everything you need to communicate with confidence</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <FeatureCard 
-              icon={<BookOpen className="text-[#818CF8]" size={20} />} 
-              title="Industry Vocab" 
-              description="Master the specific terminology and phrasing expected in your target industry." 
+            <FeatureCard
+              icon={<BookOpen className="text-[#818CF8]" size={20} />}
+              title="Industry Vocab"
+              description="Master the specific terminology and phrasing expected in your target industry."
             />
-            <FeatureCard 
-              icon={<Mic className="text-[#818CF8]" size={20} />} 
-              title="Pronunciation" 
-              description="Real-time feedback on your clarity, pacing, and tone during mock calls." 
+            <FeatureCard
+              icon={<Mic className="text-[#818CF8]" size={20} />}
+              title="Pronunciation"
+              description="Real-time feedback on your clarity, pacing, and tone during mock calls."
             />
-            <FeatureCard 
-              icon={<Presentation className="text-[#818CF8]" size={20} />} 
-              title="Presentations" 
-              description="Structure your narrative and practice delivery for high-stakes meetings." 
+            <FeatureCard
+              icon={<Presentation className="text-[#818CF8]" size={20} />}
+              title="Presentations"
+              description="Structure your narrative and practice delivery for high-stakes meetings."
             />
-            <FeatureCard 
-              icon={<Mail className="text-[#818CF8]" size={20} />} 
-              title="Email Drafting" 
-              description="Learn to write concise, professional emails that get fast responses." 
+            <FeatureCard
+              icon={<Mail className="text-[#818CF8]" size={20} />}
+              title="Email Drafting"
+              description="Learn to write concise, professional emails that get fast responses."
             />
-            <FeatureCard 
-              icon={<Brain className="text-[#818CF8]" size={20} />} 
-              title="Cultural Nuance" 
-              description="Understand the unspoken rules of international business communication." 
+            <FeatureCard
+              icon={<Brain className="text-[#818CF8]" size={20} />}
+              title="Cultural Nuance"
+              description="Understand the unspoken rules of international business communication."
             />
-            <FeatureCard 
-              icon={<LineChart className="text-[#818CF8]" size={20} />} 
-              title="Progress Tracking" 
-              description="Detailed analytics on your fluency, vocabulary expansion, and confidence." 
+            <FeatureCard
+              icon={<LineChart className="text-[#818CF8]" size={20} />}
+              title="Progress Tracking"
+              description="Detailed analytics on your fluency, vocabulary expansion, and confidence."
             />
           </div>
         </section>
       </main>
-      
+
       <footer className="bg-[#131318] py-8 border-t border-subtle w-full mt-auto">
         <div className="flex flex-col md:flex-row justify-between items-center px-5 md:px-16 max-w-7xl mx-auto gap-4">
           <div className="text-sm text-[#5F5F6B]">

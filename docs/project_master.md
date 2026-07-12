@@ -1,3 +1,6 @@
+> **⚠️ This is an executive summary for quick onboarding only.**
+> For all architectural decisions, endpoint contracts, and implementation details, defer to the **ultimate source of truth**: [`buslingo_implementation_blueprint.md`](./buslingo_implementation_blueprint.md) (v2 route).
+
 # 1. Project Overview
 
 We are building **Buslingo**, an AI-native Business English learning platform. It is a structured educational product that combines the gamification and pedagogical structure of Duolingo with the conversational power of modern LLMs. 

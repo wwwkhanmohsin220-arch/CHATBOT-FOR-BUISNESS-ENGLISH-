@@ -149,3 +149,28 @@ create table llm_failures (
   error text, raw_output text,
   user_id uuid, created_at timestamptz default now()
 );
+
+-- ============ RAG PIPELINE (pgvector) ============
+create extension if not exists vector;
+
+create table document_sources (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  author text,
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz default now()
+);
+
+create table document_chunks (
+  id uuid primary key default gen_random_uuid(),
+  source_id uuid not null references document_sources(id) on delete cascade,
+  content text not null,
+  embedding vector(384),            -- all-MiniLM-L6-v2
+  concept_tags text[] default '{}', -- For hybrid filtering
+  created_at timestamptz default now()
+);
+
+-- HNSW index for ultra-fast semantic search
+create index on document_chunks using hnsw (embedding vector_cosine_ops);
+
+
