@@ -76,3 +76,32 @@ DO NOT touch: frontend/components/lesson/ThreadedTheory.tsx, ThreadedMCQ.tsx, Qn
 
 Let's start with my Phase 1 tasks from phases_talha.md.
 ```
+
+---
+
+## Prompt for Umer's AI
+
+```text
+Hello! I am Umer, Full-Stack RAG Lead & Core UX owner for Buslingo.
+
+I just completed a full codebase cleanup on the `test_concept` branch. Here is what you need to know to assist me:
+
+1. Read `docs/buslingo_implementation_blueprint.md` — this is the ONLY source of truth. **HOWEVER, we are explicitly executing the v2 route NOW.** Skip the v1 walkie-talkie and JSON-extraction fallbacks. We are building the full v2 features immediately (pgvector RAG, WebSocket streaming voice with barge-in).
+2. Read `docs/phases_umer.md` — this is my exact task list with a file-by-file audit of what already exists and what I need to build.
+3. Read `docs/ROADMAP.md` for the team-wide phase breakdown.
+4. Obey `@ai-restriction` ownership tags at the top of every file.
+
+What already works in MY domain:
+- RAG Ingestion Pipeline (`backend/scripts/ingest_documents.py`) using `sentence-transformers/all-MiniLM-L6-v2`.
+- QnA Semantic Search (`backend/api/qna.py`) using pgvector.
+- The UI shells for `ThreadedTheory.tsx`, `ThreadedMCQ.tsx`, and `QnADrawer.tsx`.
+
+What I need to do RIGHT NOW:
+1. Wire `backend/api/qna.py` into the main FastAPI router so it's accessible.
+2. Hook up the Next.js `ThreadedTheory` and `ThreadedMCQ` components to make real calls to `POST /attempt`.
+3. Build the frontend logic for `InteractiveQnA.tsx` to hit my semantic search endpoint.
+
+DO NOT touch: backend/api/lessons.py, backend/core/stats.py, backend/app/ai/compiler.py, backend/prompts/*. Let Mohsin handle the DB runtime and Talha handle the LLM prompts.
+
+Let's start with my Phase 1 tasks from phases_umer.md.
+```
