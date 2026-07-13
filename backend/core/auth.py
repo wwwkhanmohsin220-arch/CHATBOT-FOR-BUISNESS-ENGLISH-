@@ -114,30 +114,82 @@ def verify_supabase_jwt(token: str) -> dict[str, Any]:
     return payload
 
 
-def _claims_to_current_user(claims: dict[str, Any]) -> CurrentUser:
-    user_id = claims.get("sub")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Supabase JWT missing subject.",
-        )
+import httpx
+import time
+import asyncio
 
-    user_metadata = claims.get("user_metadata") or {}
-    app_metadata = claims.get("app_metadata") or {}
-    display_name = (
-        user_metadata.get("full_name")
-        or user_metadata.get("name")
-        or app_metadata.get("provider")
-        or (claims.get("email") or "").split("@")[0]
-        or None
-    )
+# Cache valid tokens for 5 minutes to avoid redundant network calls to Supabase Auth.
+_TOKEN_CACHE: dict[str, tuple[float, CurrentUser]] = {}
+_TOKEN_LOCKS: dict[str, asyncio.Lock] = {}
+_CACHE_TTL = 300  # 5 minutes
 
-    return CurrentUser(
-        user_id=str(user_id),
-        email=claims.get("email"),
-        display_name=display_name,
-        claims=claims,
-    )
+async def verify_supabase_jwt_async(token: str) -> CurrentUser:
+    now = time.time()
+    
+    # Check cache
+    if token in _TOKEN_CACHE:
+        timestamp, user = _TOKEN_CACHE[token]
+        if now - timestamp < _CACHE_TTL:
+            return user
+        else:
+            del _TOKEN_CACHE[token]
+
+    if token not in _TOKEN_LOCKS:
+        _TOKEN_LOCKS[token] = asyncio.Lock()
+        
+    async with _TOKEN_LOCKS[token]:
+        # Check cache again inside lock
+        if token in _TOKEN_CACHE:
+            timestamp, user = _TOKEN_CACHE[token]
+            if now - timestamp < _CACHE_TTL:
+                return user
+
+        supabase_url = os.getenv("SUPABASE_URL")
+        anon_key = os.getenv("SUPABASE_ANON_KEY")
+        
+        if not supabase_url or not anon_key:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="SUPABASE_URL or SUPABASE_ANON_KEY is not configured.",
+            )
+            
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{supabase_url}/auth/v1/user",
+                headers={
+                    "apikey": anon_key,
+                    "Authorization": f"Bearer {token}"
+                }
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid or expired Supabase access token.",
+                )
+                
+            user_data = response.json()
+            
+            user_metadata = user_data.get("user_metadata", {})
+            app_metadata = user_data.get("app_metadata", {})
+            display_name = (
+                user_metadata.get("full_name")
+                or user_metadata.get("name")
+                or user_metadata.get("username")
+                or app_metadata.get("provider")
+                or (user_data.get("email") or "").split("@")[0]
+                or None
+            )
+            
+            current_user = CurrentUser(
+                user_id=user_data["id"],
+                email=user_data.get("email"),
+                display_name=display_name,
+                claims=user_data,
+            )
+            
+            _TOKEN_CACHE[token] = (now, current_user)
+            return current_user
 
 
 async def get_current_user(authorization: str | None = Header(default=None)) -> CurrentUser:
@@ -148,8 +200,7 @@ async def get_current_user(authorization: str | None = Header(default=None)) -> 
             detail="Missing Supabase access token.",
         )
 
-    claims = verify_supabase_jwt(token)
-    return _claims_to_current_user(claims)
+    return await verify_supabase_jwt_async(token)
 
 
 async def get_optional_current_user(
@@ -158,5 +209,8 @@ async def get_optional_current_user(
     token = _extract_bearer_token(authorization)
     if not token:
         return None
-    claims = verify_supabase_jwt(token)
-    return _claims_to_current_user(claims)
+        
+    try:
+        return await verify_supabase_jwt_async(token)
+    except HTTPException:
+        return None

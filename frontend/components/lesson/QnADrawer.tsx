@@ -94,7 +94,7 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
           try {
             const formData = new FormData();
             formData.append("audio", audioBlob, "recording.webm");
-            const res = await fetch("http://localhost:8000/api/transcribe", {
+            const res = await fetch("/api/transcribe", {
               method: "POST",
               body: formData,
             });
@@ -155,18 +155,27 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
     setIsTyping(true);
 
     try {
-      const res = await fetch(`http://localhost:8000/api/lesson-instances/${instanceId}/qna`, {
+      const res = await fetch(`/api/qna/semantic-search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: userMsg })
+        body: JSON.stringify({ query: userMsg })
       });
       const data = await res.json();
+      
+      let answer_markdown = "Here is what I found in the curriculum:\n\n";
+      if (data.results && data.results.length > 0) {
+        data.results.forEach((r: any) => {
+          answer_markdown += `> **Source: ${r.source_title}**\n>\n> ${r.content}\n\n`;
+        });
+      } else {
+        answer_markdown = "I couldn't find anything relevant to that question.";
+      }
       
       setMessages(prev => [...prev, { 
         id: (Date.now() + 1).toString(), 
         role: "ai", 
-        text: data.answer_markdown,
-        isOffTopic: data.scope === "off_topic"
+        text: answer_markdown,
+        isOffTopic: false
       }]);
     } catch (error) {
       console.error(error);

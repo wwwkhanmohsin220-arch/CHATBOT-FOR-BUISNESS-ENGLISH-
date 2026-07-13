@@ -18,8 +18,15 @@ async def mock_get_current_user():
 
 router = APIRouter()
 
-# Load the model once when the module imports. It runs locally on the CPU.
-model = SentenceTransformer('all-MiniLM-L6-v2')
+# We will lazy-load the model to prevent massive startup delays
+_model = None
+
+def get_model():
+    global _model
+    if _model is None:
+        print("Lazy-loading SentenceTransformer model (BAAI/bge-small-en-v1.5)...")
+        _model = SentenceTransformer('BAAI/bge-small-en-v1.5')
+    return _model
 
 class SemanticSearchRequest(BaseModel):
     query: str
@@ -44,7 +51,7 @@ async def semantic_search(
 
     try:
         # 1. Embed the query locally (zero cost, zero latency)
-        query_embedding = model.encode(request.query)
+        query_embedding = get_model().encode(request.query)
         embedding_json = json.dumps(query_embedding.tolist())
 
         # 2. Vector search via pgvector cosine distance operator <->

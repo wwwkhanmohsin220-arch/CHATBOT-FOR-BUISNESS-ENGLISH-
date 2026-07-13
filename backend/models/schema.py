@@ -53,11 +53,11 @@ class AuthResponse(BaseModel):
 
 
 class SlotContext(BaseModel):
-    objectives: list[str] = Field(min_length=2, max_length=5)
+    objectives: list[str] = Field(min_length=1, max_length=5)
     concept_tags: list[str]
-    key_vocabulary: list[str] = Field(min_length=4, max_length=12)
+    key_vocabulary: list[str] = Field(min_length=1, max_length=12)
     grammar_points: list[str] = Field(min_length=1, max_length=4)
-    example_phrases: list[str] = Field(min_length=2, max_length=8)
+    example_phrases: list[str] = Field(min_length=1, max_length=8)
 
     @field_validator("concept_tags")
     @classmethod
@@ -113,6 +113,27 @@ class VoiceScore(BaseModel):
     notable_errors: list[str]
     one_line_feedback: str
 
+
+class PrioritizedFix(BaseModel):
+    concept_tag: str
+    why: str
+    example_from_user: Optional[str] = None
+
+
+class CoachSummary(BaseModel):
+    overall_scores: dict[str, int]
+    summary_markdown: str
+    prioritized_fixes: list[PrioritizedFix]
+    next_lesson_focus: str
+    final_score: Optional[int] = None
+
+    @field_validator("prioritized_fixes")
+    @classmethod
+    def validate_tags(cls, v: list[PrioritizedFix]) -> list[PrioritizedFix]:
+        for fix in v:
+            if fix.concept_tag not in CANONICAL_TAGS:
+                raise ValueError(f"Tag {fix.concept_tag} is not a canonical tag.")
+        return v
 
 class QnAResponse(BaseModel):
     answer_markdown: str = Field(min_length=10, max_length=2500)
@@ -252,6 +273,7 @@ class VoiceTurnResponse(BaseModel):
     reply_audio_b64: Optional[str] = None
     objectives_hit: list[str] = Field(default_factory=list)
     turn_count: int
+    is_complete: bool = False
     session_key: str
 
 

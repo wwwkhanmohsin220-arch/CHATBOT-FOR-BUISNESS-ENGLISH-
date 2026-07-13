@@ -91,7 +91,7 @@ def _extract_objectives_hit(state: VoiceState, transcript: str) -> list[str]:
     return hits
 
 
-async def transcribe_audio_bytes(audio_bytes: bytes) -> str:
+async def transcribe_audio_bytes(audio_bytes: bytes, filename: str = "audio.webm") -> str:
     if not audio_bytes:
         raise ValueError("Audio payload is empty.")
 
@@ -105,7 +105,7 @@ async def transcribe_audio_bytes(audio_bytes: bytes) -> str:
         return _fallback_transcript(audio_bytes)
 
     try:
-        maybe_result = transcribe(audio_bytes=audio_bytes)
+        maybe_result = transcribe(audio_bytes=audio_bytes, filename=filename)
         if hasattr(maybe_result, "__await__"):
             result = await maybe_result
         else:
@@ -113,6 +113,12 @@ async def transcribe_audio_bytes(audio_bytes: bytes) -> str:
     except Exception as exc:
         import traceback
         traceback.print_exc()
+        try:
+            with open("transcription_error.log", "w") as f:
+                f.write(traceback.format_exc())
+                f.write("\nException message: " + str(exc))
+        except:
+            pass
         return _fallback_transcript(audio_bytes)
 
     if isinstance(result, str):
@@ -124,41 +130,42 @@ async def transcribe_audio_bytes(audio_bytes: bytes) -> str:
     return _fallback_transcript(audio_bytes)
 
 
-async def generate_voice_reply(state: VoiceState, transcript: str) -> tuple[str, str | None]:
+async def generate_voice_reply(state: VoiceState, transcript: str) -> tuple[str, str | None, bool]:
     try:
         ai_module = importlib.import_module("backend.app.ai.client")
     except Exception:
-        return _fallback_reply(state, transcript), None
+        return _fallback_reply(state, transcript), None, False
 
     generate_reply = getattr(ai_module, "generate_voice_reply", None)
     if generate_reply is None:
-        return _fallback_reply(state, transcript), None
+        return _fallback_reply(state, transcript), None, False
 
     try:
         maybe_result = generate_reply(
-            transcript=transcript,
             objectives=state.objectives,
             ai_persona=state.ai_persona,
             scenario=state.scenario,
             coach_voice=state.coach_voice,
             level=state.level,
+            history=[{"role": msg.role, "text": msg.text} for msg in state.history],
         )
         if hasattr(maybe_result, "__await__"):
             result = await maybe_result
         else:
             result = maybe_result
     except Exception:
-        return _fallback_reply(state, transcript), None
+        return _fallback_reply(state, transcript), None, False
 
     if isinstance(result, dict):
         reply_text = str(result.get("reply_text") or result.get("text") or _fallback_reply(state, transcript))
         reply_audio = result.get("reply_audio_b64")
-        return reply_text, reply_audio if isinstance(reply_audio, str) else None
+        is_complete = bool(result.get("llm_signaled_complete", False))
+        return reply_text, reply_audio if isinstance(reply_audio, str) else None, is_complete
 
     if isinstance(result, str):
-        return result, None
+        return result, None, False
 
-    return _fallback_reply(state, transcript), None
+    return _fallback_reply(state, transcript), None, False
 
 
 async def get_or_create_state(

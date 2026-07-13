@@ -3,29 +3,1097 @@
     {
       "id": 1,
       "position": 1,
-      "title": "Unit 1: The First Impression",
+      "title": "Unit 1: Introduction to Communication",
       "slots": [
         {
           "slot_key": "u1l1",
           "position": 1,
           "objectives": [
-            "Introduce yourself clearly in a professional setting",
-            "Exchange pleasantries without being overly informal"
+            "Understand introduction to communication",
+            "Apply professional communication techniques"
           ],
           "concept_tags": [
-            "small_talk",
+            "polite_disagreement"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss introduction to communication in detail."
+          ]
+        },
+        {
+          "slot_key": "u1l2",
+          "position": 2,
+          "objectives": [
+            "Understand flow of communication",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
             "tone_formality"
           ],
           "key_vocabulary": [
-            "Pleasure to meet you",
-            "I'm responsible for",
-            "Looking forward to"
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
           ],
           "grammar_points": [
-            "Present simple for roles and responsibilities"
+            "Present simple for general truths"
           ],
           "example_phrases": [
-            "Hello, my name is Alex. I'm responsible for the marketing team here."
+            "Let's discuss flow of communication in detail."
+          ]
+        },
+        {
+          "slot_key": "u1l3",
+          "position": 3,
+          "objectives": [
+            "Understand theories of communication",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "tense_past_perfect"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss theories of communication in detail."
+          ]
+        },
+        {
+          "slot_key": "u1l4",
+          "position": 4,
+          "objectives": [
+            "Understand the process of communication and misconceptions",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "email_structure"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss the process of communication and misconceptions in detail."
+          ]
+        },
+        {
+          "slot_key": "u1l5",
+          "position": 5,
+          "objectives": [
+            "Understand barriers in effective communication",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "meeting_vocabulary"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss barriers in effective communication in detail."
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "position": 2,
+      "title": "Unit 2: Non-verbal Communication",
+      "slots": [
+        {
+          "slot_key": "u2l1",
+          "position": 1,
+          "objectives": [
+            "Understand non-verbal communication",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "negotiation_phrases"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss non-verbal communication in detail."
+          ]
+        },
+        {
+          "slot_key": "u2l2",
+          "position": 2,
+          "objectives": [
+            "Understand non-verbal communication",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "conditionals"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss non-verbal communication in detail."
+          ]
+        },
+        {
+          "slot_key": "u2l3",
+          "position": 3,
+          "objectives": [
+            "Understand traits of good communicators",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "active_listening_phrases"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss traits of good communicators in detail."
+          ]
+        },
+        {
+          "slot_key": "u2l4",
+          "position": 4,
+          "objectives": [
+            "Understand principles of business communication",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "small_talk"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss principles of business communication in detail."
+          ]
+        },
+        {
+          "slot_key": "u2l5",
+          "position": 5,
+          "objectives": [
+            "Understand concreteness",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "clarifying_questions"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss concreteness in detail."
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "position": 3,
+      "title": "Unit 3: Consideration",
+      "slots": [
+        {
+          "slot_key": "u3l1",
+          "position": 1,
+          "objectives": [
+            "Understand consideration",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "numbers_and_dates"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss consideration in detail."
+          ]
+        },
+        {
+          "slot_key": "u3l2",
+          "position": 2,
+          "objectives": [
+            "Understand intercultural communication",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "closing_language"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss intercultural communication in detail."
+          ]
+        },
+        {
+          "slot_key": "u3l3",
+          "position": 3,
+          "objectives": [
+            "Understand intercultural communication",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "polite_disagreement"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss intercultural communication in detail."
+          ]
+        },
+        {
+          "slot_key": "u3l4",
+          "position": 4,
+          "objectives": [
+            "Understand individual cultural variables",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "tone_formality"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss individual cultural variables in detail."
+          ]
+        },
+        {
+          "slot_key": "u3l5",
+          "position": 5,
+          "objectives": [
+            "Understand process of preparing effective business messages",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "tense_past_perfect"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss process of preparing effective business messages in detail."
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "position": 4,
+      "title": "Unit 4: The Appearance and Design of Business Messages",
+      "slots": [
+        {
+          "slot_key": "u4l1",
+          "position": 1,
+          "objectives": [
+            "Understand the appearance and design of business messages",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "email_structure"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss the appearance and design of business messages in detail."
+          ]
+        },
+        {
+          "slot_key": "u4l2",
+          "position": 2,
+          "objectives": [
+            "Understand the appearance and design of business messages",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "meeting_vocabulary"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss the appearance and design of business messages in detail."
+          ]
+        },
+        {
+          "slot_key": "u4l3",
+          "position": 3,
+          "objectives": [
+            "Understand communication through technology",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "negotiation_phrases"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss communication through technology in detail."
+          ]
+        },
+        {
+          "slot_key": "u4l4",
+          "position": 4,
+          "objectives": [
+            "Understand basic organizational plans",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "conditionals"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss basic organizational plans in detail."
+          ]
+        },
+        {
+          "slot_key": "u4l5",
+          "position": 5,
+          "objectives": [
+            "Understand inquiries and general requests",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "active_listening_phrases"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss inquiries and general requests in detail."
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "position": 5,
+      "title": "Unit 5: Inquiries and General Requests",
+      "slots": [
+        {
+          "slot_key": "u5l1",
+          "position": 1,
+          "objectives": [
+            "Understand inquiries and general requests",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "small_talk"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss inquiries and general requests in detail."
+          ]
+        },
+        {
+          "slot_key": "u5l2",
+          "position": 2,
+          "objectives": [
+            "Understand letter writing (placing orders)",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "clarifying_questions"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss letter writing (placing orders) in detail."
+          ]
+        },
+        {
+          "slot_key": "u5l3",
+          "position": 3,
+          "objectives": [
+            "Understand letter writing (claim letter)",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "numbers_and_dates"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss letter writing (claim letter) in detail."
+          ]
+        },
+        {
+          "slot_key": "u5l4",
+          "position": 4,
+          "objectives": [
+            "Understand letter writing (adjustment letter)",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "closing_language"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss letter writing (adjustment letter) in detail."
+          ]
+        },
+        {
+          "slot_key": "u5l5",
+          "position": 5,
+          "objectives": [
+            "Understand collection letter",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "polite_disagreement"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss collection letter in detail."
+          ]
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "position": 6,
+      "title": "Unit 6: Sales Letter",
+      "slots": [
+        {
+          "slot_key": "u6l1",
+          "position": 1,
+          "objectives": [
+            "Understand sales letter",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "tone_formality"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss sales letter in detail."
+          ]
+        },
+        {
+          "slot_key": "u6l2",
+          "position": 2,
+          "objectives": [
+            "Understand memorandum and circular",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "tense_past_perfect"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss memorandum and circular in detail."
+          ]
+        },
+        {
+          "slot_key": "u6l3",
+          "position": 3,
+          "objectives": [
+            "Understand minutes of the meeting",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "email_structure"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss minutes of the meeting in detail."
+          ]
+        },
+        {
+          "slot_key": "u6l4",
+          "position": 4,
+          "objectives": [
+            "Understand business reports",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "meeting_vocabulary"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss business reports in detail."
+          ]
+        },
+        {
+          "slot_key": "u6l5",
+          "position": 5,
+          "objectives": [
+            "Understand business reports (letter reports)",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "negotiation_phrases"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss business reports (letter reports) in detail."
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "position": 7,
+      "title": "Unit 7: Business Reports",
+      "slots": [
+        {
+          "slot_key": "u7l1",
+          "position": 1,
+          "objectives": [
+            "Understand business reports (formal reports)",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "conditionals"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss business reports (formal reports) in detail."
+          ]
+        },
+        {
+          "slot_key": "u7l2",
+          "position": 2,
+          "objectives": [
+            "Understand market reports",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "active_listening_phrases"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss market reports in detail."
+          ]
+        },
+        {
+          "slot_key": "u7l3",
+          "position": 3,
+          "objectives": [
+            "Understand job search and employment",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "small_talk"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss job search and employment in detail."
+          ]
+        },
+        {
+          "slot_key": "u7l4",
+          "position": 4,
+          "objectives": [
+            "Understand resume writing",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "clarifying_questions"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss resume writing in detail."
+          ]
+        },
+        {
+          "slot_key": "u7l5",
+          "position": 5,
+          "objectives": [
+            "Understand resume and application letter",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "numbers_and_dates"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss resume and application letter in detail."
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "position": 8,
+      "title": "Unit 8: Job Inquiry Letter and Interview",
+      "slots": [
+        {
+          "slot_key": "u8l1",
+          "position": 1,
+          "objectives": [
+            "Understand job inquiry letter and interview",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "closing_language"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss job inquiry letter and interview in detail."
+          ]
+        },
+        {
+          "slot_key": "u8l2",
+          "position": 2,
+          "objectives": [
+            "Understand process of preparing the interview",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "polite_disagreement"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss process of preparing the interview in detail."
+          ]
+        },
+        {
+          "slot_key": "u8l3",
+          "position": 3,
+          "objectives": [
+            "Understand oral presentation",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "tone_formality"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss oral presentation in detail."
+          ]
+        },
+        {
+          "slot_key": "u8l4",
+          "position": 4,
+          "objectives": [
+            "Understand oral presentation",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "tense_past_perfect"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss oral presentation in detail."
+          ]
+        },
+        {
+          "slot_key": "u8l5",
+          "position": 5,
+          "objectives": [
+            "Understand language practice and negotiation skill",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "email_structure"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss language practice and negotiation skill in detail."
+          ]
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "position": 9,
+      "title": "Unit 9: Negotiation and Listening",
+      "slots": [
+        {
+          "slot_key": "u9l1",
+          "position": 1,
+          "objectives": [
+            "Understand negotiation and listening",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "meeting_vocabulary"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss negotiation and listening in detail."
+          ]
+        },
+        {
+          "slot_key": "u9l2",
+          "position": 2,
+          "objectives": [
+            "Understand thesis writing and presentation",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "negotiation_phrases"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss thesis writing and presentation in detail."
+          ]
+        },
+        {
+          "slot_key": "u9l3",
+          "position": 3,
+          "objectives": [
+            "Understand thesis writing and presentation",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "conditionals"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss thesis writing and presentation in detail."
+          ]
+        },
+        {
+          "slot_key": "u9l4",
+          "position": 4,
+          "objectives": [
+            "Understand research methodology",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "active_listening_phrases"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss research methodology in detail."
+          ]
+        },
+        {
+          "slot_key": "u9l5",
+          "position": 5,
+          "objectives": [
+            "Understand research methodology",
+            "Apply professional communication techniques"
+          ],
+          "concept_tags": [
+            "small_talk"
+          ],
+          "key_vocabulary": [
+            "communication",
+            "professional",
+            "strategy",
+            "structure"
+          ],
+          "grammar_points": [
+            "Present simple for general truths"
+          ],
+          "example_phrases": [
+            "Let's discuss research methodology in detail."
           ]
         }
       ]

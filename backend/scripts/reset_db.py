@@ -14,6 +14,8 @@ async def main():
     await conn.execute("DELETE FROM lesson_branches;")
     await conn.execute("DELETE FROM lesson_nodes;")
     await conn.execute("DELETE FROM lesson_instances;")
+    await conn.execute("DELETE FROM document_chunks;")
+    await conn.execute("DELETE FROM document_sources;")
     await conn.close()
     print("Database reset successfully.")
 

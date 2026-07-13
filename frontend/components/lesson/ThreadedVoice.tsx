@@ -5,7 +5,7 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import { Mic, Bot } from "lucide-react";
+import { Mic, Bot, Volume2 } from "lucide-react";
 import { motion, AnimatePresence, animate } from "framer-motion";
 import Strands from "@/components/ui/Strands";
 
@@ -13,20 +13,25 @@ interface Message {
   id: string;
   sender: "Coach" | "You";
   text: string;
+  audioData?: string;
 }
 
 interface ThreadedVoiceProps {
   instanceId: string;
   nodeId: string;
+  content?: any;
   onEndSession: () => void;
 }
 
-export function ThreadedVoice({ instanceId, nodeId, onEndSession }: ThreadedVoiceProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: ThreadedVoiceProps) {
+  const [messages, setMessages] = useState<Message[]>(
+    content?.opening_line ? [{ id: "0", sender: "Coach", text: content.opening_line }] : []
+  );
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
+  const interimTranscriptRef = useRef("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recognitionRef = useRef<any>(null);
@@ -37,6 +42,13 @@ export function ThreadedVoice({ instanceId, nodeId, onEndSession }: ThreadedVoic
     waviness: 0.5, 
     thickness: 0.3 
   });
+  const [sessionComplete, setSessionComplete] = useState(false);
+
+  useEffect(() => {
+    if (!isPlayingAudio && sessionComplete) {
+      handleEndSession();
+    }
+  }, [isPlayingAudio, sessionComplete]);
 
   useEffect(() => {
     const controls = animate(visuals, {
@@ -83,6 +95,7 @@ export function ThreadedVoice({ instanceId, nodeId, onEndSession }: ThreadedVoic
             transcript += event.results[i][0].transcript;
           }
           setInterimTranscript(transcript);
+          interimTranscriptRef.current = transcript;
         };
         recognition.start();
         recognitionRef.current = recognition;
@@ -142,8 +155,13 @@ export function ThreadedVoice({ instanceId, nodeId, onEndSession }: ThreadedVoic
     try {
       const formData = new FormData();
       formData.append("audio", audioBlob, "recording.webm");
+      
+      const fallbackText = interimTranscriptRef.current;
+      if (fallbackText) {
+        formData.append("transcript_fallback", fallbackText);
+      }
 
-      const res = await fetch(`http://localhost:8000/api/lesson-instances/${instanceId}/voice/turn`, {
+      const res = await fetch(`/api/lesson-instances/${instanceId}/voice/turn`, {
         method: "POST",
         body: formData,
       });
@@ -155,14 +173,24 @@ export function ThreadedVoice({ instanceId, nodeId, onEndSession }: ThreadedVoic
       const data = await res.json();
       
       setInterimTranscript(""); // Clear real-time transcript
+      interimTranscriptRef.current = "";
       
       // Add User message
       const userMsg: Message = { id: Date.now().toString(), sender: "You", text: data.transcript };
       
       // Add Coach message
-      const coachMsg: Message = { id: (Date.now() + 1).toString(), sender: "Coach", text: data.reply_text };
+      const coachMsg: Message = { 
+        id: (Date.now() + 1).toString(), 
+        sender: "Coach", 
+        text: data.reply_text,
+        audioData: data.reply_audio_b64 
+      };
       
       setMessages(prev => [...prev, userMsg, coachMsg]);
+
+      if (data.is_complete) {
+        setSessionComplete(true);
+      }
 
       // Play audio response
       if (data.reply_audio_b64) {
@@ -181,7 +209,7 @@ export function ThreadedVoice({ instanceId, nodeId, onEndSession }: ThreadedVoic
   const handleEndSession = async () => {
     setIsProcessing(true);
     try {
-      await fetch(`http://localhost:8000/api/lesson-instances/${instanceId}/voice/finish`, {
+      await fetch(`/api/lesson-instances/${instanceId}/voice/finish`, {
         method: "POST",
       });
       onEndSession();
@@ -211,17 +239,13 @@ export function ThreadedVoice({ instanceId, nodeId, onEndSession }: ThreadedVoic
       animate={{ opacity: 1, x: 0 }}
       className="flex flex-col gap-6 w-full"
     >
-      <div className="flex gap-4 items-start pl-4 border-l-[3px] border-[#818cf8]">
-        <div className="w-10 h-10 rounded-full bg-[#2a292f] flex items-center justify-center shrink-0 border border-[#35343a]">
-          <Bot size={20} className="text-[#818cf8]" />
+      {content?.scenario && (
+        <div className="flex flex-col gap-2 bg-[#818cf8]/10 border border-[#818cf8]/30 rounded-xl p-4 ml-14 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-[#818cf8]" />
+          <span className="text-[12px] font-bold text-[#818cf8] uppercase tracking-wider">Scenario</span>
+          <p className="text-[14px] text-[#e4e1e9] leading-relaxed">{content.scenario}</p>
         </div>
-        <div className="flex flex-col gap-1 w-full">
-          <span className="text-[12px] font-medium text-[#c6c5d5] uppercase tracking-wider">Voice Practice</span>
-          <p className="text-[16px] text-[#e4e1e9] font-medium leading-relaxed">
-            Practice speaking with the AI coach. We will analyze your tone, fluency, and vocabulary.
-          </p>
-        </div>
-      </div>
+      )}
 
       <div className="pl-14 w-full flex flex-col items-center gap-8">
         <div className="relative w-[180px] h-[180px] md:w-[220px] md:h-[220px] rounded-full overflow-hidden shrink-0 mt-4">
@@ -260,15 +284,32 @@ export function ThreadedVoice({ instanceId, nodeId, onEndSession }: ThreadedVoic
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   className="flex flex-col gap-1 w-full shrink-0"
                 >
-                  <span 
-                    className={
-                      msg.sender === "Coach" 
-                        ? "text-[#818cf8] text-[12px] font-bold tracking-wide uppercase" 
-                        : "text-[#A0A0AB] text-[12px] font-bold tracking-wide uppercase"
-                    }
-                  >
-                    {msg.sender}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span 
+                      className={
+                        msg.sender === "Coach" 
+                          ? "text-[#818cf8] text-[12px] font-bold tracking-wide uppercase" 
+                          : "text-[#A0A0AB] text-[12px] font-bold tracking-wide uppercase"
+                      }
+                    >
+                      {msg.sender}
+                    </span>
+                    {msg.sender === "Coach" && (
+                      <button 
+                        onClick={() => {
+                          if (msg.audioData) {
+                            playAudioData(msg.audioData);
+                          } else {
+                            playTTSFallback(msg.text);
+                          }
+                        }}
+                        className="text-[#818cf8] hover:text-[#bdc2ff] transition-colors bg-[#818cf8]/10 hover:bg-[#818cf8]/20 p-1 rounded-full flex items-center justify-center"
+                        title="Play audio"
+                      >
+                        <Volume2 size={14} />
+                      </button>
+                    )}
+                  </div>
                   <p className="text-[#e4e1e9] text-[16px] md:text-[18px] leading-relaxed font-medium">
                     {msg.text}
                   </p>

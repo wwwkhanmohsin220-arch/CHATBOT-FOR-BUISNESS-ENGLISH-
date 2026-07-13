@@ -242,23 +242,89 @@ async def _persist_compile_metadata(
             json.dumps(profile_snapshot),
         )
 
+        # Clear any existing nodes/branches if it's a recompile
+        await connection.execute("DELETE FROM lesson_nodes WHERE lesson_instance_id = $1", instance_id)
+        await connection.execute("DELETE FROM lesson_branches WHERE lesson_instance_id = $1", instance_id)
+
+        # Insert spine nodes
+        for index, node in enumerate(bundle.spine):
+            await connection.execute(
+                """
+                INSERT INTO lesson_nodes
+                  (lesson_instance_id, position, node_type, concept_tag, content)
+                VALUES ($1, $2, $3, $4, $5::jsonb)
+                """,
+                instance_id,
+                index,
+                node.node_type,
+                node.concept_tag,
+                json.dumps(node.content),
+            )
+
+        # Insert branches
+        for concept_tag, branch in bundle.branches.items():
+            await connection.execute(
+                """
+                INSERT INTO lesson_branches (lesson_instance_id, concept_tag, content)
+                VALUES ($1, $2, $3::jsonb)
+                ON CONFLICT (lesson_instance_id, concept_tag) DO NOTHING
+                """,
+                instance_id,
+                concept_tag,
+                json.dumps(branch.content),
+            )
+
+
+async def _fetch_rag_context(connection, slot: dict) -> str:
+    try:
+        from backend.api.qna import get_model
+        import json
+        
+        query = f"{slot.get('unit_title', '')} - {' '.join(slot.get('objectives', []))}"
+        if not query.strip() or query == " - ":
+            return ""
+            
+        model = get_model()
+        embedding = model.encode(query)
+        embedding_json = json.dumps(embedding.tolist())
+        
+        rows = await connection.fetch(
+            """
+            SELECT dc.content
+            FROM document_chunks dc
+            ORDER BY dc.embedding <-> $1::vector
+            LIMIT 3
+            """,
+            embedding_json
+        )
+        return "\n\n".join(row["content"] for row in rows)
+    except Exception as e:
+        print(f"RAG fetch failed: {e}")
+        return ""
 
 async def _compile_or_fallback(
     *,
+    connection,
     slot: dict[str, Any],
     user_profile: dict[str, Any],
 ) -> LessonBundle:
-    messages = build_compile_messages(_slot_context(slot), user_profile)
     try:
+        rag_context = await _fetch_rag_context(connection, slot)
+        messages = build_compile_messages(_slot_context(slot), user_profile, rag_context=rag_context)
         return await generate_validated(messages, LessonBundle, task="compile", model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"))
     except Exception as exc:
-        await log_llm_failure(
-            "compile",
-            os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-            str(exc)[:2000],
-            raw_output=json.dumps({"slot_key": slot.get("slot_key"), "user_profile": user_profile})[:4000],
-            user_id=user_profile.get("user_id"),
-        )
+        import traceback
+        traceback.print_exc()
+        try:
+            await log_llm_failure(
+                "compile",
+                os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+                str(exc)[:2000],
+                raw_output=json.dumps({"slot_key": slot.get("slot_key"), "user_profile": user_profile})[:4000],
+                user_id=user_profile.get("user_id"),
+            )
+        except Exception:
+            pass
         return _fallback_bundle(slot, user_profile)
 
 
@@ -288,7 +354,7 @@ async def compile_lesson(*, user_id: str, slot_key: str, instance_id: str) -> Le
 
     async with pool.acquire() as connection:
         user_profile = await _load_user_profile(connection, user_id)
-        bundle = await _compile_or_fallback(slot=slot, user_profile=user_profile)
+        bundle = await _compile_or_fallback(connection=connection, slot=slot, user_profile=user_profile)
 
         try:
             async with connection.transaction():

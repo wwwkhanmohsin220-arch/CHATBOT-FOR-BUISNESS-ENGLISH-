@@ -75,20 +75,16 @@ async def grade_writing_draft(
     except Exception:
         return _fallback_grade(draft, coach_voice, concept_tags)
 
-    generate_validated = getattr(grader_module, "generate_validated", None)
-    grade_prompt = getattr(grader_module, "grade_prompt", None)
-    if generate_validated is None or grade_prompt is None:
+    grade_writing = getattr(grader_module, "grade_writing", None)
+    if grade_writing is None:
         return _fallback_grade(draft, coach_voice, concept_tags)
 
     try:
         async with asyncio.timeout(30):
-            maybe_result = generate_validated(
-                model=WritingRubric,
-                prompt=grade_prompt(
-                    draft=draft,
-                    coach_voice=coach_voice,
-                    concept_tags=concept_tags,
-                ),
+            maybe_result = grade_writing(
+                draft=draft,
+                coach_voice=coach_voice,
+                concept_tags=concept_tags,
             )
             if hasattr(maybe_result, "__await__"):
                 result = await maybe_result

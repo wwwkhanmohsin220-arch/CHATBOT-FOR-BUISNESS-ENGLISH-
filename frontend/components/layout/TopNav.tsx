@@ -11,8 +11,16 @@ import { useRouter } from "next/navigation";
 export function TopNav() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [me, setMe] = useState<any>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => r.json())
+      .then((data) => setMe(data))
+      .catch((e) => console.error("Failed to fetch me for TopNav:", e));
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -24,6 +32,10 @@ export function TopNav() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const streak = me?.streak_count || 0;
+  const xp = me?.total_xp || 0;
+  const initial = me?.name ? me.name.charAt(0).toUpperCase() : "G";
 
   return (
     <header className="h-[56px] bg-[#131318] border-b border-[#1A1A22] sticky top-0 z-30 flex items-center justify-between px-6">
@@ -46,12 +58,12 @@ export function TopNav() {
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
           <Flame size={20} className="text-[#f7bd3e]" />
-          <span className="text-[14px] font-bold text-white">12</span>
+          <span className="text-[14px] font-bold text-white">{streak}</span>
         </div>
         
         <div className="flex items-center gap-2">
           <Star size={20} className="text-[#818CF8]" fill="currentColor" />
-          <span className="text-[14px] font-bold text-white">2,450</span>
+          <span className="text-[14px] font-bold text-white">{xp}</span>
         </div>
         
         <div className="relative ml-2" ref={dropdownRef}>
@@ -59,7 +71,7 @@ export function TopNav() {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="w-8 h-8 rounded-full bg-gradient-to-br from-[#818CF8] to-[#4f46e5] flex items-center justify-center text-white text-[14px] font-bold active:scale-95 transition-transform"
           >
-            U
+            {initial}
           </button>
           
           {isDropdownOpen && (

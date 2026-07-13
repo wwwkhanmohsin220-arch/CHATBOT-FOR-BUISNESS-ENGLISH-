@@ -11,7 +11,7 @@ import json
 from decimal import Decimal
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile, status
 
 from backend.api.lessons import CURRICULUM_PATH, get_db_user_instance
 from backend.core.auth import CurrentUser, get_current_user, get_optional_current_user
@@ -134,15 +134,12 @@ async def _advance_after_voice_finish(
         await connection.execute(
             """
             UPDATE lesson_instances
-            SET status = 'completed', completed_at = NOW(), current_node_index = $2
+            SET current_node_index = $2
             WHERE id = $1 AND status <> 'completed'
             """,
             instance_id,
             Decimal(str(current_position)) + Decimal("1"),
         )
-        await _award_completion_xp(connection, context_user_id, instance_id)
-        if slot_key:
-            await _seed_srs_cards_for_slot(connection, context_user_id, slot_key)
         return float(Decimal(str(current_position)) + Decimal("1")), True, slot_key
 
     await connection.execute(
@@ -164,7 +161,7 @@ async def transcribe_route(
 ) -> TranscribeResponse:
     try:
         audio_bytes = await audio.read()
-        transcript = await transcribe_audio_bytes(audio_bytes)
+        transcript = await transcribe_audio_bytes(audio_bytes, filename=audio.filename or "audio.webm")
         return TranscribeResponse(transcript=transcript)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -178,11 +175,17 @@ async def transcribe_route(
 async def voice_turn_route(
     instance_id: str,
     audio: UploadFile = File(...),
+    transcript_fallback: str | None = Form(None),
     current_user: CurrentUser | None = Depends(get_optional_current_user),
 ) -> VoiceTurnResponse:
     try:
         audio_bytes = await audio.read()
-        transcript = await transcribe_audio_bytes(audio_bytes)
+        try:
+            transcript = await transcribe_audio_bytes(audio_bytes, filename=audio.filename or "audio.webm")
+            if "Fallback transcription" in transcript and transcript_fallback:
+                transcript = transcript_fallback
+        except Exception:
+            transcript = transcript_fallback or "Fallback transcription failed."
 
         pool = await database.pool()
         async with pool.acquire() as connection:
@@ -203,13 +206,7 @@ async def voice_turn_route(
                 user_message = VoiceMessage(role="user", text=transcript)
                 state.history.append(user_message)
                 state.last_seen_at = user_message.created_at
-                state.objectives_hit.update(
-                    objective
-                    for objective in state.objectives
-                    if any(term in transcript.lower() for term in objective.lower().split())
-                )
-
-                reply_text, reply_audio_b64 = await generate_voice_reply(state, transcript)
+                reply_text, reply_audio_b64, is_complete = await generate_voice_reply(state, transcript)
                 assistant_message = VoiceMessage(role="assistant", text=reply_text)
                 state.history.append(assistant_message)
                 state.last_seen_at = assistant_message.created_at
@@ -221,6 +218,7 @@ async def voice_turn_route(
                     reply_audio_b64=reply_audio_b64,
                     objectives_hit=sorted(state.objectives_hit),
                     turn_count=state.turn_count,
+                    is_complete=is_complete,
                     session_key=state.key,
                 )
     except ValueError as exc:

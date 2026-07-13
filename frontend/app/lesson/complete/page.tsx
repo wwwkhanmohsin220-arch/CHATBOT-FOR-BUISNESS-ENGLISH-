@@ -3,44 +3,62 @@
  * @ai-restriction
  * Primary Owner: Umer
  */
-import { Star, TrendingUp, CalendarDays, ArrowRight, ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { TargetedFixCard, TargetedFix } from "@/components/lesson/TargetedFixCard";
+import { Star, TrendingUp, CalendarDays, ArrowRight, ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { TargetedFixCard } from "@/components/lesson/TargetedFixCard";
 
-const MOCK_FIXES: TargetedFix[] = [
-  {
-    id: "f1",
-    category: "Vocabulary",
-    issue: "You repeatedly used 'say again' when asking for clarification.",
-    suggestion: "Use 'recap' or 'could you clarify' in professional settings.",
-    microDrillType: "text",
-    microDrillQuestion: "Rewrite this sentence: 'Can you say again what the budget is?'"
-  },
-  {
-    id: "f2",
-    category: "Tone",
-    issue: "You used very direct phrasing: 'I think that's bad'.",
-    suggestion: "Soften the phrasing using mitigation: 'I have some concerns about...'",
-    microDrillType: "text",
-    microDrillQuestion: "Mitigate this statement: 'Your timeline is wrong.'"
-  },
-  {
-    id: "f3",
-    category: "Pronunciation",
-    issue: "Rushed articulation on the word 'specifically'.",
-    suggestion: "Slow down and enunciate the syllables: spe-cif-i-cal-ly.",
-    microDrillType: "text",
-    microDrillQuestion: "Type the phonetic breakdown of 'specifically' (just for testing the drill UI)."
-  }
-];
-
-export default function SessionReportCardPage() {
+function ReportCardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const instanceId = searchParams?.get("instanceId");
+  
+  const [summary, setSummary] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!instanceId) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchSummary = async () => {
+      try {
+        const res = await fetch(`/api/lesson-instances/${instanceId}/summary`);
+        if (res.ok) {
+          const data = await res.json();
+          setSummary(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch summary", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSummary();
+  }, [instanceId]);
+
+  const handleRetry = async () => {
+    if (!instanceId) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/lesson-instances/${instanceId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.text().catch(() => "no body");
+        throw new Error(`Delete failed with status: ${res.status}. Body: ${body}`);
+      }
+      router.push('/home'); // Send them to dashboard so they can start fresh
+    } catch (err) {
+      console.error("Failed to retry lesson", err);
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-[#e4e1e9] flex flex-col font-sans relative overflow-hidden">
       
-      {/* Background Geometrics (Strictly Professional) */}
+      {/* Background Geometrics */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-[0.03] text-white">
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
           <pattern id="grid" width="4" height="4" patternUnits="userSpaceOnUse">
@@ -63,18 +81,12 @@ export default function SessionReportCardPage() {
           </button>
           
           <div className="flex gap-3 animate-in fade-in slide-in-from-top-4 duration-700">
-            <div className="bg-[#131318] border border-[#242430] rounded-lg px-4 py-2 flex items-center gap-2">
-              <TrendingUp className="text-[#818cf8]" size={16} />
-              <span className="text-[14px] font-bold text-[#818cf8]">+20 Tone</span>
-            </div>
-            <div className="bg-[#131318] border border-[#242430] rounded-lg px-4 py-2 flex items-center gap-2">
-              <TrendingUp className="text-[#22C55E]" size={16} />
-              <span className="text-[14px] font-bold text-[#22C55E]">+15 Diplomacy</span>
-            </div>
-            <div className="bg-[#131318] border border-[#242430] rounded-lg px-4 py-2 flex items-center gap-2">
-              <CalendarDays className="text-[#c6c5d5]" size={16} />
-              <span className="text-[14px] font-bold text-[#c6c5d5]">13 Day Consistency</span>
-            </div>
+            {summary?.final_score !== undefined && summary?.final_score !== null && (
+              <div className="bg-[#22c55e]/10 border border-[#22c55e]/30 rounded-lg px-4 py-2 flex items-center gap-2">
+                <TrendingUp className="text-[#22c55e]" size={16} />
+                <span className="text-[14px] font-bold text-[#22c55e]">Final Score: {summary.final_score}%</span>
+              </div>
+            )}
           </div>
         </div>
         
@@ -86,33 +98,72 @@ export default function SessionReportCardPage() {
               Session Report Card
             </h1>
           </div>
-          <p className="text-[16px] text-[#c6c5d5] pl-[36px]">
-            Unit 3 › Lesson 4: Disagreeing Politely
-          </p>
         </div>
 
-        {/* Executive Summary */}
-        <div className="w-full bg-[#1c1c23] border border-[#242430] rounded-[14px] p-6 mb-10 flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-          <h3 className="text-[14px] font-bold text-[#c6c5d5] uppercase tracking-wider mb-1">AI Coach Summary</h3>
-          <p className="text-[15px] text-[#e4e1e9] leading-relaxed">
-            Your ability to soften direct statements has improved significantly during this session. However, during the voice practice, you rushed the explanation of the timeline and used some overly casual vocabulary. Review the prioritized fixes below to tighten your delivery.
-          </p>
-        </div>
+        {loading ? (
+          <div className="w-full flex justify-center py-20">
+             <Loader2 className="animate-spin text-[#818cf8]" size={32} />
+          </div>
+        ) : !summary ? (
+          <div className="w-full bg-[#1c1c23] border border-[#242430] rounded-[14px] p-6 text-center text-[#A0A0AB]">
+            No summary generated for this lesson yet.
+          </div>
+        ) : (
+          <>
+            {/* Executive Summary */}
+            <div className="w-full bg-[#1c1c23] border border-[#242430] rounded-[14px] p-6 mb-10 flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+              <h3 className="text-[14px] font-bold text-[#c6c5d5] uppercase tracking-wider mb-1">AI Coach Summary</h3>
+              <p className="text-[15px] text-[#e4e1e9] leading-relaxed">
+                {summary.summary_markdown}
+              </p>
+              {summary.next_lesson_focus && (
+                <p className="text-[14px] text-[#818cf8] mt-2 font-medium">
+                  {summary.next_lesson_focus}
+                </p>
+              )}
+            </div>
 
-        {/* Targeted Fixes */}
-        <div className="w-full flex flex-col gap-4 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-          <h2 className="text-[18px] font-bold text-[#e4e1e9] mb-2 flex items-center gap-2">
-            Prioritized Fixes
-            <span className="bg-[#2a292f] text-[#c6c5d5] text-[12px] px-2 py-0.5 rounded-full font-medium">3</span>
-          </h2>
-          
-          {MOCK_FIXES.map((fix) => (
-            <TargetedFixCard key={fix.id} fix={fix} />
-          ))}
-        </div>
+            {/* Targeted Fixes */}
+            {summary.prioritized_fixes?.length > 0 && (
+              <div className="w-full flex flex-col gap-4 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                <h2 className="text-[18px] font-bold text-[#e4e1e9] mb-2 flex items-center gap-2">
+                  Prioritized Fixes
+                  <span className="bg-[#2a292f] text-[#c6c5d5] text-[12px] px-2 py-0.5 rounded-full font-medium">{summary.prioritized_fixes.length}</span>
+                </h2>
+                
+                {summary.prioritized_fixes.map((fix: any, idx: number) => (
+                  <div key={idx} className="w-full bg-[#1c1c23] border border-[#242430] rounded-[14px] p-5 flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-[#818cf8]/10 text-[#818cf8] text-[12px] px-2 py-0.5 rounded-[6px] font-semibold uppercase tracking-wider">
+                        {fix.concept_tag.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                    {fix.example_from_user && (
+                      <div className="bg-[#242430] rounded-[8px] p-3 border-l-2 border-[#ff4e4e]/50">
+                        <p className="text-[14px] text-[#A0A0AB] italic">"{fix.example_from_user}"</p>
+                      </div>
+                    )}
+                    <p className="text-[15px] text-[#e4e1e9] leading-relaxed">
+                      {fix.why}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
 
         {/* Footer Actions */}
-        <div className="w-full flex items-center justify-end border-t border-[#242430] pt-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
+        <div className="w-full flex items-center justify-between border-t border-[#242430] pt-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
+          <button 
+            onClick={handleRetry}
+            disabled={deleting}
+            className="text-[#c6c5d5] text-[14px] font-medium h-[48px] px-6 rounded-[10px] hover:bg-[#242430] hover:text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {deleting ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+            Retry Lesson
+          </button>
+          
           <button 
             onClick={() => router.push('/home')}
             className="bg-[#818cf8] text-[#0A0A0F] text-[14px] font-semibold h-[48px] px-8 rounded-[10px] hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 active:scale-95"
@@ -124,5 +175,13 @@ export default function SessionReportCardPage() {
 
       </main>
     </div>
+  );
+}
+
+export default function SessionReportCardPageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center"><Loader2 className="animate-spin text-[#818cf8]" /></div>}>
+      <ReportCardContent />
+    </Suspense>
   );
 }

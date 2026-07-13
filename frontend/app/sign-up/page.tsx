@@ -5,7 +5,7 @@
  * Talha: Do not modify UI/UX design, only permitted to hook up backend APIs.
  */
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { Card } from "@/components/ui/Card";
 import { Button, getButtonClasses } from "@/components/ui/Button";
@@ -14,7 +14,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 
-export default function SignUpPage() {
+function SignUpContent() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -22,6 +22,10 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const searchParams = useSearchParams();
+  const level = searchParams.get("level") || "beginner";
+  const goals = searchParams.get("goals") || "";
 
   const supabase = createClient();
 
@@ -44,10 +48,23 @@ export default function SignUpPage() {
       if (signUpError) {
         throw signUpError;
       }
+      
+      // Let's create the user profile on the backend using the Next.js API proxy
+      const profileRes = await fetch("/api/users/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          display_name: username,
+          level: level,
+          goals: goals.split(",").filter(Boolean)
+        })
+      });
 
-      // Supabase by default requires email confirmation, 
-      // but for this demo we'll assume they can just sign in or are auto-signed in
-      router.push("/sign-in");
+      if (!profileRes.ok) {
+        console.error("Failed to create profile:", await profileRes.text());
+      }
+
+      router.push("/home"); // Go directly to home instead of sign-in, assuming auto-login!
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");
     } finally {
@@ -150,5 +167,14 @@ export default function SignUpPage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+import { Suspense } from "react";
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignUpContent />
+    </Suspense>
   );
 }

@@ -60,7 +60,7 @@ export default function SelectLevelPage() {
           Back
         </Link>
         {selected ? (
-          <Link href="/onboarding/goals" className={getButtonClasses("primary")}>
+          <Link href={`/sign-up?level=${selected}`} className={getButtonClasses("primary")}>
             Continue
           </Link>
         ) : (

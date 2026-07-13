@@ -9,8 +9,9 @@ import { InteractiveQnA } from "@/components/lesson/InteractiveQnA";
 import { ThreadedVoice } from "@/components/lesson/ThreadedVoice";
 import { ThreadedMCQ } from "@/components/lesson/ThreadedMCQ";
 import { QnADrawer } from "@/components/lesson/QnADrawer";
+import { TargetedFixCard } from "@/components/lesson/TargetedFixCard";
 
-type BlockType = "theory" | "mcq" | "qna" | "voice" | "targeted_fix";
+type BlockType = "theory" | "mcq" | "writing" | "voice" | "targeted_fix";
 
 interface LessonBlock {
   node_id: string;
@@ -28,22 +29,50 @@ export default function UnifiedLessonPage() {
   const [isGrading, setIsGrading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+  const [isCompiling, setIsCompiling] = useState(false);
+  const [isAlreadyCompleted, setIsAlreadyCompleted] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Hardcode the instance ID for Phase 1 Mock
-  const instanceId = "test"; 
+  const instanceId = params.id as string;
 
   // 1. Fetch current node on mount
   const fetchCurrentNode = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/lesson-instances/${instanceId}/nodes/current`, {
+      const res = await fetch(`/api/lesson-instances/${instanceId}/nodes/current`, {
         cache: "no-store"
       });
+      
+      if (!res.ok) {
+        console.error(`Failed to fetch node: ${res.status}`);
+        if (res.status === 404) {
+          router.push("/learn"); // lesson not found - go to curriculum
+        } else {
+          router.push("/home");
+        }
+        return;
+      }
+
       const data = await res.json();
       
+      if (data.status === "already_completed") {
+        setIsAlreadyCompleted(true);
+        setIsLoadingInitial(false);
+        return;
+      }
+
       if (data.status === "completed") {
         endLesson();
         return;
       }
+
+      if (data.status === "compiling") {
+        setIsCompiling(true);
+        setTimeout(fetchCurrentNode, 2000);
+        return;
+      }
+      
+      // If we got a node, stop compiling state
+      setIsCompiling(false);
       
       // Append the new node if it doesn't already exist
       setNodes(prev => {
@@ -68,7 +97,7 @@ export default function UnifiedLessonPage() {
       if (answerIndex !== undefined) payload.answer_index = answerIndex;
       else payload.read_ack = true;
 
-      const res = await fetch(`http://localhost:8000/api/lesson-instances/${instanceId}/nodes/${nodeId}/attempt`, {
+      const res = await fetch(`/api/lesson-instances/${instanceId}/nodes/${nodeId}/attempt`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -109,11 +138,15 @@ export default function UnifiedLessonPage() {
     fetchCurrentNode();
   };
 
-  const endLesson = () => {
+  const endLesson = async () => {
     setIsGrading(true);
-    setTimeout(() => {
-      router.push('/lesson/complete');
-    }, 1500);
+    try {
+      await fetch(`/api/lesson-instances/${instanceId}/complete`, { method: "POST" });
+      router.push(`/lesson/complete?instanceId=${instanceId}`);
+    } catch (error) {
+      console.error("Failed to complete lesson", error);
+      setIsGrading(false);
+    }
   };
 
   // Render a specific block
@@ -138,13 +171,13 @@ export default function UnifiedLessonPage() {
         {block.type === "theory" && (
           <ThreadedTheory 
             content={block.content?.text || ""}
+            examplePhrase={block.content?.example_phrase || block.content?.example}
             onSubmitAttempt={async () => {
               const data = await submitAttempt(block.node_id);
               if (data?.correct) {
                 await fetchCurrentNode();
               }
             }}
-            onAskExample={handleAskExample}
           />
         )}
         
@@ -176,29 +209,55 @@ export default function UnifiedLessonPage() {
         )}
 
         {block.type === "targeted_fix" && (
-           <ThreadedTheory 
-             content={block.content?.text || "Quick fix: Let's review this concept."}
-             onSubmitAttempt={async () => {
-               const data = await submitAttempt(block.node_id);
-               if (data?.correct) {
+           <TargetedFixCard 
+             content={block.content as any}
+             onSubmitAttempt={async (idx) => {
+               const data = await submitAttempt(block.node_id, idx);
+               // We handle next steps in onAdvance or Try Again
+             }}
+             feedback={feedbacks[block.node_id]}
+             onAdvance={async () => {
+               const f = feedbacks[block.node_id];
+               if (f?.correct) {
                  await fetchCurrentNode();
                }
              }}
-             onAskExample={handleAskExample}
+             onTryAgain={() => {
+               setFeedbacks(prev => {
+                 const next = { ...prev };
+                 delete next[block.node_id];
+                 return next;
+               });
+             }}
            />
         )}
 
-        {block.type === "qna" && (
-          <InteractiveQnA 
-            question={block.content?.question || ""}
-            onComplete={advanceNextBlock}
-          />
+        {block.type === "writing" && (
+           <InteractiveQnA
+             question={block.content?.scenario || block.content?.text || "Please write a draft."}
+             onSubmitDraft={async (draft: string) => {
+               const res = await fetch(`/api/lesson-instances/${instanceId}/writing/submit`, {
+                 method: "POST",
+                 headers: { "Content-Type": "application/json" },
+                 body: JSON.stringify({ draft })
+               });
+               if (!res.ok) {
+                 throw new Error("Failed to submit draft");
+               }
+               const data = await res.json();
+               return data.rubric;
+             }}
+             onComplete={async () => {
+                await fetchCurrentNode();
+             }}
+           />
         )}
 
         {block.type === "voice" && (
           <ThreadedVoice 
             instanceId={instanceId} 
             nodeId={block.node_id} 
+            content={block.content}
             onEndSession={endLesson}
           />
         )}
@@ -206,8 +265,80 @@ export default function UnifiedLessonPage() {
     );
   };
 
-  if (isLoadingInitial) {
-     return <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center text-white">Loading Lesson...</div>;
+  if (isLoadingInitial || isCompiling) {
+     return (
+       <div className="min-h-screen bg-[#0A0A0F] flex flex-col items-center justify-center text-white gap-4">
+         <div className="w-16 h-16 border-4 border-[#818cf8] border-t-transparent rounded-full animate-spin mb-4" />
+         <h2 className="text-[24px] font-bold text-white">
+           {isCompiling ? "Personalizing your lesson..." : "Loading Lesson..."}
+         </h2>
+         <p className="text-[#A0A0AB]">AI is assembling real-world business scenarios</p>
+       </div>
+     );
+  }
+
+  if (isAlreadyCompleted) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0F] text-[#e4e1e9] flex flex-col font-sans relative overflow-hidden items-center justify-center">
+        {/* Background Geometrics */}
+        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-[0.03] text-white">
+          <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <pattern id="grid" width="4" height="4" patternUnits="userSpaceOnUse">
+              <path d="M 4 0 L 0 0 0 4" fill="none" stroke="currentColor" strokeWidth="0.1" />
+            </pattern>
+            <rect width="100" height="100" fill="url(#grid)" />
+          </svg>
+        </div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="z-10 flex flex-col items-center text-center max-w-[500px] px-6 gap-6"
+        >
+          <div className="w-16 h-16 bg-[#131318] border border-[#242430] rounded-2xl flex items-center justify-center text-[#818CF8]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div>
+            <h2 className="text-[28px] font-bold text-white mb-2">Lesson Completed</h2>
+            <p className="text-[16px] text-[#A0A0AB]">You've already finished this lesson. What would you like to do next?</p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4 w-full mt-4">
+            <button 
+              onClick={() => router.push(`/lesson/complete?instanceId=${instanceId}`)}
+              className="flex-1 h-12 rounded-[10px] bg-[#242430] text-white text-[14px] font-semibold hover:bg-[#2a2a35] transition-colors flex items-center justify-center"
+            >
+              View Report Card
+            </button>
+            <button 
+              disabled={isDeleting}
+              onClick={async () => {
+                setIsDeleting(true);
+                try {
+                  const res = await fetch(`/api/lesson-instances/${instanceId}`, { method: "DELETE" });
+                  if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(`Delete failed with status: ${res.status}. Body: ${text}`);
+                  }
+                  window.location.reload();
+                } catch (e) {
+                  console.error(e);
+                  setIsDeleting(false);
+                }
+              }}
+              className="flex-1 h-12 rounded-[10px] bg-[#818CF8] text-[#0A0A0F] text-[14px] font-semibold hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isDeleting ? (
+                <div className="w-4 h-4 border-2 border-[#0A0A0F] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              )}
+              Retry Lesson
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
   }
 
   return (

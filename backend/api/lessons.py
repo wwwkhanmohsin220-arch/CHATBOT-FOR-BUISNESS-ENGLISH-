@@ -157,6 +157,13 @@ def _fixture_bundle(slot: dict[str, Any]) -> dict[str, Any]:
                 },
             },
             {
+                "node_type": "writing",
+                "concept_tag": "email_structure",
+                "content": {
+                    "scenario": "A client just asked for a project update. Write a brief, professional reply.",
+                },
+            },
+            {
                 "node_type": "voice",
                 "concept_tag": "small_talk",
                 "content": {
@@ -248,7 +255,7 @@ async def _ensure_demo_instance(connection: Any, user_id: str) -> str:
             """
             INSERT INTO lesson_instances
               (user_id, lesson_slot_id, title, status, current_node_index, compile_version, profile_snapshot)
-            VALUES ($1, $2, $3, 'ready', 0, $4, $5::jsonb)
+            VALUES ($1::uuid, $2, $3, 'ready', 0, $4, $5::jsonb)
             RETURNING id
             """,
             user_id,
@@ -258,6 +265,7 @@ async def _ensure_demo_instance(connection: Any, user_id: str) -> str:
             json.dumps({"level": "beginner", "source": "fixture"}),
         )
     except Exception as exc:
+        print(f"Demo instance creation failed: {exc}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=(
@@ -305,6 +313,7 @@ async def get_db_user_instance(
     connection: Any,
     instance_id: str,
     current_user: CurrentUser | None = None,
+    background_tasks: BackgroundTasks | None = None,
 ) -> LessonInstanceContext:
     user_id = current_user.user_id if current_user else DEMO_USER_ID
     if instance_id == DEMO_INSTANCE_ALIAS:
@@ -315,13 +324,62 @@ async def get_db_user_instance(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Supabase authentication is required for non-demo lesson instances.",
             )
-        resolved_id = await _resolve_instance_id(connection, instance_id)
+
+        # Check if this looks like a slot_key rather than a UUID
+        # UUIDs have the format 8-4-4-4-12 hex chars with dashes
+        import re
+        is_uuid = bool(re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', instance_id, re.I))
+
+        if not is_uuid:
+            # Treat as slot_key - find or create a lesson instance for this user+slot
+            slot_row = await connection.fetchrow(
+                "SELECT id FROM lesson_slots WHERE slot_key = $1",
+                instance_id,
+            )
+            if not slot_row:
+                raise HTTPException(status_code=404, detail=f"Lesson slot '{instance_id}' not found.")
+
+            existing = await connection.fetchrow(
+                "SELECT id, status, current_node_index FROM lesson_instances WHERE user_id = $1::uuid AND lesson_slot_id = $2",
+                user_id,
+                slot_row["id"],
+            )
+            if existing:
+                resolved_id = str(existing["id"])
+                instance = existing
+            else:
+                from backend.app.ai.compiler import compile_lesson
+                
+                # Create a new instance for this user with status 'compiling'
+                await _ensure_curriculum_seeded(connection)
+                
+                instance_uuid = await connection.fetchval(
+                    """
+                    INSERT INTO lesson_instances
+                      (user_id, lesson_slot_id, title, status, current_node_index, compile_version, profile_snapshot)
+                    VALUES ($1::uuid, $2, 'Generating...', 'compiling', 0, 'v2', '{}'::jsonb)
+                    RETURNING id
+                    """,
+                    user_id,
+                    slot_row["id"],
+                )
+                resolved_id = str(instance_uuid)
+                
+                if background_tasks:
+                    background_tasks.add_task(
+                        compile_lesson,
+                        user_id=user_id,
+                        slot_key=instance_id,
+                        instance_id=resolved_id
+                    )
+        else:
+            resolved_id = await _resolve_instance_id(connection, instance_id)
 
     instance = await connection.fetchrow(
         """
         SELECT id, user_id, status, current_node_index
         FROM lesson_instances
-        WHERE id = $1
+        WHERE id = $1::uuid
         """,
         resolved_id,
     )
@@ -335,7 +393,8 @@ async def get_db_user_instance(
 
 
 @router.get("/curriculum")
-async def get_curriculum():
+async def get_curriculum(current_user: CurrentUser | None = Depends(get_optional_current_user)):
+    user_id = current_user.user_id if current_user else DEFAULT_USER_ID
     try:
         pool = await database.pool()
         async with pool.acquire() as connection:
@@ -346,14 +405,25 @@ async def get_curriculum():
                   u.id AS unit_id,
                   u.title AS unit_title,
                   ls.slot_key,
-                  ls.position AS lesson_position
+                  ls.position AS lesson_position,
+                  li.status,
+                  li.current_node_index,
+                  li.coach_summary,
+                  li.id AS instance_id
                 FROM units u
                 LEFT JOIN lesson_slots ls ON ls.unit_id = u.id
+                LEFT JOIN lesson_instances li ON li.lesson_slot_id = ls.id AND li.user_id = $1
                 ORDER BY u.position, ls.position
-                """
+                """,
+                user_id
             )
     except Exception as exc:
         raise _db_error(exc) from exc
+
+    import json
+    from pathlib import Path
+    curr_path = Path(__file__).parent.parent / "app" / "content" / "curriculum.json"
+    curr_data = json.loads(curr_path.read_text(encoding="utf-8"))
 
     units_by_id: dict[int, dict[str, Any]] = {}
     for row in rows:
@@ -366,10 +436,33 @@ async def get_curriculum():
             },
         )
         if row["slot_key"]:
+            real_title = f"Lesson {row['lesson_position']}"
+            for c_unit in curr_data.get("units", []):
+                for c_slot in c_unit.get("slots", []):
+                    if c_slot.get("slot_key") == row["slot_key"]:
+                        if c_slot.get("concept_tags"):
+                            tag = c_slot["concept_tags"][0].replace("_", " ").title()
+                            real_title += f": {tag}"
+                        break
+            
+            # Extract final_score from coach_summary if available
+            final_score = None
+            if row["coach_summary"]:
+                try:
+                    summary_data = json.loads(row["coach_summary"])
+                    if "final_score" in summary_data:
+                        final_score = summary_data["final_score"]
+                except:
+                    pass
+            
             unit["lessons"].append(
                 {
                     "id": DEMO_INSTANCE_ALIAS if row["lesson_position"] == 1 else row["slot_key"],
-                    "title": f"Lesson {row['lesson_position']}: Business Greetings",
+                    "instance_id": str(row["instance_id"]) if row["instance_id"] else None,
+                    "title": real_title,
+                    "status": row["status"] or "available",
+                    "current_node_index": float(row["current_node_index"] or 0),
+                    "final_score": final_score
                 }
             )
 
@@ -379,21 +472,24 @@ async def get_curriculum():
 @router.get("/lesson-instances/{instance_id}/nodes/current")
 async def get_current_node(
     instance_id: str,
+    background_tasks: BackgroundTasks,
     current_user: CurrentUser | None = Depends(get_optional_current_user),
 ):
     try:
         pool = await database.pool()
         async with pool.acquire() as connection:
-            context = await get_db_user_instance(connection, instance_id, current_user)
+            context = await get_db_user_instance(connection, instance_id, current_user, background_tasks)
             instance = context.instance_row
             if instance["status"] == "completed":
-                return {"status": "completed"}
+                return {"status": "already_completed"}
+            if instance["status"] == "compiling":
+                return {"status": "compiling"}
 
             node = await connection.fetchrow(
                 """
                 SELECT id, node_type, concept_tag, content, position
                 FROM lesson_nodes
-                WHERE lesson_instance_id = $1
+                WHERE lesson_instance_id = $1::uuid
                   AND status = 'pending'
                   AND position >= $2
                 ORDER BY position ASC
@@ -403,14 +499,6 @@ async def get_current_node(
                 instance["current_node_index"],
             )
             if not node:
-                await connection.execute(
-                    """
-                    UPDATE lesson_instances
-                    SET status = 'completed', completed_at = NOW()
-                    WHERE id = $1
-                    """,
-                    context.instance_id,
-                )
                 return {"status": "completed"}
 
             return _safe_node(node)
@@ -457,8 +545,17 @@ async def submit_attempt(
                 explanation = None
                 injected_node = None
 
-                if node["node_type"] in {"theory", "targeted_fix"}:
+                if node["node_type"] == "theory":
                     correct = bool(payload.read_ack is not False)
+                elif node["node_type"] == "targeted_fix":
+                    drill = content.get("drill_mcq")
+                    if drill and payload.answer_index is not None:
+                        correct_index = drill.get("correct_index")
+                        correct = payload.answer_index == correct_index
+                        explanations = drill.get("explanations", {})
+                        explanation = explanations.get(str(payload.answer_index))
+                    else:
+                        correct = bool(payload.read_ack is not False)
                 elif node["node_type"] == "mcq":
                     correct_index = content.get("correct_index")
                     correct = payload.answer_index == correct_index
@@ -523,27 +620,74 @@ async def submit_attempt(
                         await connection.execute(
                             """
                             UPDATE lesson_instances
-                            SET status = 'completed', completed_at = NOW(), current_node_index = $2
+                            SET current_node_index = $2
                             WHERE id = $1 AND status <> 'completed'
                             """,
                             context.instance_id,
                             _to_decimal(node["position"]) + Decimal("1"),
                         )
-                        await _award_completion_xp(connection, context.user_id, context.instance_id)
+                        # 1. Fetch current slot info
+                        curr_slot = await connection.fetchrow(
+                            """
+                            SELECT u.position as unit_pos, ls.position as slot_pos
+                            FROM lesson_instances li
+                            JOIN lesson_slots ls ON ls.id = li.lesson_slot_id
+                            JOIN units u ON u.id = ls.unit_id
+                            WHERE li.id = $1
+                            """,
+                            context.instance_id,
+                        )
+
+                        # 2. Find the next chronological slot
+                        next_slot = None
+                        if curr_slot:
+                            next_slot = await connection.fetchrow(
+                                """
+                                SELECT ls.id, ls.slot_key 
+                                FROM lesson_slots ls
+                                JOIN units u ON u.id = ls.unit_id
+                                WHERE u.position > $1 OR (u.position = $1 AND ls.position > $2)
+                                ORDER BY u.position ASC, ls.position ASC
+                                LIMIT 1
+                                """,
+                                curr_slot["unit_pos"],
+                                curr_slot["slot_pos"]
+                            )
+
                         if slot_key:
                             await _seed_srs_cards_for_slot(
                                 connection,
                                 context.user_id,
                                 slot_key,
                             )
-                        advance_to = _decimal_to_float(_to_decimal(node["position"]) + Decimal("1"))
-                        if slot_key:
-                            background_tasks.add_task(
-                                compile_lesson_background,
+                            
+                        # 3. Trigger compilation for the NEXT slot
+                        if next_slot:
+                            # Check if instance already exists
+                            next_existing = await connection.fetchval(
+                                "SELECT id FROM lesson_instances WHERE user_id = $1 AND lesson_slot_id = $2",
                                 context.user_id,
-                                slot_key,
-                                context.instance_id,
+                                next_slot["id"]
                             )
+                            if not next_existing:
+                                next_instance_id = await connection.fetchval(
+                                    """
+                                    INSERT INTO lesson_instances
+                                      (user_id, lesson_slot_id, title, status, current_node_index, compile_version, profile_snapshot)
+                                    VALUES ($1, $2, 'Generating...', 'compiling', 0, 'v2', '{}'::jsonb)
+                                    RETURNING id
+                                    """,
+                                    context.user_id,
+                                    next_slot["id"]
+                                )
+                                from backend.app.ai.compiler import compile_lesson
+                                background_tasks.add_task(
+                                    compile_lesson,
+                                    user_id=context.user_id,
+                                    slot_key=next_slot["slot_key"],
+                                    instance_id=str(next_instance_id),
+                                )
+                        advance_to = _decimal_to_float(_to_decimal(node["position"]) + Decimal("1"))
                     else:
                         await connection.execute(
                             """
@@ -774,30 +918,109 @@ async def complete_lesson(
             if not slot_row:
                 raise HTTPException(status_code=404, detail="Lesson slot not found.")
 
-            if instance["status"] != "completed":
-                await connection.execute(
+            if instance["status"] != "completed" or not instance["coach_summary"]:
+                # Generate Coach Summary synchronously
+                attempts_rows = await connection.fetch(
                     """
-                    UPDATE lesson_instances
-                    SET status = 'completed', completed_at = NOW()
-                    WHERE id = $1 AND status <> 'completed'
+                    SELECT na.attempt_no, na.payload, na.result, ln.node_type, ln.concept_tag, ln.content
+                    FROM node_attempts na
+                    JOIN lesson_nodes ln ON na.node_id = ln.id
+                    WHERE ln.lesson_instance_id = $1
+                    ORDER BY ln.position ASC, na.attempt_no ASC
                     """,
                     context.instance_id,
                 )
-                await _award_completion_xp(connection, context.user_id, context.instance_id)
+                attempts_history = [dict(r) for r in attempts_rows]
+                for att in attempts_history:
+                    if att.get("payload"): att["payload"] = json.loads(att["payload"])
+                    if att.get("result"): att["result"] = json.loads(att["result"])
+                    if att.get("content"): att["content"] = json.loads(att["content"])
+
+                profile = json.loads(instance.get("profile_snapshot") or "{}")
+
+                from backend.app.ai.summary import build_summary_messages
+                from backend.utils.llm import generate_validated
+                from backend.models.schema import CoachSummary
+                import asyncio
+
+                messages = build_summary_messages(profile, attempts_history)
+                summary_json = None
+                try:
+                    async with asyncio.timeout(45):
+                        summary = await generate_validated(messages, schema=CoachSummary, task="coach_summary")
+                        
+                        # Mathematical final score calculation
+                        total_earned = 0.0
+                        total_possible = 0.0
+                        
+                        # Keep track of which MCQ nodes we've processed so we only count the first attempt for possible points
+                        processed_mcqs = set()
+
+                        for att in attempts_history:
+                            node_type = att["node_type"]
+                            attempt_no = att["attempt_no"]
+                            result = att.get("result", {})
+                            if not result:
+                                continue
+                            
+                            if node_type == "mcq" and "correct" in result:
+                                node_id = att.get("node_id", "")  # We don't have node_id in the fetch! Wait, we don't need it if we just use attempt_no.
+                                # Actually, attempt_no = 1 is always the first attempt of a given node.
+                                if attempt_no == 1:
+                                    total_possible += 100
+                                if result.get("correct"):
+                                    if attempt_no == 1:
+                                        total_earned += 100
+                                    elif attempt_no == 2:
+                                        total_earned += 50
+                                    elif attempt_no == 3:
+                                        total_earned += 25
+                            elif node_type == "writing":
+                                scores = []
+                                for key in ["tone", "clarity", "structure"]:
+                                    if key in result and isinstance(result[key], dict) and "score" in result[key]:
+                                        scores.append(result[key]["score"] * 10)
+                                if scores:
+                                    total_possible += 100
+                                    total_earned += sum(scores) / len(scores)
+                            elif node_type == "voice":
+                                scores = []
+                                for key in ["fluency", "grammar", "tone", "diplomacy"]:
+                                    if key in result and isinstance(result[key], dict) and "score" in result[key]:
+                                        scores.append(result[key]["score"] * 10)
+                                if scores:
+                                    total_possible += 100
+                                    total_earned += sum(scores) / len(scores)
+                        
+                        summary.final_score = int(round(total_earned / (total_possible / 100))) if total_possible > 0 else 100
+                        summary_json = summary.model_dump_json()
+                except Exception as exc:
+                    import logging
+                    logging.error(f"Failed to generate coach summary: {exc}")
+                    # If LLM fails, we just don't set the summary (UI handles 404 or empty)
+                    pass
+
+                await connection.execute(
+                    """
+                    UPDATE lesson_instances
+                    SET status = 'completed', 
+                        completed_at = COALESCE(completed_at, NOW()), 
+                        coach_summary = COALESCE(coach_summary, $2)
+                    WHERE id = $1
+                    """,
+                    context.instance_id,
+                    summary_json,
+                )
+                
+                if instance["status"] != "completed":
+                    await _award_completion_xp(connection, context.user_id, context.instance_id)
             await _seed_srs_cards_for_slot(
                 connection,
                 context.user_id,
                 slot_row["slot_key"],
             )
 
-        background_tasks.add_task(
-            compile_lesson_background,
-            context.user_id,
-            slot_row["slot_key"],
-            context.instance_id,
-        )
-
-        return {"status": "completed", "background_compile_scheduled": True}
+        return {"status": "completed"}
     except HTTPException:
         raise
     except Exception as exc:
@@ -849,3 +1072,79 @@ async def lesson_qna(
         raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.get("/lesson-instances/{instance_id}/summary")
+async def get_lesson_summary(
+    instance_id: str,
+    current_user: CurrentUser | None = Depends(get_optional_current_user),
+):
+    try:
+        pool = await database.pool()
+        async with pool.acquire() as connection:
+            context = await get_db_user_instance(connection, instance_id, current_user)
+            row = await connection.fetchrow(
+                "SELECT coach_summary FROM lesson_instances WHERE id = $1",
+                context.instance_id,
+            )
+            if not row or not row["coach_summary"]:
+                raise HTTPException(status_code=404, detail="Summary not found or not generated yet")
+            return json.loads(row["coach_summary"])
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _db_error(exc) from exc
+
+@router.delete("/lesson-instances/{instance_id}")
+async def delete_lesson_instance(
+    instance_id: str,
+    current_user: CurrentUser | None = Depends(get_optional_current_user),
+):
+    try:
+        pool = await database.pool()
+        async with pool.acquire() as connection:
+            context = await get_db_user_instance(connection, instance_id, current_user)
+            # Check if qna_exchanges table exists outside any transaction
+            qna_exists = await connection.fetchval(
+                "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'qna_exchanges')"
+            )
+            
+            async with connection.transaction():
+                if qna_exists:
+                    await connection.execute(
+                        "DELETE FROM qna_exchanges WHERE lesson_instance_id = $1::uuid",
+                        context.instance_id,
+                    )
+                await connection.execute(
+                    """
+                    DELETE FROM node_attempts 
+                    WHERE node_id IN (
+                        SELECT id FROM lesson_nodes WHERE lesson_instance_id = $1::uuid
+                    )
+                    """,
+                    context.instance_id,
+                )
+                await connection.execute(
+                    "DELETE FROM lesson_branches WHERE lesson_instance_id = $1::uuid",
+                    context.instance_id,
+                )
+                await connection.execute(
+                    "DELETE FROM lesson_nodes WHERE lesson_instance_id = $1::uuid",
+                    context.instance_id,
+                )
+                await connection.execute(
+                    "DELETE FROM lesson_instances WHERE id = $1::uuid",
+                    context.instance_id,
+                )
+            return {"status": "deleted"}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        import traceback
+        try:
+            with open("delete_error.log", "w") as f:
+                f.write(traceback.format_exc())
+                f.write(f"\nException message: {exc}")
+        except:
+            pass
+        raise _db_error(exc) from exc

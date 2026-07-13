@@ -103,10 +103,20 @@ export function ThreadedMCQ({ question, options, onSubmitAttempt, feedback, onAd
               )}
 
               <button 
-                onClick={isCorrect ? onAdvance : (onTryAgain || onAdvance)}
-                className="mt-3 self-start bg-[#2a292f] text-white border border-[#464553] text-[14px] font-semibold h-[40px] px-6 rounded-[10px] hover:bg-[#35343a] transition-colors active:scale-95"
+                onClick={async () => {
+                  const action = isCorrect ? onAdvance : (onTryAgain || onAdvance);
+                  if (action.constructor.name === "AsyncFunction" || action.toString().includes("await")) {
+                    setIsSubmitting(true);
+                    try { await action(); } finally { setIsSubmitting(false); }
+                  } else {
+                    action();
+                  }
+                }}
+                disabled={isSubmitting}
+                className="mt-3 self-start bg-[#2a292f] text-white border border-[#464553] text-[14px] font-semibold h-[40px] px-6 rounded-[10px] hover:bg-[#35343a] transition-colors active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {isCorrect ? "Continue Lesson" : "Try Again"}
+                {isSubmitting && isCorrect && <Loader2 size={16} className="animate-spin" />}
+                {isCorrect ? (isSubmitting ? "Loading..." : "Continue Lesson") : "Try Again"}
               </button>
             </div>
           </motion.div>

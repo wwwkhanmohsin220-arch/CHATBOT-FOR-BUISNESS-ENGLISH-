@@ -6,14 +6,15 @@ import { motion } from "framer-motion";
 
 interface ThreadedTheoryProps {
   content: string;
+  examplePhrase?: string;
   onSubmitAttempt: () => Promise<void>;
-  onAskExample: () => void;
 }
 
-export function ThreadedTheory({ content, onSubmitAttempt, onAskExample }: ThreadedTheoryProps) {
+export function ThreadedTheory({ content, examplePhrase, onSubmitAttempt }: ThreadedTheoryProps) {
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showExample, setShowExample] = useState(false);
 
   // Typewriter effect
   useEffect(() => {
@@ -61,6 +62,21 @@ export function ThreadedTheory({ content, onSubmitAttempt, onAskExample }: Threa
         </div>
       </div>
 
+      {showExample && examplePhrase && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex gap-4 items-start pl-4 ml-8 border-l-[3px] border-[#818cf8]/50 mt-4"
+        >
+          <div className="flex flex-col gap-1 w-full bg-[#818cf8]/10 p-4 rounded-xl border border-[#818cf8]/20">
+            <span className="text-[12px] font-medium text-[#c6c5d5] uppercase tracking-wider">Example</span>
+            <p className="text-[16px] leading-7 text-[#e4e1e9] italic">
+              "{examplePhrase}"
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {!isTyping && (
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
@@ -68,15 +84,16 @@ export function ThreadedTheory({ content, onSubmitAttempt, onAskExample }: Threa
           transition={{ delay: 0.2 }}
           className="flex justify-end gap-3 mt-4"
         >
-          <button 
-            onClick={onAskExample}
-            disabled={isSubmitting}
-            className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-[#818cf8] border border-[#818cf8] hover:bg-[#818cf8]/10 transition-colors text-[14px] font-semibold disabled:opacity-50"
-          >
-            <Lightbulb size={16} />
-            Give me an example
-          </button>
-          
+          {!showExample && examplePhrase && (
+            <button 
+              onClick={() => setShowExample(true)}
+              disabled={isSubmitting}
+              className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-[#818cf8] border border-[#818cf8] hover:bg-[#818cf8]/10 transition-colors text-[14px] font-semibold disabled:opacity-50"
+            >
+              <Lightbulb size={16} />
+              Give me an example
+            </button>
+          )}
           <button 
             onClick={handleSubmit}
             disabled={isSubmitting}

@@ -1,145 +1,140 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Play, Sparkles } from "lucide-react";
+import { Bot, CheckCircle2, AlertCircle, Loader2, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { MultipleChoice } from "./MultipleChoice";
 
-export type FixCategory = "Grammar" | "Vocabulary" | "Tone" | "Pronunciation";
-
-export interface TargetedFix {
-  id: string;
-  category: FixCategory;
-  issue: string;
-  suggestion: string;
-  microDrillType: "text" | "mcq";
-  microDrillQuestion: string;
+interface TargetedFixProps {
+  content: {
+    text: string;
+    micro_theory: string;
+    drill_mcq: {
+      question: string;
+      options: string[];
+    };
+  };
+  onSubmitAttempt: (answerIndex: number) => Promise<void>;
+  feedback: { correct: boolean; explanation?: string } | null;
+  onAdvance: () => void;
+  onTryAgain?: () => void;
 }
 
-interface TargetedFixCardProps {
-  fix: TargetedFix;
-}
+export function TargetedFixCard({ content, onSubmitAttempt, feedback, onAdvance, onTryAgain }: TargetedFixProps) {
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAdvancing, setIsAdvancing] = useState(false);
 
-export function TargetedFixCard({ fix }: TargetedFixCardProps) {
-  const [isDrillOpen, setIsDrillOpen] = useState(false);
-  const [drillAnswer, setDrillAnswer] = useState("");
-  const [drillState, setDrillState] = useState<"idle" | "grading" | "success">("idle");
-
-  const getCategoryColor = (cat: FixCategory) => {
-    switch (cat) {
-      case "Grammar": return "text-green-400";
-      case "Vocabulary": return "text-[#818cf8]";
-      case "Tone": return "text-yellow-400";
-      case "Pronunciation": return "text-pink-400";
-      default: return "text-[#818cf8]";
-    }
+  const handleSubmit = async () => {
+    if (selectedIdx === null) return;
+    setIsSubmitting(true);
+    await onSubmitAttempt(selectedIdx);
+    setIsSubmitting(false);
   };
 
-  const getCategoryBg = (cat: FixCategory) => {
-    switch (cat) {
-      case "Grammar": return "bg-green-500/10";
-      case "Vocabulary": return "bg-[#818cf8]/10";
-      case "Tone": return "bg-yellow-500/10";
-      case "Pronunciation": return "bg-pink-500/10";
-      default: return "bg-[#818cf8]/10";
-    }
-  };
+  const isCorrect = feedback?.correct;
 
-  const handleDrillSubmit = () => {
-    if (!drillAnswer.trim()) return;
-    setDrillState("grading");
-    setTimeout(() => {
-      setDrillState("success");
-    }, 1000);
-  };
+  // Ensure options exists before mapping
+  const options = content?.drill_mcq?.options || [];
+  const mcqOptions = options.map((optText, idx) => ({
+    id: idx.toString(),
+    text: optText
+  }));
 
   return (
-    <div className="w-full bg-[#131318] border border-[#242430] rounded-[14px] overflow-hidden transition-colors hover:border-[#35343a]">
-      {/* Header Area */}
-      <div className="p-5 flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <div className={`px-2 py-1 rounded-[6px] text-[11px] font-bold uppercase tracking-wider ${getCategoryBg(fix.category)} ${getCategoryColor(fix.category)}`}>
-            {fix.category}
-          </div>
-        </div>
-        
-        <p className="text-[16px] text-[#e4e1e9] font-medium leading-relaxed">
-          <span className="text-[#908f9e] line-through mr-2">Issue: {fix.issue}</span>
-        </p>
-        <p className="text-[16px] text-[#e4e1e9] font-medium leading-relaxed">
-          <Sparkles size={16} className="inline mr-2 text-[#818cf8]" />
-          <span className="text-[#818cf8]">Suggestion:</span> {fix.suggestion}
-        </p>
-
-        {/* Micro Drill Toggle */}
-        <button 
-          onClick={() => setIsDrillOpen(!isDrillOpen)}
-          className="mt-2 flex items-center justify-between w-full h-10 px-4 rounded-[10px] bg-[#1c1c23] border border-[#242430] hover:bg-[#2a292f] transition-colors text-[14px] font-semibold text-[#c6c5d5]"
-        >
-          <span className="flex items-center gap-2">
-            <Play size={16} className="text-[#818cf8]" />
-            {drillState === "success" ? "Drill Completed" : "Start Micro-Drill"}
-          </span>
-          {drillState === "success" ? (
-            <CheckCircle2 size={18} className="text-green-400" />
-          ) : isDrillOpen ? (
-            <ChevronUp size={18} />
-          ) : (
-            <ChevronDown size={18} />
-          )}
-        </button>
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      className="flex flex-col gap-6 w-full p-6 rounded-[20px] bg-gradient-to-b from-[#818cf8]/10 to-transparent border border-[#818cf8]/30 shadow-[0_0_30px_rgba(129,140,248,0.1)] relative overflow-hidden"
+    >
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#818cf8] to-[#c7d2fe]" />
+      
+      {/* Badge */}
+      <div className="flex items-center gap-2 self-start bg-[#818cf8]/20 text-[#818cf8] px-3 py-1.5 rounded-full border border-[#818cf8]/30">
+        <Zap size={14} className="fill-current" />
+        <span className="text-[12px] font-bold uppercase tracking-wider">AI Coach</span>
       </div>
 
-      {/* Inline Micro-Drill Expandable Area */}
-      <AnimatePresence>
-        {isDrillOpen && drillState !== "success" && (
-          <motion.div 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="border-t border-[#242430] bg-[#1c1c23] overflow-hidden"
-          >
-            <div className="p-5 flex flex-col gap-4">
-              <p className="text-[15px] text-[#c6c5d5] font-medium">
-                {fix.microDrillQuestion}
-              </p>
-              
-              <div className="flex flex-col gap-3">
-                <input 
-                  type="text"
-                  value={drillAnswer}
-                  onChange={(e) => setDrillAnswer(e.target.value)}
-                  disabled={drillState !== "idle"}
-                  placeholder="Type your correction..."
-                  className="w-full bg-[#131318] border border-[#35343a] rounded-[10px] h-[48px] px-4 text-[15px] text-[#e4e1e9] placeholder:text-[#52525B] focus:border-[#818cf8] focus:ring-1 focus:ring-[#818cf8] outline-none transition-colors disabled:opacity-50"
-                />
-                <button 
-                  onClick={handleDrillSubmit}
-                  disabled={!drillAnswer.trim() || drillState !== "idle"}
-                  className="self-end bg-[#818cf8] text-[#0A0A0F] text-[14px] font-semibold h-[40px] px-6 rounded-[10px] hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
-                >
-                  {drillState === "grading" ? "Checking..." : "Submit"}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
+      <div className="flex flex-col gap-4">
+        <p className="text-[16px] text-[#e4e1e9] font-medium leading-relaxed">
+          {content?.text}
+        </p>
+        <div className="p-4 bg-[#2a292f] rounded-[12px] border border-[#35343a] border-l-[4px] border-l-[#818cf8]">
+          <p className="text-[15px] text-[#c6c5d5] italic">
+            "{content?.micro_theory}"
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4 mt-2">
+        <h3 className="text-[15px] font-semibold text-white">{content?.drill_mcq?.question}</h3>
+        <MultipleChoice 
+          name={`mcq-fix`}
+          options={mcqOptions}
+          selectedValue={selectedIdx !== null ? selectedIdx.toString() : ""}
+          onChange={(id) => { if (!feedback && !isSubmitting) setSelectedIdx(parseInt(id)); }}
+        />
         
-        {isDrillOpen && drillState === "success" && (
-          <motion.div 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            className="border-t border-[#242430] bg-green-500/5 overflow-hidden"
+        {!feedback && (
+          <button 
+            onClick={handleSubmit}
+            disabled={selectedIdx === null || isSubmitting}
+            className="self-end bg-[#818cf8] text-[#0A0A0F] text-[14px] font-semibold h-[40px] px-6 rounded-[10px] hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:active:scale-100 mt-2"
           >
-            <div className="p-5 flex items-center gap-3 text-green-400">
-              <CheckCircle2 size={24} />
-              <div className="flex flex-col">
-                <span className="text-[15px] font-bold">Nailed it!</span>
-                <span className="text-[14px] text-green-400/80">You've successfully corrected this weakness.</span>
+            {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : "Submit Answer"}
+          </button>
+        )}
+      </div>
+
+      {/* Feedback Result */}
+      <AnimatePresence>
+        {feedback && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="overflow-hidden"
+          >
+            <div className={`mt-2 rounded-[14px] p-5 border flex flex-col gap-3
+              ${isCorrect ? "bg-green-500/10 border-green-500/30" : "bg-yellow-500/10 border-yellow-500/30"}
+            `}>
+              <div className="flex items-center gap-2">
+                {isCorrect ? (
+                  <CheckCircle2 size={20} className="text-green-400" />
+                ) : (
+                  <AlertCircle size={20} className="text-yellow-400" />
+                )}
+                <span className={`text-[15px] font-semibold tracking-wide
+                  ${isCorrect ? "text-green-400" : "text-yellow-400"}
+                `}>
+                  {isCorrect ? "Nailed it!" : "Not quite right."}
+                </span>
               </div>
+              
+              {feedback.explanation && (
+                <p className="text-[15px] text-[#c6c5d5] leading-relaxed">
+                  {feedback.explanation}
+                </p>
+              )}
+
+              <button 
+                onClick={async () => {
+                  if (isCorrect) {
+                    setIsAdvancing(true);
+                    try { await onAdvance(); } finally { setIsAdvancing(false); }
+                  } else {
+                    (onTryAgain || onAdvance)();
+                  }
+                }}
+                disabled={isAdvancing}
+                className="mt-3 self-start bg-[#2a292f] text-white border border-[#464553] text-[14px] font-semibold h-[40px] px-6 rounded-[10px] hover:bg-[#35343a] transition-colors active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isAdvancing && isCorrect && <Loader2 size={16} className="animate-spin" />}
+                {isCorrect ? (isAdvancing ? "Loading..." : "Continue Lesson") : "Try Again"}
+              </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

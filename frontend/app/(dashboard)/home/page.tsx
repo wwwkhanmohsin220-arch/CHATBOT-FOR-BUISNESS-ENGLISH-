@@ -18,8 +18,8 @@ export default function HomeDashboardPage() {
     const fetchData = async () => {
       try {
         const [dashRes, meRes] = await Promise.all([
-          fetch("http://localhost:8000/api/dashboard"),
-          fetch("http://localhost:8000/api/me")
+          fetch("/api/dashboard"),
+          fetch("/api/me")
         ]);
         setDashboard(await dashRes.json());
         setMe(await meRes.json());
@@ -36,7 +36,7 @@ export default function HomeDashboardPage() {
     return <main className="flex-1 p-6 md:p-8 max-w-[960px] mx-auto w-full"><div className="text-[#8e8d9b] py-4">Loading dashboard...</div></main>;
   }
 
-  const name = me?.name || "Umer";
+  const name = me?.name || "";
   const daily = dashboard?.daily_goal || { minutes: 0, target: 20 };
   const streak = dashboard?.streak || { count: 0, week_days: [] };
   const next = dashboard?.next_lesson || { title: "No upcoming lesson", slot_key: "" };

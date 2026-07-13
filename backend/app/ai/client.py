@@ -71,31 +71,31 @@ def _groq_transcribe_sync(
     filename: str = "audio.webm",
     temperature: float = 0.0,
 ) -> TranscriptionResult:
+    import requests
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise RuntimeError("GROQ_API_KEY is required to transcribe audio")
-    body, boundary = _encode_multipart(
-        {"model": model, "temperature": str(temperature)},
-        {"file": (filename, audio_bytes, "application/octet-stream")},
-    )
-    request = urllib.request.Request(
+    
+    if '.' not in filename:
+        filename += '.webm'
+        
+    ext = filename.split('.')[-1]
+    files = {"file": (filename, audio_bytes, f"audio/{ext}")}
+    data = {"model": model, "temperature": str(temperature)}
+    headers = {"Authorization": f"Bearer {api_key}"}
+    
+    response = requests.post(
         GROQ_AUDIO_URL,
-        data=body,
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": f"multipart/form-data; boundary={boundary}",
-            "User-Agent": "Buslingo/1.0",
-        },
-        method="POST",
+        headers=headers,
+        files=files,
+        data=data,
+        timeout=60
     )
-    try:
-        with urllib.request.urlopen(request, timeout=60) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"Groq transcription failed with status {exc.code}: {body}") from exc
-    except urllib.error.URLError as exc:
-        raise RuntimeError(f"Groq transcription failed: {exc.reason}") from exc
+    
+    if not response.ok:
+        raise RuntimeError(f"Groq transcription failed with status {response.status_code}: {response.text}")
+        
+    payload = response.json()
     return TranscriptionResult(text=str(payload.get("text", "")), raw_response=payload)
 
 
@@ -115,10 +115,15 @@ async def transcribe_audio(
             temperature=temperature,
         )
 
-async def generate_voice_reply(*, transcript: str, objectives: list[str], ai_persona: str, scenario: str, coach_voice: str, level: str) -> dict[str, Any]:
-    messages = build_voice_reply_messages(transcript, objectives, ai_persona, scenario, coach_voice, level)
+async def generate_voice_reply(*, objectives: list[str], ai_persona: str, scenario: str, coach_voice: str, level: str, history: list[dict[str, str]]) -> dict[str, Any]:
+    messages = build_voice_reply_messages(objectives, ai_persona, scenario, coach_voice, level, history)
     reply_text = await chat(messages)
     
+    llm_signaled_complete = False
+    if "[SCENARIO_COMPLETE]" in reply_text:
+        llm_signaled_complete = True
+        reply_text = reply_text.replace("[SCENARIO_COMPLETE]", "").strip()
+
     try:
         tts_provider = build_tts_provider()
         
@@ -139,7 +144,7 @@ async def generate_voice_reply(*, transcript: str, objectives: list[str], ai_per
     return {
         "reply_text": reply_text,
         "reply_audio_b64": reply_audio_b64,
-        "objectives_hit": [],  # Let backend.core.voice compute this
+        "llm_signaled_complete": llm_signaled_complete,
         "level": level
     }
 
