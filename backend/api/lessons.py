@@ -15,11 +15,12 @@ from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from backend.core.auth import CurrentUser, get_optional_current_user
+from backend.core.auth import CurrentUser, get_optional_current_user, get_current_user
 from backend.core.database import DatabaseNotConfigured, database
-from backend.core.jobs import compile_lesson_background
+from backend.core.jobs import compile_lesson_background, compile_cold_start_background
 from backend.core.stats import record_axis_score, record_stat_event
 from backend.core.srs import ensure_srs_cards_for_terms
 from backend.core.writing import grade_writing_draft
@@ -334,29 +335,186 @@ async def get_db_user_instance(
     return LessonInstanceContext(user_id=user_id, instance_id=str(resolved_id), instance_row=instance)
 
 
+@router.post("/lessons/{slot_id}/start")
+async def start_lesson(
+    slot_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    user_id = current_user.user_id
+    try:
+        pool = await database.pool()
+        async with pool.acquire() as connection:
+            slot_row = None
+            if slot_id.isdigit():
+                slot_row = await connection.fetchrow(
+                    "SELECT id, slot_key FROM lesson_slots WHERE id = $1",
+                    int(slot_id)
+                )
+            if not slot_row:
+                slot_row = await connection.fetchrow(
+                    "SELECT id, slot_key FROM lesson_slots WHERE slot_key = $1",
+                    slot_id
+                )
+            if not slot_row:
+                raise HTTPException(status_code=404, detail=f"Lesson slot '{slot_id}' not found")
+
+            db_slot_id = slot_row["id"]
+            slot_key = slot_row["slot_key"]
+
+            instance = await connection.fetchrow(
+                """
+                SELECT id, status, current_node_index
+                FROM lesson_instances
+                WHERE user_id = $1 AND lesson_slot_id = $2
+                """,
+                user_id,
+                db_slot_id
+            )
+
+            if instance:
+                status_str = instance["status"]
+                instance_id = str(instance["id"])
+
+                if status_str in ("ready", "in_progress"):
+                    await connection.execute(
+                        """
+                        UPDATE lesson_instances
+                        SET status = 'in_progress', started_at = COALESCE(started_at, NOW())
+                        WHERE id = $1
+                        """,
+                        instance["id"]
+                    )
+                    return {
+                        "status": "in_progress",
+                        "instance_id": instance_id,
+                        "current_node_index": float(instance["current_node_index"])
+                    }
+                elif status_str == "compiling":
+                    return JSONResponse(
+                        status_code=status.HTTP_202_ACCEPTED,
+                        content={"status": "compiling", "instance_id": instance_id}
+                    )
+                elif status_str == "completed":
+                    return {
+                        "status": "completed",
+                        "instance_id": instance_id,
+                        "current_node_index": float(instance["current_node_index"])
+                    }
+                elif status_str == "failed":
+                    await connection.execute("DELETE FROM lesson_instances WHERE id = $1", instance["id"])
+                    instance = None
+
+            if not instance:
+                try:
+                    instance_id = await connection.fetchval(
+                        """
+                        INSERT INTO lesson_instances (user_id, lesson_slot_id, status, current_node_index)
+                        VALUES ($1, $2, 'compiling', 0)
+                        ON CONFLICT (user_id, lesson_slot_id) DO NOTHING
+                        RETURNING id
+                        """,
+                        user_id,
+                        db_slot_id
+                    )
+                    was_created = True if instance_id else False
+                except Exception:
+                    was_created = False
+                    instance_id = None
+
+                if instance_id is None:
+                    instance_id = await connection.fetchval(
+                        """
+                        SELECT id FROM lesson_instances
+                        WHERE user_id = $1 AND lesson_slot_id = $2
+                        """,
+                        user_id,
+                        db_slot_id
+                    )
+                    was_created = False
+
+                if was_created:
+                    background_tasks.add_task(
+                        compile_cold_start_background,
+                        user_id,
+                        slot_key,
+                        str(instance_id)
+                    )
+
+                return JSONResponse(
+                    status_code=status.HTTP_202_ACCEPTED,
+                    content={"status": "compiling", "instance_id": str(instance_id)}
+                )
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _db_error(exc) from exc
+
+
 @router.get("/curriculum")
-async def get_curriculum():
+async def get_curriculum(current_user: CurrentUser = Depends(get_current_user)):
+    user_id = current_user.user_id
     try:
         pool = await database.pool()
         async with pool.acquire() as connection:
             await _ensure_curriculum_seeded(connection)
-            rows = await connection.fetch(
+            slots = await connection.fetch(
                 """
                 SELECT
                   u.id AS unit_id,
                   u.title AS unit_title,
+                  u.position AS unit_position,
+                  ls.id AS slot_id,
                   ls.slot_key,
                   ls.position AS lesson_position
                 FROM units u
-                LEFT JOIN lesson_slots ls ON ls.unit_id = u.id
+                JOIN lesson_slots ls ON ls.unit_id = u.id
                 ORDER BY u.position, ls.position
                 """
             )
+            
+            instances = await connection.fetch(
+                """
+                SELECT lesson_slot_id, status, title
+                FROM lesson_instances
+                WHERE user_id = $1
+                """,
+                user_id
+            )
+            instance_map = {row["lesson_slot_id"]: (row["status"], row["title"]) for row in instances}
     except Exception as exc:
         raise _db_error(exc) from exc
 
+    previous_completed = True
+
     units_by_id: dict[int, dict[str, Any]] = {}
-    for row in rows:
+    for row in slots:
+        slot_id = row["slot_id"]
+        slot_key = row["slot_key"]
+        
+        inst_data = instance_map.get(slot_id)
+        if inst_data:
+            inst_status, inst_title = inst_data
+            if inst_status == "completed":
+                status_str = "completed"
+                current_completed = True
+            elif inst_status in ("in_progress", "ready", "compiling"):
+                status_str = "in_progress"
+                current_completed = False
+            else:
+                status_str = "available" if previous_completed else "locked"
+                current_completed = False
+        else:
+            inst_title = None
+            if previous_completed:
+                status_str = "available"
+            else:
+                status_str = "locked"
+            current_completed = False
+            
+        previous_completed = current_completed
+
         unit = units_by_id.setdefault(
             row["unit_id"],
             {
@@ -365,13 +523,31 @@ async def get_curriculum():
                 "lessons": [],
             },
         )
-        if row["slot_key"]:
-            unit["lessons"].append(
-                {
-                    "id": DEMO_INSTANCE_ALIAS if row["lesson_position"] == 1 else row["slot_key"],
-                    "title": f"Lesson {row['lesson_position']}: Business Greetings",
-                }
-            )
+        
+        topic_title = inst_title
+        if not topic_title:
+            if slot_key == "u1l1":
+                topic_title = "Introductions & Role"
+            elif slot_key == "u1l2":
+                topic_title = "Meetings & Disagreement"
+            elif slot_key == "u1l3":
+                topic_title = "Follow-up Emails"
+            elif slot_key == "u2l1":
+                topic_title = "Negotiation & Price"
+            elif slot_key == "u2l2":
+                topic_title = "Timeline Clarity"
+            elif slot_key == "u2l3":
+                topic_title = "Closing the Deal"
+            else:
+                topic_title = "Business English Practice"
+
+        unit["lessons"].append(
+            {
+                "id": slot_key,
+                "title": f"Lesson {row['lesson_position']}: {topic_title}",
+                "status": status_str,
+            }
+        )
 
     return {"units": list(units_by_id.values())}
 

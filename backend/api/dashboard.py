@@ -10,12 +10,20 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+from typing import Optional, Literal
 
-from backend.core.auth import CurrentUser, get_optional_current_user
+from backend.core.auth import CurrentUser, get_optional_current_user, get_current_user
 from backend.core.database import database
 from backend.core.srs import get_srs_stats
 from backend.models.schema import DashboardResponse, DailyGoalSchema, NextLessonSchema, StreakDaySchema, StreakSchema
+
+class SettingsUpdateRequest(BaseModel):
+    coach_voice: Optional[Literal["encouraging", "direct_professional", "balanced"]] = None
+    timezone: Optional[str] = None
+    daily_goal_min: Optional[int] = None
+    level: Optional[Literal["beginner", "intermediate", "advanced"]] = None
 
 router = APIRouter(tags=["dashboard"])
 
@@ -210,15 +218,129 @@ async def get_dashboard(
         )
 
 @router.get("/me")
-async def get_me(current_user: CurrentUser | None = Depends(get_optional_current_user)):
-    return {
-        "id": current_user.user_id if current_user else DEFAULT_USER_ID,
-        "name": "Umer",
-        "level": "intermediate",
-        "settings": {
-            "coach_voice": "female",
-            "daily_goal_min": 20
-        },
-        "total_xp": 1250,
-        "streak_count": 14
-    }
+async def get_me(current_user: CurrentUser = Depends(get_current_user)):
+    user_id = current_user.user_id
+    try:
+        pool = await database.pool()
+        async with pool.acquire() as connection:
+            profile = await connection.fetchrow(
+                """
+                SELECT display_name, level, coach_voice, timezone, daily_goal_min
+                FROM user_profiles
+                WHERE user_id = $1
+                """,
+                user_id,
+            )
+            if not profile:
+                raise HTTPException(status_code=404, detail="User profile not found")
+
+            xp_row = await connection.fetchrow(
+                "SELECT COALESCE(SUM(amount), 0) as total_xp FROM xp_events WHERE user_id = $1",
+                user_id,
+            )
+            total_xp = int(xp_row["total_xp"]) if xp_row else 0
+
+            timezone_name = profile["timezone"] or "UTC"
+            today = _today_for_timezone(timezone_name)
+
+            # Calculate streak dynamically
+            rows = await connection.fetch(
+                "SELECT day FROM activity_days WHERE user_id = $1 AND minutes > 0 ORDER BY day DESC",
+                user_id,
+            )
+            active_dates = [row["day"] for row in rows]
+            streak = 0
+            if active_dates:
+                latest = active_dates[0]
+                if latest == today or latest == today - timedelta(days=1):
+                    streak = 1
+                    current = latest
+                    for d in active_dates[1:]:
+                        if d == current - timedelta(days=1):
+                            streak += 1
+                            current = d
+                        else:
+                            break
+
+            return {
+                "id": user_id,
+                "name": profile["display_name"] or current_user.display_name or "User",
+                "level": profile["level"],
+                "settings": {
+                    "coach_voice": profile["coach_voice"],
+                    "daily_goal_min": profile["daily_goal_min"],
+                    "timezone": profile["timezone"],
+                },
+                "total_xp": total_xp,
+                "streak_count": streak,
+            }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {exc}",
+        )
+
+
+@router.patch("/me/settings")
+async def update_settings(
+    payload: SettingsUpdateRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    updates = []
+    params = [current_user.user_id]
+    
+    param_idx = 2
+    if payload.coach_voice is not None:
+        updates.append(f"coach_voice = ${param_idx}")
+        params.append(payload.coach_voice)
+        param_idx += 1
+    if payload.timezone is not None:
+        updates.append(f"timezone = ${param_idx}")
+        params.append(payload.timezone)
+        param_idx += 1
+    if payload.daily_goal_min is not None:
+        updates.append(f"daily_goal_min = ${param_idx}")
+        params.append(payload.daily_goal_min)
+        param_idx += 1
+    if payload.level is not None:
+        updates.append(f"level = ${param_idx}")
+        params.append(payload.level)
+        param_idx += 1
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="No setting updates provided")
+
+    try:
+        pool = await database.pool()
+        async with pool.acquire() as connection:
+            query = f"""
+                UPDATE user_profiles
+                SET {", ".join(updates)}
+                WHERE user_id = $1
+                RETURNING user_id, display_name, level, coach_voice, timezone, daily_goal_min
+            """
+            updated = await connection.fetchrow(query, *params)
+            if not updated:
+                raise HTTPException(status_code=404, detail="User profile not found")
+            
+            return {
+                "success": True,
+                "profile": {
+                    "id": updated["user_id"],
+                    "level": updated["level"],
+                    "settings": {
+                        "coach_voice": updated["coach_voice"],
+                        "daily_goal_min": updated["daily_goal_min"],
+                        "timezone": updated["timezone"],
+                    }
+                }
+            }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {exc}",
+        )

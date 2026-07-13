@@ -19,13 +19,141 @@
           "key_vocabulary": [
             "Pleasure to meet you",
             "I'm responsible for",
-            "Looking forward to"
+            "Looking forward to",
+            "Colleague"
           ],
           "grammar_points": [
             "Present simple for roles and responsibilities"
           ],
           "example_phrases": [
             "Hello, my name is Alex. I'm responsible for the marketing team here."
+          ]
+        },
+        {
+          "slot_key": "u1l2",
+          "position": 2,
+          "objectives": [
+            "Express professional disagreement with a client",
+            "Acknowledge client feedback politely"
+          ],
+          "concept_tags": [
+            "polite_disagreement",
+            "meeting_vocabulary"
+          ],
+          "key_vocabulary": [
+            "I hear your concern",
+            "Alternative approach",
+            "Pushback",
+            "Agenda"
+          ],
+          "grammar_points": [
+            "Softeners and hedging: 'I appreciate your point, however...'"
+          ],
+          "example_phrases": [
+            "I appreciate your concern about the budget; however, let's explore an alternative approach."
+          ]
+        },
+        {
+          "slot_key": "u1l3",
+          "position": 3,
+          "objectives": [
+            "Draft structured professional emails",
+            "Choose appropriate level of formality for follow-ups"
+          ],
+          "concept_tags": [
+            "email_structure",
+            "tone_formality"
+          ],
+          "key_vocabulary": [
+            "Please find attached",
+            "Further clarification",
+            "Best regards",
+            "Following up on"
+          ],
+          "grammar_points": [
+            "Formal email greetings and sign-offs"
+          ],
+          "example_phrases": [
+            "I am following up on our meeting from yesterday. Please find the proposal attached."
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "position": 2,
+      "title": "Unit 2: Negotiation & Clarity",
+      "slots": [
+        {
+          "slot_key": "u2l1",
+          "position": 1,
+          "objectives": [
+            "Discuss pricing and propose counter-offers",
+            "Demonstrate active listening in negotiation"
+          ],
+          "concept_tags": [
+            "negotiation_phrases",
+            "active_listening_phrases"
+          ],
+          "key_vocabulary": [
+            "Counter-offer",
+            "Price point",
+            "Mutual benefit",
+            "Compromise"
+          ],
+          "grammar_points": [
+            "Polite negotiation questions"
+          ],
+          "example_phrases": [
+            "What flexibility do we have on the final price point?"
+          ]
+        },
+        {
+          "slot_key": "u2l2",
+          "position": 2,
+          "objectives": [
+            "Ask clarifying questions about project timelines",
+            "Verify numerical data and deliverables"
+          ],
+          "concept_tags": [
+            "clarifying_questions",
+            "numbers_and_dates"
+          ],
+          "key_vocabulary": [
+            "Deadline",
+            "Timeline",
+            "Milestones",
+            "Clarify"
+          ],
+          "grammar_points": [
+            "Clarifying question structures: 'Did you mean...?'"
+          ],
+          "example_phrases": [
+            "Just to clarify, did you mean the deadline is the end of this month?"
+          ]
+        },
+        {
+          "slot_key": "u2l3",
+          "position": 3,
+          "objectives": [
+            "Confirm agreements and next steps",
+            "Use conditional language to seal deal structures"
+          ],
+          "concept_tags": [
+            "closing_language",
+            "conditionals"
+          ],
+          "key_vocabulary": [
+            "Finalize",
+            "Agreement",
+            "Next steps",
+            "Sign off"
+          ],
+          "grammar_points": [
+            "First conditional in business deals: 'If you sign, we will...'"
+          ],
+          "example_phrases": [
+            "If we finalize the agreement today, we can initiate the project by next week."
           ]
         }
       ]

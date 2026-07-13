@@ -11,6 +11,7 @@ from backend.api.auth import auth_router
 from backend.api.voice import router as voice_router
 from backend.api.lessons import router as lessons_router
 from backend.api.progress import router as progress_router
+from backend.api.qna import router as qna_router
 
 try:
     from backend.api.dashboard import router as dashboard_router
@@ -32,6 +33,7 @@ router.include_router(auth_router)
 router.include_router(lessons_router)
 router.include_router(progress_router)
 router.include_router(voice_router)
+router.include_router(qna_router, prefix="/qna")
 
 if dashboard_router:
     router.include_router(dashboard_router)
