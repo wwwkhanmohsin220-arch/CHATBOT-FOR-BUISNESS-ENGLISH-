@@ -6,6 +6,7 @@ Talha: You may add websocket routing configurations but do not change core REST 
 """
 
 from pathlib import Path
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,10 +22,16 @@ from backend.api.websockets import ws_router
 
 app = FastAPI(title="Buslingo API")
 
-# Add CORS Middleware to allow requests from the Next.js frontend
+# CORS origins: reads from env var in production, falls back to localhost for dev
+_cors_origins_raw = os.environ.get(
+    "CORS_ORIGINS",
+    "http://localhost:3000,http://127.0.0.1:3000"
+)
+_cors_origins = [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
