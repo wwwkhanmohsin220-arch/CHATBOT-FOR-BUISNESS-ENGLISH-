@@ -4,7 +4,7 @@
  * Mohsin: Do not modify UI/UX design, only permitted to hook up backend APIs.
  * Talha: Do not modify UI/UX design, only permitted to hook up Voice APIs.
  */
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -17,6 +17,13 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Buslingo",
   description: "Master the language of business",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
