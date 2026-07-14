@@ -32,6 +32,7 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
   const interimTranscriptRef = useRef("");
+  const recognitionStoppedRef = useRef(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recognitionRef = useRef<any>(null);
@@ -78,6 +79,18 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
+      if (data.event === "error") {
+        // Backend error (e.g. Groq failure) — unblock the UI
+        console.error("Backend sent error event:", data);
+        setIsProcessing(false);
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          sender: "Coach",
+          text: "Sorry, I had trouble responding. Please try again."
+        }]);
+        return;
+      }
+
       if (data.event === "assistant.partial") {
         // Update the last Coach message with the partial text
         setMessages(prev => {
@@ -119,8 +132,26 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
       }
     };
 
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+      setIsProcessing(false);
+    };
+
+    ws.onclose = () => {
+      setIsProcessing(false);
+    };
+
     ws.onopen = () => {
-      ws.send(JSON.stringify({ event: "start_session", lesson_id: nodeId }));
+      ws.send(JSON.stringify({
+        event: "start_session",
+        lesson_id: nodeId,
+        // Send node content so the backend builds a proper scenario prompt
+        scenario: content?.scenario || "",
+        ai_persona: content?.ai_persona || "a professional business client",
+        objectives: content?.objectives || [],
+        coach_voice: "female",
+        level: "intermediate",
+      }));
     };
 
     return () => {
@@ -134,6 +165,8 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
   }, [instanceId, nodeId]);
 
   const startRecording = async () => {
+    // Reset the stop-guard so the new session's onresult events are accepted
+    recognitionStoppedRef.current = false;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
@@ -157,6 +190,7 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.onresult = (event: any) => {
+          if (recognitionStoppedRef.current) return; // ignore final event after stop
           let transcript = "";
           for (let i = 0; i < event.results.length; i++) {
             transcript += event.results[i][0].transcript;
@@ -179,6 +213,8 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
+      // Set the flag FIRST so the final recognition onresult event is ignored
+      recognitionStoppedRef.current = true;
       mediaRecorderRef.current.stop();
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch (e) { }
@@ -186,9 +222,15 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
       setIsRecording(false);
       setIsProcessing(true);
 
+      // Capture transcript BEFORE clearing the ref
       const transcript = interimTranscriptRef.current;
+
+      // Clear interim immediately so it vanishes before the permanent message appears
+      setInterimTranscript("");
+      interimTranscriptRef.current = "";
+
       if (transcript) {
-        setMessages(prev => [...prev, { id: Date.now().toString(), sender: "You", text: transcript }]);
+        setMessages(prev => [...prev, { id: Date.now().toString() + "-you", sender: "You", text: transcript }]);
         if (wsRef.current?.readyState === WebSocket.OPEN) {
           wsRef.current.send(JSON.stringify({
             event: "transcript.final",
@@ -196,11 +238,21 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
             session_id: instanceId,
             lesson_id: nodeId,
           }));
+        } else {
+          // If the connection was lost while they were reading/idle, don't get stuck loading forever
+          setIsProcessing(false);
+          setMessages(prev => [...prev, { 
+            id: Date.now().toString() + "-coach-error", 
+            sender: "Coach", 
+            text: "My connection to the server was lost. Please refresh the page so we can continue!" 
+          }]);
         }
+      } else {
+        // If they didn't say anything, just stop loading
+        setIsProcessing(false);
       }
 
-      setInterimTranscript("");
-      interimTranscriptRef.current = "";
+      recognitionStoppedRef.current = true; // keep true until next startRecording
     }
   };
 
@@ -278,14 +330,14 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
       className="flex flex-col gap-6 w-full"
     >
       {content?.scenario && (
-        <div className="flex flex-col gap-2 bg-[#818cf8]/10 border border-[#818cf8]/30 rounded-xl p-4 ml-14 relative overflow-hidden">
+        <div className="flex flex-col gap-2 bg-[#818cf8]/10 border border-[#818cf8]/30 rounded-xl p-4 ml-10 md:ml-14 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1 h-full bg-[#818cf8]" />
           <span className="text-[12px] font-bold text-[#818cf8] uppercase tracking-wider">Scenario</span>
           <p className="text-[14px] text-[#e4e1e9] leading-relaxed">{content.scenario}</p>
         </div>
       )}
 
-      <div className="pl-14 w-full flex flex-col items-center gap-8">
+      <div className="pl-0 md:pl-14 w-full flex flex-col items-center gap-8">
         <div className="relative w-[180px] h-[180px] md:w-[220px] md:h-[220px] rounded-full overflow-hidden shrink-0 mt-4">
           <div className="absolute inset-0 w-full h-full">
             <Strands

@@ -14,26 +14,53 @@ const HEATMAP_LEVELS = [
   "bg-[#818cf8]"            // 3: primary-container
 ];
 
-export function ActivityHeatmap() {
-  // To avoid hydration mismatch with Math.random, we generate grid on mount or use a static seeded array
+export function ActivityHeatmap({ activity }: { activity?: { day: string; minutes: number; xp: number }[] }) {
   const [grid, setGrid] = useState<number[][]>([]);
 
   useEffect(() => {
+    // Build a lookup map of day string (YYYY-MM-DD) to minutes
+    const activityMap: Record<string, number> = {};
+    if (activity) {
+      activity.forEach(a => {
+        activityMap[a.day] = a.minutes;
+      });
+    }
+
     const newGrid: number[][] = [];
+    const today = new Date();
+    
+    // We want 12 columns (weeks). Column 11 is the current week.
+    // To align properly, we find the starting Sunday of 12 weeks ago.
+    const currentDayOfWeek = today.getDay(); // 0 is Sunday
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - currentDayOfWeek - (11 * 7));
+
+    let currentDate = new Date(startDate);
+    
     for (let col = 0; col < 12; col++) {
       const week: number[] = [];
       for (let row = 0; row < 7; row++) {
-        // Pattern logic from reference HTML: 
-        // Recent weeks have more solid activity, others random
-        const level = (col > 8 && row % 2 === 0) 
-          ? 3 
-          : (Math.random() > 0.6 ? Math.floor(Math.random() * 3) + 1 : 0);
-        week.push(level);
+        // Stop if the date is in the future
+        if (currentDate > today) {
+          week.push(0);
+        } else {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          const mins = activityMap[dateStr] || 0;
+          
+          let level = 0;
+          if (mins > 45) level = 3;
+          else if (mins > 20) level = 2;
+          else if (mins > 0) level = 1;
+          
+          week.push(level);
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
       }
       newGrid.push(week);
     }
+    
     setGrid(newGrid);
-  }, []);
+  }, [activity]);
 
   return (
     <section className="bg-[#131318] border border-[#454653] rounded-lg p-[20px] flex flex-col gap-6">

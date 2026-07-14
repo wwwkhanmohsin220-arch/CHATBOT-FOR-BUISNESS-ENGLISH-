@@ -5,18 +5,6 @@
  */
 import { cn } from "@/lib/utils";
 
-// Mock data structures
-const STRENGTHS = [
-  "Grammar Structure",
-  "Reading Comprehension",
-  "Professional Tone"
-];
-
-const WEAKNESSES = [
-  "Spontaneous Fluency",
-  "Idiomatic Vocabulary"
-];
-
 export function SkillAssessment({ radar }: { radar?: any }) {
   const strengths: string[] = [];
   const weaknesses: string[] = [];
@@ -26,8 +14,8 @@ export function SkillAssessment({ radar }: { radar?: any }) {
     strengths.push(...sorted.slice(0, 3).map(x => x[0].charAt(0).toUpperCase() + x[0].slice(1)));
     weaknesses.push(...sorted.slice(-2).map(x => x[0].charAt(0).toUpperCase() + x[0].slice(1)));
   } else {
-    strengths.push(...STRENGTHS);
-    weaknesses.push(...WEAKNESSES);
+    strengths.push("No data yet");
+    weaknesses.push("Complete lessons to see stats");
   }
 
   return (

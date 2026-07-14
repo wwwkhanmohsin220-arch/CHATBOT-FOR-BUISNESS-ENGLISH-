@@ -38,7 +38,11 @@ export async function updateSession(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const isAuthPage = request.nextUrl.pathname === '/sign-in' || request.nextUrl.pathname === '/sign-up';
+    const isAuthPage = request.nextUrl.pathname === '/sign-in' || 
+                       request.nextUrl.pathname === '/sign-up' ||
+                       request.nextUrl.pathname === '/forgot-password' ||
+                       request.nextUrl.pathname === '/update-password' ||
+                       request.nextUrl.pathname.startsWith('/auth');
     const isLandingPage = request.nextUrl.pathname === '/';
     const isOnboarding = request.nextUrl.pathname.startsWith('/onboarding');
 

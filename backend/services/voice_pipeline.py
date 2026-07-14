@@ -11,7 +11,8 @@ from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
 from backend.app.ai.client import chat_stream
-from backend.services.tts import build_tts_provider
+from backend.prompts.voice import build_voice_reply_messages
+from backend.services.tts import TTSProvider, build_tts_provider
 
 
 @dataclass(slots=True)
@@ -30,24 +31,43 @@ class VoiceSessionState:
     assistant_text: str = ""
     turn_count: int = 0
     active: bool = True
+    # Node content fields for proper scenario prompting
+    scenario: str = "A general business conversation."
+    ai_persona: str = "a professional business person"
+    objectives: list[str] = field(default_factory=lambda: ["Practice professional English"])
+    coach_voice: str = "female"
+    level: str = "intermediate"
 
 
 def build_voice_messages(state: VoiceSessionState, transcript: str) -> list[dict[str, str]]:
-    system_message = {
-        "role": "system",
-        "content": (
-            "You are a Business English tutor speaking in short, natural turns. "
-            "Keep replies to two sentences max. Stay helpful, encouraging, and concise."
-        ),
-    }
-    history_messages = [{"role": msg.role, "content": msg.text} for msg in state.history[-12:]]
-    return [system_message, *history_messages, {"role": "user", "content": transcript}]
+    """Build properly contextualised messages using the full voice prompt."""
+    history_as_dicts = [{"role": msg.role, "text": msg.text} for msg in state.history[-12:]]
+    return build_voice_reply_messages(
+        objectives=state.objectives,
+        ai_persona=state.ai_persona,
+        scenario=state.scenario,
+        coach_voice=state.coach_voice,
+        level=state.level,
+        history=history_as_dicts,
+    )
 
 
 class VoicePipeline:
     def __init__(self) -> None:
-        self.tts = build_tts_provider()
+        self._tts: TTSProvider | None = None
         self.sessions: dict[str, VoiceSessionState] = {}
+
+    @property
+    def tts(self) -> TTSProvider:
+        # Lazy-init: read env vars at first request, not at import time
+        if self._tts is None:
+            self._tts = build_tts_provider()
+            provider_name = type(self._tts).__name__
+            import os
+            has_key = bool(os.getenv("ELEVENLABS_API_KEY"))
+            print(f"[VoicePipeline] TTS provider initialized: {provider_name} | ElevenLabs key present: {has_key}")
+        return self._tts
+
 
     def get_or_create_session(
         self,
@@ -100,7 +120,8 @@ class VoicePipeline:
         session.history.append(VoiceMessage(role="assistant", text=assistant_text))
         
         if assistant_text:
-            speech = await self.tts.synthesize(assistant_text)
+            voice_id = "ErXwobaYiN019PkySvjV" if session.coach_voice.lower() == "male" else "21m00Tcm4TlvDq8ikWAM"
+            speech = await self.tts.synthesize(assistant_text, voice_id_override=voice_id)
             yield {
                 "event": "assistant.final",
                 "session_id": session.session_id,

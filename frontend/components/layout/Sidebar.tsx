@@ -9,12 +9,12 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Home, GraduationCap, Mic, Users, BarChart2, Trophy, Settings } from "lucide-react";
 
-const mainNav = [
+export const mainNav = [
   { name: "Home", href: "/home", icon: Home },
   { name: "Learn", href: "/learn", icon: GraduationCap }
 ];
 
-const meNav = [
+export const meNav = [
   { name: "Progress", href: "/progress", icon: BarChart2 },
   { name: "Settings", href: "/settings", icon: Settings },
 ];

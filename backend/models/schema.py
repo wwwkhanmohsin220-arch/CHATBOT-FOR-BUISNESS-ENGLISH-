@@ -83,6 +83,27 @@ class LessonBundle(BaseModel):
     spine: list[LessonNode]
     branches: dict[str, LessonBranch]
 
+    @field_validator("spine")
+    @classmethod
+    def validate_spine(cls, v: list[LessonNode]) -> list[LessonNode]:
+        mcq_count = sum(1 for node in v if node.node_type == "mcq")
+        writing_count = sum(1 for node in v if node.node_type == "writing")
+        voice_count = sum(1 for node in v if node.node_type == "voice")
+        theory_count = sum(1 for node in v if node.node_type == "theory")
+        
+        if theory_count != 1:
+            raise ValueError("The spine MUST have exactly 1 'theory' node.")
+        if mcq_count < 4 or mcq_count > 6:
+            raise ValueError(f"The spine MUST have between 4 and 6 'mcq' nodes. You provided {mcq_count}.")
+        if writing_count < 1 or writing_count > 3:
+            raise ValueError(f"The spine MUST have between 1 and 3 'writing' nodes. You provided {writing_count}.")
+        if voice_count != 1:
+            raise ValueError("The spine MUST have exactly 1 'voice' node at the very end.")
+        if v[-1].node_type != "voice":
+            raise ValueError("The very last node in the spine MUST be the 'voice' node.")
+            
+        return v
+
 
 class RubricAxis(BaseModel):
     score: int = Field(ge=0, le=10)

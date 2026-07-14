@@ -23,12 +23,12 @@ class SpeechResult:
 
 
 class TTSProvider(Protocol):
-    async def synthesize(self, text: str) -> SpeechResult:
+    async def synthesize(self, text: str, voice_id_override: str | None = None) -> SpeechResult:
         ...
 
 
 class BrowserSpeechProvider:
-    async def synthesize(self, text: str) -> SpeechResult:
+    async def synthesize(self, text: str, voice_id_override: str | None = None) -> SpeechResult:
         return SpeechResult(audio_b64=None, provider="browser")
 
 
@@ -85,9 +85,9 @@ class ElevenLabsSpeechProvider:
                 return SpeechResult(audio_b64=None, provider="elevenlabs_payment_required")
 
             return SpeechResult(audio_b64=None, provider="elevenlabs_error")
-        except Exception as exc:
-            import traceback
-            traceback.print_exc()
+        except Exception as e:
+            import logging
+            logging.error(f"ElevenLabs HTTPError: {e}")
             return SpeechResult(audio_b64=None, provider="elevenlabs_error")
 
         if not audio_bytes:
@@ -107,18 +107,49 @@ class ElevenLabsSpeechProvider:
             raise
 
 
+
+class FishAudioSpeechProvider:
+    def __init__(self):
+        import os
+        self.api_key = os.getenv("FISH_AUDIO_API_KEY")
+
+    async def synthesize(self, text: str, voice_id_override: str | None = None):
+        import os
+        if not self.api_key:
+            return SpeechResult(audio_b64=None, provider="fishaudio_missing_key")
+
+        # Ignore voice_id_override since voice_pipeline currently hardcodes ElevenLabs voice IDs
+        reference_id = os.getenv("FISH_AUDIO_VOICE_ID", "933563129e564b19a115bedd57b7406a")
+        
+        url = "https://api.fish.audio/v1/tts"
+        import json, urllib.request, base64, asyncio
+        payload = json.dumps({"text": text, "reference_id": reference_id, "format": "mp3"}).encode("utf-8")
+        request = urllib.request.Request(url, data=payload, headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json", "model": "s2.1-pro-free"}, method="POST")
+
+        try:
+            result = await asyncio.to_thread(urllib.request.urlopen, request, timeout=10)
+            encoded = base64.b64encode(result.read()).decode("ascii")
+            return SpeechResult(audio_b64=encoded, provider="fishaudio")
+        except Exception as e:
+            import logging
+            logging.error(f"FishAudio HTTPError: {e}")
+            return SpeechResult(audio_b64=None, provider="fishaudio_error")
+
 class MockSpeechProvider:
-    async def synthesize(self, text: str) -> SpeechResult:
+    async def synthesize(self, text: str, voice_id_override: str | None = None):
+        import base64
         encoded = base64.b64encode(text.encode("utf-8")).decode("ascii")
         return SpeechResult(audio_b64=encoded, provider="mock")
 
-
-def build_tts_provider() -> TTSProvider:
+def build_tts_provider():
+    import os
     provider = os.getenv("TTS_PROVIDER", "auto").lower()
     has_elevenlabs_key = bool(os.getenv("ELEVENLABS_API_KEY"))
 
     if provider == "elevenlabs":
         return ElevenLabsSpeechProvider()
+    if provider == "fish":
+        return FishAudioSpeechProvider()
     if provider == "mock":
         return MockSpeechProvider()
     if provider == "auto" and has_elevenlabs_key:

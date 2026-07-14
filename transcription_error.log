@@ -1,0 +1,23 @@
+Traceback (most recent call last):
+  File "C:\Users\umerk\Downloads\buslingo\backend\core\voice.py", line 110, in transcribe_audio_bytes
+    result = await maybe_result
+             ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\umerk\Downloads\buslingo\backend\app\ai\client.py", line 110, in transcribe_audio
+    return await asyncio.to_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "C:\Python314\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\concurrent\futures\thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "C:\Python314\Lib\concurrent\futures\thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "C:\Users\umerk\Downloads\buslingo\backend\app\ai\client.py", line 96, in _groq_transcribe_sync
+    raise RuntimeError(f"Groq transcription failed with status {response.status_code}: {response.text}")
+RuntimeError: Groq transcription failed with status 400: {"error":{"message":"could not process file - is it a valid media file?","type":"invalid_request_error"}}
+
+
+Exception message: Groq transcription failed with status 400: {"error":{"message":"could not process file - is it a valid media file?","type":"invalid_request_error"}}

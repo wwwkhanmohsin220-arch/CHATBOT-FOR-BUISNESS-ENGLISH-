@@ -38,6 +38,7 @@ class AttemptIn(BaseModel):
 
 class QnARequest(BaseModel):
     question: str
+    chat_history: Optional[list[dict[str, str]]] = None
 
 
 @dataclass(slots=True)
@@ -98,7 +99,11 @@ def _safe_node(row: Any) -> dict[str, Any]:
     }
 
 
-async def _award_completion_xp(connection: Any, user_id: str, instance_id: str) -> None:
+async def _award_completion_xp(connection: Any, user_id: str, instance_id: str, final_score: int | None = None) -> None:
+    base_xp = 10
+    bonus_xp = int((final_score or 0) / 2)
+    total_xp = base_xp + bonus_xp
+    
     await connection.execute(
         """
         INSERT INTO xp_events (user_id, amount, reason, idempotency_key)
@@ -106,9 +111,39 @@ async def _award_completion_xp(connection: Any, user_id: str, instance_id: str) 
         ON CONFLICT (idempotency_key) DO NOTHING
         """,
         user_id,
-        10,
+        total_xp,
         "lesson completion",
         f"xp:lesson:{instance_id}",
+    )
+
+
+async def _log_activity_day(connection: Any, user_id: str, minutes: int = 15) -> None:
+    from datetime import datetime
+    try:
+        from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+    except ImportError:
+        from backports.zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+    profile = await connection.fetchrow("SELECT timezone FROM user_profiles WHERE user_id = $1", user_id)
+    tz_str = profile["timezone"] if profile and profile["timezone"] else "UTC"
+    
+    try:
+        tz = ZoneInfo(tz_str)
+    except ZoneInfoNotFoundError:
+        tz = ZoneInfo("UTC")
+        
+    today = datetime.now(tz).date()
+    
+    await connection.execute(
+        """
+        INSERT INTO activity_days (user_id, day, minutes, xp)
+        VALUES ($1, $2, $3, 0)
+        ON CONFLICT (user_id, day) DO UPDATE SET
+            minutes = activity_days.minutes + EXCLUDED.minutes
+        """,
+        user_id,
+        today,
+        minutes,
     )
 
 
@@ -119,6 +154,18 @@ async def _seed_srs_cards_for_slot(connection: Any, user_id: str, slot_key: str)
             if slot["slot_key"] == slot_key:
                 await ensure_srs_cards_for_terms(connection, user_id, slot.get("key_vocabulary", []))
                 return
+
+
+async def _seed_srs_in_background(user_id: str, slot_key: str) -> None:
+    """Fire-and-forget SRS seeding with its own DB connection so it doesn't
+    block the attempt transaction response."""
+    try:
+        pool = await database.pool()
+        async with pool.acquire() as conn:
+            await _seed_srs_cards_for_slot(conn, user_id, slot_key)
+    except Exception as exc:
+        import logging
+        logging.warning(f"Background SRS seeding failed for {slot_key}: {exc}")
 
 
 def _fixture_bundle(slot: dict[str, Any]) -> dict[str, Any]:
@@ -349,51 +396,28 @@ async def get_db_user_instance(
                         "SELECT id, status, current_node_index FROM lesson_instances WHERE id = $1::uuid",
                         existing["id"],
                     )
-                else:
-                    resolved_id = await _hydrate_fixture_instance(
-                        connection,
-                        user_id=user_id,
-                        slot_row=slot_row,
-                        slot={
-                            "slot_key": instance_id,
-                            "objectives": [
-                                "Understand introduction to communication",
-                                "Apply professional communication techniques",
-                            ],
-                            "concept_tags": ["polite_disagreement"],
-                            "key_vocabulary": ["communication", "professional", "strategy", "structure"],
-                            "grammar_points": ["Present simple for general truths"],
-                            "example_phrases": ["Let's discuss introduction to communication in detail."],
-                        },
-                    )
-                    instance = await connection.fetchrow(
-                        """
-                        SELECT id, user_id, status, current_node_index
-                        FROM lesson_instances
-                        WHERE id = $1::uuid
-                        """,
-                        resolved_id,
-                    )
-                    return LessonInstanceContext(user_id=user_id, instance_id=resolved_id, instance_row=instance)
             resolved_id = str(existing["id"])
             instance = existing
         else:
-            resolved_id = await _hydrate_fixture_instance(
-                connection,
-                user_id=user_id,
-                slot_row=slot_row,
-                slot={
-                    "slot_key": instance_id,
-                    "objectives": [
-                        "Understand introduction to communication",
-                        "Apply professional communication techniques",
-                    ],
-                    "concept_tags": ["polite_disagreement"],
-                    "key_vocabulary": ["communication", "professional", "strategy", "structure"],
-                    "grammar_points": ["Present simple for general truths"],
-                    "example_phrases": ["Let's discuss introduction to communication in detail."],
-                },
+            resolved_id = await connection.fetchval(
+                """
+                INSERT INTO lesson_instances
+                  (user_id, lesson_slot_id, title, status, current_node_index, compile_version, profile_snapshot)
+                VALUES ($1, $2, 'Generating...', 'compiling', 0, 'v2', '{}'::jsonb)
+                RETURNING id
+                """,
+                user_id,
+                slot_row["id"]
             )
+            if background_tasks:
+                from backend.app.ai.compiler import compile_lesson
+                background_tasks.add_task(
+                    compile_lesson,
+                    user_id=user_id,
+                    slot_key=instance_id,
+                    instance_id=str(resolved_id),
+                )
+
     else:
         resolved_id = instance_id
 
@@ -768,11 +792,8 @@ async def submit_attempt(
                             )
 
                         if slot_key:
-                            await _seed_srs_cards_for_slot(
-                                connection,
-                                context.user_id,
-                                slot_key,
-                            )
+                            # Offload SRS seeding to background — not needed for the response
+                            background_tasks.add_task(_seed_srs_in_background, context.user_id, slot_key)
                             
                         # 3. Trigger compilation for the NEXT slot
                         if next_slot:
@@ -1098,9 +1119,9 @@ async def complete_lesson(
                                     total_earned += sum(scores) / len(scores)
                             elif node_type == "voice":
                                 scores = []
-                                for key in ["fluency", "grammar", "tone", "diplomacy"]:
-                                    if key in result and isinstance(result[key], dict) and "score" in result[key]:
-                                        scores.append(result[key]["score"] * 10)
+                                for key in ["tone", "fluency", "vocabulary", "grammar", "listening"]:
+                                    if key in result and isinstance(result[key], (int, float)):
+                                        scores.append(result[key])
                                 if scores:
                                     total_possible += 100
                                     total_earned += sum(scores) / len(scores)
@@ -1126,7 +1147,8 @@ async def complete_lesson(
                 )
                 
                 if instance["status"] != "completed":
-                    await _award_completion_xp(connection, context.user_id, context.instance_id)
+                    await _award_completion_xp(connection, context.user_id, context.instance_id, instance.get("final_score"))
+                    await _log_activity_day(connection, context.user_id, minutes=15)
             await _seed_srs_cards_for_slot(
                 connection,
                 context.user_id,
@@ -1173,7 +1195,7 @@ async def lesson_qna(
                 node_dict["content"] = json.loads(node_dict["content"])
                 
             from backend.app.ai.qna import qna_prompt
-            messages = qna_prompt(question=req.question, current_node=node_dict, slot_context={})
+            messages = qna_prompt(question=req.question, current_node=node_dict, slot_context={}, chat_history=req.chat_history)
             
             from backend.utils.llm import generate_validated
             from backend.models.schema import QnAResponse

@@ -8,6 +8,7 @@ import { getButtonClasses } from "@/components/ui/Button";
 import Link from "next/link";
 import { BookOpen, Mic, Presentation, Mail, Brain, LineChart } from "lucide-react";
 import ColorBends from "@/components/ui/ColorBends";
+import { MotionLink } from "@/components/ui/MotionLink";
 
 export default function Home() {
   return (
@@ -16,12 +17,22 @@ export default function Home() {
         <div className="flex justify-between items-center px-5 md:px-16 max-w-7xl mx-auto h-full">
           <Logo />
           <div className="flex items-center gap-4 md:gap-6">
-            <Link href="/sign-in" className="text-[#c6c5d5] font-medium hover:text-[#bdc2ff] transition-colors duration-200">
+            <MotionLink 
+              href="/sign-in" 
+              whileHover={{ scale: 1.02 }} 
+              whileTap={{ scale: 0.98 }} 
+              className="text-[#c6c5d5] font-medium hover:text-[#bdc2ff] transition-colors duration-200"
+            >
               Sign in
-            </Link>
-            <Link href="/onboarding" className={getButtonClasses("primary")}>
+            </MotionLink>
+            <MotionLink 
+              href="/onboarding" 
+              whileHover={{ scale: 1.02 }} 
+              whileTap={{ scale: 0.98 }} 
+              className={getButtonClasses("primary")}
+            >
               Start Learning
-            </Link>
+            </MotionLink>
           </div>
         </div>
       </nav>
@@ -52,60 +63,65 @@ export default function Home() {
               Master the Language of Business
             </h1>
             <p className="text-base md:text-lg leading-relaxed text-[#A0A0AB] max-w-[560px] mb-8 md:mb-10">
-              AI-powered coaching for emails, meetings, presentations, and beyond. Build the communication skills that accelerate your career.
+              Interactive voice AI coaching for professionals. Perfect your spoken English through immersive, dynamic conversational scenarios.
             </p>
-            <Link href="/onboarding" className={getButtonClasses("primary", "lg", "mb-6")}>
+            <MotionLink 
+              href="/onboarding" 
+              whileHover={{ scale: 1.02 }} 
+              whileTap={{ scale: 0.98 }} 
+              className={getButtonClasses("primary", "lg", "mb-6")}
+            >
               Start Learning
-            </Link>
+            </MotionLink>
             <p className="text-sm text-[#5F5F6B]">
               Already have an account? <Link href="/sign-in" className="text-[#818CF8] hover:underline">Sign in</Link>
             </p>
 
             <div className="mt-16 md:mt-24 flex flex-col items-center">
-              <p className="text-sm text-[#5F5F6B] mb-6">Trusted by learners preparing for careers at</p>
+              <p className="text-sm text-[#5F5F6B] mb-6">Powered by modern enterprise-grade technology</p>
               <div className="flex flex-wrap justify-center gap-5 md:gap-10 text-sm text-[#5F5F6B] font-medium">
-                <span>Google</span>
-                <span>McKinsey</span>
-                <span>Stripe</span>
-                <span>Deloitte</span>
-                <span>Amazon</span>
+                <span>Next.js</span>
+                <span>FastAPI</span>
+                <span>Supabase</span>
+                <span>Groq</span>
+                <span>Fish Audio</span>
               </div>
             </div>
           </div>
         </section>
 
         <section className="py-16 md:py-24 px-5 md:px-16 max-w-7xl mx-auto">
-          <h2 className="text-3xl font-semibold text-[#F2F2F2] mb-12 text-center">Everything you need to communicate with confidence</h2>
+          <h2 className="text-3xl font-semibold text-[#F2F2F2] mb-12 text-center">Cutting-edge AI tools to elevate your spoken English</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <FeatureCard
               icon={<BookOpen className="text-[#818CF8]" size={20} />}
-              title="Industry Vocab"
-              description="Master the specific terminology and phrasing expected in your target industry."
+              title="Conversational RAG"
+              description="Our retrieval engine surfaces hyper-relevant corporate vocabulary for every scenario."
             />
             <FeatureCard
               icon={<Mic className="text-[#818CF8]" size={20} />}
-              title="Pronunciation"
-              description="Real-time feedback on your clarity, pacing, and tone during mock calls."
+              title="Voice AI Coach"
+              description="Engage in ultra-low latency voice conversations powered by advanced LLM models."
             />
             <FeatureCard
               icon={<Presentation className="text-[#818CF8]" size={20} />}
-              title="Presentations"
-              description="Structure your narrative and practice delivery for high-stakes meetings."
+              title="Dynamic Scenarios"
+              description="Practice high-stakes negotiations with adaptive AI that responds in real-time."
             />
             <FeatureCard
               icon={<Mail className="text-[#818CF8]" size={20} />}
-              title="Email Drafting"
-              description="Learn to write concise, professional emails that get fast responses."
+              title="Threaded Theory"
+              description="Learn through interactive, threaded dialogues tailored to your exact skill level."
             />
             <FeatureCard
               icon={<Brain className="text-[#818CF8]" size={20} />}
-              title="Cultural Nuance"
-              description="Understand the unspoken rules of international business communication."
+              title="Adaptive Learning"
+              description="Experience personalized curriculum generation that adapts to your performance."
             />
             <FeatureCard
               icon={<LineChart className="text-[#818CF8]" size={20} />}
               title="Progress Tracking"
-              description="Detailed analytics on your fluency, vocabulary expansion, and confidence."
+              description="Monitor your spoken fluency and track your mastery metrics on a visual heatmap."
             />
           </div>
         </section>
@@ -113,12 +129,15 @@ export default function Home() {
 
       <footer className="bg-[#131318] py-8 border-t border-subtle w-full mt-auto">
         <div className="flex flex-col md:flex-row justify-between items-center px-5 md:px-16 max-w-7xl mx-auto gap-4">
-          <div className="text-sm text-[#5F5F6B]">
-            © 2026 Buslingo. Precision Business English.
+          <div className="text-sm text-[#5F5F6B] flex flex-col md:flex-row items-center gap-2">
+            <span>© 2026 Buslingo.</span>
+            <span className="hidden md:inline">•</span>
+            <span>Open-source portfolio project</span>
           </div>
-          <div className="flex gap-6 text-sm text-[#5F5F6B]">
-            <Link href="#" className="hover:text-[#F2F2F2] transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-[#F2F2F2] transition-colors">Terms of Service</Link>
+          <div className="flex flex-col md:flex-row items-center gap-4 text-sm text-[#5F5F6B]">
+            <span>Built by Mohsin, Umer & Talha</span>
+            <span className="hidden md:inline">•</span>
+            <a href="https://github.com/wwwkhanmohsin220-arch/CHATBOT-FOR-BUISNESS-ENGLISH-" target="_blank" rel="noreferrer" className="hover:text-[#F2F2F2] transition-colors underline underline-offset-4">View Source</a>
           </div>
         </div>
       </footer>

@@ -131,9 +131,9 @@ async def generate_voice_reply(*, objectives: list[str], ai_persona: str, scenar
         voice_id = None
         safe_voice = coach_voice or "female"
         if safe_voice.lower() == "male":
-            voice_id = "CwhRBWXzGAHq8TQ4Fs17" # Rogers
+            voice_id = "ErXwobaYiN019PkySvjV" # Antoni
         else:
-            voice_id = "EST9Ui6982FZPSi7gCHi" # Elise (female default)
+            voice_id = "21m00Tcm4TlvDq8ikWAM" # Rachel
             
         tts_result = await tts_provider.synthesize(reply_text, voice_id_override=voice_id)
         reply_audio_b64 = tts_result.audio_b64

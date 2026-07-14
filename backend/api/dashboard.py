@@ -244,15 +244,11 @@ async def get_me(current_user: CurrentUser | None = Depends(get_optional_current
             
             # Fall back to auth token's display_name if no DB profile yet
             auth_display_name = current_user.display_name if current_user else None
-            name = (
-                (profile["display_name"] if profile and profile["display_name"] else None)
-                or auth_display_name
-                or "Guest User"
-            )
             return {
                 "id": user_id,
-                "name": name,
-                "level": profile["level"] if profile else "beginner",
+                "name": profile["display_name"] if profile else (current_user.display_name if current_user else "User"),
+                "email": current_user.email if current_user else "",
+                "level": profile["level"] if profile else "intermediate",
                 "settings": {
                     "coach_voice": profile["coach_voice"] if profile else "balanced",
                     "daily_goal_min": profile["daily_goal_min"] if profile else 20
@@ -264,7 +260,8 @@ async def get_me(current_user: CurrentUser | None = Depends(get_optional_current
         print(f"Returning mock /me data due to DB error: {repr(e)}")
         return {
             "id": user_id,
-            "name": "Fallback User",
+            "name": current_user.display_name if current_user else "Fallback User",
+            "email": current_user.email if current_user else "",
             "level": "intermediate",
             "settings": {"coach_voice": "balanced", "daily_goal_min": 20},
             "total_xp": 0,
@@ -276,6 +273,7 @@ class SettingsUpdate(BaseModel):
     daily_goal_min: int | None = None
     timezone: str | None = None
     level: str | None = None
+    display_name: str | None = None
 
 @router.patch("/me/settings")
 async def update_settings(
@@ -304,12 +302,25 @@ async def update_settings(
         updates.append(f"level = ${idx}")
         values.append(settings.level)
         idx += 1
+    if settings.display_name is not None:
+        updates.append(f"display_name = ${idx}")
+        values.append(settings.display_name)
+        idx += 1
         
     if not updates:
         return {"status": "no_changes"}
         
+    updates_sql = ", ".join(updates)
+    
     values.append(user_id)
-    query = f"UPDATE user_profiles SET {', '.join(updates)} WHERE user_id = ${idx}"
+    
+    # We use an UPSERT (INSERT ... ON CONFLICT DO UPDATE) so that users who signed in 
+    # via Google OAuth (and skipped onboarding) get a profile gracefully created.
+    query = f"""
+        INSERT INTO user_profiles (user_id) 
+        VALUES (${idx}) 
+        ON CONFLICT (user_id) DO UPDATE SET {updates_sql}
+    """
     
     try:
         pool = await database.pool()

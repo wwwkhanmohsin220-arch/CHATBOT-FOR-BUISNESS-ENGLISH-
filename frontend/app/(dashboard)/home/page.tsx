@@ -6,46 +6,35 @@
 import { Flag, Flame, ArrowRight, Bookmark } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-
-import { useEffect, useState } from "react";
+import { useCachedFetch } from "@/hooks/useCachedFetch";
 
 export default function HomeDashboardPage() {
-  const [dashboard, setDashboard] = useState<any>(null);
-  const [me, setMe] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: dashboard, loading: dashLoading } = useCachedFetch("/api/dashboard");
+  const { data: me, loading: meLoading } = useCachedFetch("/api/me");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [dashRes, meRes] = await Promise.all([
-          fetch("/api/dashboard"),
-          fetch("/api/me")
-        ]);
-        setDashboard(await dashRes.json());
-        setMe(await meRes.json());
-      } catch (e) {
-        console.error("Failed to fetch dashboard data:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const loading = dashLoading || meLoading;
 
-  if (loading) {
+  if (loading && !dashboard && !me) {
     return <main className="flex-1 p-6 md:p-8 max-w-[960px] mx-auto w-full"><div className="text-[#8e8d9b] py-4">Loading dashboard...</div></main>;
   }
 
   const name = me?.name || "";
   const daily = dashboard?.daily_goal || { minutes: 0, target: 20 };
   const streak = dashboard?.streak || { count: 0, week_days: [] };
-  const next = dashboard?.next_lesson || { title: "No upcoming lesson", slot_key: "" };
+  const next = dashboard?.next_lesson || { title: "No upcoming lesson", slot_key: "", current_node_index: 0, total_nodes: 1 };
   const srsCount = dashboard?.srs_due_count || 0;
+
+  const nextProgress = Math.round(Math.min(100, Math.max(5, ((next.current_node_index || 0) / 6) * 100)));
+
+  const hour = new Date().getHours();
+  let greeting = "Good evening";
+  if (hour < 12) greeting = "Good morning";
+  else if (hour < 18) greeting = "Good afternoon";
 
   return (
     <main className="flex-1 p-6 md:p-8 max-w-[960px] mx-auto w-full">
-      <h1 className="text-[32px] leading-[40px] tracking-[-0.02em] font-bold text-white mb-8">
-        Good evening, {name} 👋
+      <h1 className="text-[32px] leading-[40px] tracking-[-0.02em] font-bold text-white mb-8 text-balance">
+        {greeting}, {name} 👋
       </h1>
 
       {/* Top Row: Stats */}
@@ -70,17 +59,17 @@ export default function HomeDashboardPage() {
         </div>
 
         {/* Streak Info */}
-        <div className="bg-[#131318] border border-[#242430] rounded-[14px] p-[20px] flex items-center justify-between hover:border-[#3F3F4E] transition-colors">
+        <div className="bg-[#131318] border border-[#242430] rounded-[14px] p-[20px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 hover:border-[#3F3F4E] transition-colors">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#f7bd3e]/10 flex items-center justify-center text-[#f7bd3e]">
               <Flame size={20} />
             </div>
-            <div>
+            <div className="whitespace-nowrap">
               <h3 className="text-[14px] font-semibold text-[#c6c5d5]">Current Streak</h3>
               <p className="text-[20px] font-bold text-white">{streak.count} Days</p>
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="flex justify-between w-full sm:w-auto sm:justify-start gap-1">
             {streak.week_days.length > 0 ? streak.week_days.map((dayObj: any, i: number) => {
               const dayStr = new Date(dayObj.day).toLocaleDateString('en-US', { weekday: 'short' }).charAt(0);
               const isActive = dayObj.active;
@@ -88,7 +77,7 @@ export default function HomeDashboardPage() {
                 <div
                   key={i}
                   className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold",
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[11px] sm:text-[12px] font-bold",
                     isActive ? "bg-[#f7bd3e] text-[#0A0A0F]" : "bg-[#1c1c23] border border-[#242430] text-[#c6c5d5] font-medium"
                   )}
                 >
@@ -96,7 +85,7 @@ export default function HomeDashboardPage() {
                 </div>
               );
             }) : ['M', 'T', 'W', 'T', 'F'].map((day, i) => (
-              <div key={i} className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold bg-[#1c1c23] border border-[#242430] text-[#c6c5d5] font-medium">
+              <div key={i} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[11px] sm:text-[12px] font-bold bg-[#1c1c23] border border-[#242430] text-[#c6c5d5] font-medium">
                 {day}
               </div>
             ))}
@@ -124,9 +113,9 @@ export default function HomeDashboardPage() {
               Continue your learning path.
             </p>
             <div className="flex items-center gap-4 w-full max-w-md">
-              <span className="text-[12px] font-medium text-[#A0A0AB]">0%</span>
+              <span className="text-[12px] font-medium text-[#A0A0AB]">{nextProgress}%</span>
               <div className="flex-1 h-1.5 bg-[#242430] rounded-full overflow-hidden">
-                <div className="h-full bg-[#818CF8] rounded-full w-[0%]" />
+                <div className="h-full bg-[#818CF8] rounded-full transition-all duration-500" style={{ width: `${nextProgress}%` }} />
               </div>
             </div>
           </div>
@@ -138,29 +127,6 @@ export default function HomeDashboardPage() {
             Resume lesson <ArrowRight size={18} />
           </Link>
         </div>
-      </div>
-
-      {/* Business Lexicon Daily Review Widget */}
-      <div className="bg-[#131318] border border-[#242430] rounded-[14px] p-[24px] flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:border-[#3F3F4E] transition-colors">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-[#818CF8]/10 flex items-center justify-center text-[#818CF8] shrink-0">
-            <Bookmark size={24} />
-          </div>
-          <div>
-            <h3 className="text-[18px] font-bold text-white mb-1">Business Lexicon</h3>
-            <p className="text-[15px] text-[#A0A0AB]">
-              <span className="text-[#e4e1e9] font-medium">12 terms</span> due for spaced repetition.
-            </p>
-          </div>
-        </div>
-        
-        <Link 
-          href="/lesson/vocabulary"
-          className="h-10 px-6 rounded-[10px] bg-[#818CF8] text-[#0A0A0F] text-[14px] font-semibold hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 whitespace-nowrap active:scale-[0.98]"
-        >
-          Start 90s Review
-          <ArrowRight size={18} />
-        </Link>
       </div>
 
     </main>

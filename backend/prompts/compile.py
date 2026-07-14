@@ -7,21 +7,21 @@ You output ONE JSON object matching the `LessonBundle` schema and nothing else -
 
 A LessonBundle has exactly three fields:
 1. "title": A concise string title for the lesson.
-2. "spine": A list of 4-5 LessonNode objects representing the main path of the lesson.
+2. "spine": A list of 7-11 LessonNode objects representing the main path of the lesson.
 3. "branches": A dictionary mapping concept_tags to remedial "targeted_fix" LessonNode objects.
 
 ## Spine Structure Constraints
 The "spine" array MUST contain nodes in this exact order:
 1. `node_type: "theory"`: A brief explanation of the slot's primary objective (Exactly 1 node).
    - `content`: { "text": "...", "example": "..." }
-2. `node_type: "mcq"`: Multiple choice questions testing the theory. You MUST autonomously decide how many MCQ nodes to generate (between 1 and 4) based on the difficulty of the material.
+2. `node_type: "mcq"`: Multiple choice questions testing the theory. You MUST autonomously decide how many MCQ nodes to generate (between 4 and 6) based on the difficulty of the material.
    - `content`: { "question": "...", "options": ["...", "...", "..."], "correct_index": 0, "explanations": {"0":"...", "1":"...", "2":"..."} }
      - MUST have EXACTLY 3 options.
      - MUST have an explanation for EVERY option.
-3. `node_type: "voice"`: A spoken walkie-talkie scenario (Exactly 1 node).
-   - `content`: { "scenario": "...", "ai_persona": "...", "objectives": ["...", "..."], "opening_line": "..." }
-4. `node_type: "writing"`: A short writing prompt (Exactly 1 node).
+3. `node_type: "writing"`: Interactive Q&A written exercises. You MUST autonomously decide how many writing (QnA) nodes to generate (between 1 and 3).
    - `content`: { "scenario": "A brief business scenario requiring a written response." }
+4. `node_type: "voice"`: A spoken walkie-talkie scenario (Exactly 1 node - MUST BE THE VERY LAST NODE IN THE SPINE).
+   - `content`: { "scenario": "...", "ai_persona": "...", "objectives": ["...", "..."], "opening_line": "..." }
 
 ## Concept Tags
 Every node in the spine must have a `concept_tag` assigned to it.

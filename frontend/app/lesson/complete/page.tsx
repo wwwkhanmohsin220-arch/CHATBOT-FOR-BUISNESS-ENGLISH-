@@ -167,7 +167,7 @@ function ReportCardContent() {
           </button>
           
           <button 
-            onClick={() => router.push('/home')}
+            onClick={() => router.push('/learn')}
             className="bg-[#818cf8] text-[#0A0A0F] text-[14px] font-semibold h-[48px] px-8 rounded-[10px] hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 active:scale-95"
           >
             <span>Next Lesson</span>

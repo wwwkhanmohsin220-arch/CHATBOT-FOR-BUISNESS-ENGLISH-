@@ -32,6 +32,8 @@ export default function UnifiedLessonPage() {
   const [isCompiling, setIsCompiling] = useState(false);
   const [isAlreadyCompleted, setIsAlreadyCompleted] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 10;
 
   const instanceId = params.id as string;
 
@@ -46,11 +48,26 @@ export default function UnifiedLessonPage() {
         console.error(`Failed to fetch node: ${res.status}`);
         if (res.status === 404) {
           router.push("/learn"); // lesson not found - go to curriculum
+        } else if (res.status === 503) {
+          // Supabase is waking up from sleep — retry instead of redirecting
+          setIsCompiling(true);
+          setRetryCount(prev => {
+            const next = prev + 1;
+            if (next >= MAX_RETRIES) {
+              router.push("/home");
+            } else {
+              setTimeout(fetchCurrentNode, 3000);
+            }
+            return next;
+          });
         } else {
           router.push("/home");
         }
         return;
       }
+
+      // Reset retry count on success
+      setRetryCount(0);
 
       const data = await res.json();
       

@@ -7,50 +7,61 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Edit2, CheckCircle, ChevronDown, Key, Trash2, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { useCachedFetch, invalidateCache } from "@/hooks/useCachedFetch";
+import { motion, AnimatePresence } from "framer-motion";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 export default function SettingsPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { data: profileData, loading } = useCachedFetch("/api/me");
 
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>(null);
-  
   const [coachVoice, setCoachVoice] = useState("female");
+  const [timezone, setTimezone] = useState("UTC");
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [passwordBusy, setPasswordBusy] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
+
   useEffect(() => {
-    fetch("/api/me")
-      .then(res => res.json())
-      .then(data => {
-        setProfile(data);
-        if (data?.settings?.coach_voice) setCoachVoice(data.settings.coach_voice);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, []);
+    if (profileData) {
+      setProfile(profileData);
+      if (profileData.settings?.coach_voice) setCoachVoice(profileData.settings.coach_voice);
+      if (profileData.timezone) setTimezone(profileData.timezone);
+      if (profileData.name) setDisplayName(profileData.name);
+      if (profileData.email) setEmail(profileData.email);
+    }
+  }, [profileData]);
 
   const handleSave = async () => {
     setSaving(true);
     setStatusMessage(null);
     try {
+      if (email && email !== profileData?.email) {
+        const { error } = await supabase.auth.updateUser({ email });
+        if (error) throw error;
+      }
+
       const res = await fetch("/api/me/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          coach_voice: coachVoice
+          coach_voice: coachVoice,
+          display_name: displayName,
+          timezone: timezone
         })
       });
-      if (!res.ok) throw new Error("Failed to save");
+      if (!res.ok) throw new Error("Failed to save profile details");
+      
+      invalidateCache("/api/me");
       setStatusMessage("Settings saved successfully.");
-    } catch (err) {
-      setStatusMessage("Error saving settings.");
+    } catch (err: any) {
+      setStatusMessage(err?.message || "Error saving settings.");
     } finally {
       setSaving(false);
     }
@@ -110,12 +121,9 @@ export default function SettingsPage() {
           
           <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Avatar */}
-            <div className="relative flex-shrink-0 group cursor-pointer">
+            <div className="relative flex-shrink-0 cursor-default">
               <div className="w-[80px] h-[80px] rounded-full overflow-hidden border-2 border-[#818cf8] flex items-center justify-center bg-gradient-to-br from-[#818CF8] to-[#4f46e5]">
-                <span className="text-white text-[32px] font-bold">{profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}</span>
-              </div>
-              <div className="absolute bottom-0 right-0 bg-[#818cf8] text-[#0A0A0F] rounded-full p-1.5 shadow-lg group-hover:scale-110 transition-transform">
-                <Edit2 size={16} />
+                <span className="text-white text-[32px] font-bold">{displayName ? displayName.charAt(0).toUpperCase() : 'U'}</span>
               </div>
             </div>
 
@@ -125,47 +133,34 @@ export default function SettingsPage() {
                 <label className="block text-[12px] font-medium text-[#c6c5d5] mb-1.5">Display Name</label>
                 <input 
                   type="text" 
-                  value={profile?.name || ""}
-                  readOnly
-                  className="bg-[#1C1C23] border border-[#242430] focus:border-[#818cf8] outline-none w-full rounded-[10px] h-[48px] px-4 text-[16px] text-[#e4e1e9] transition-colors opacity-80"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="bg-[#1C1C23] border border-[#242430] focus:border-[#818cf8] outline-none w-full rounded-[10px] h-[48px] px-4 text-[16px] text-[#e4e1e9] transition-colors"
                 />
               </div>
               
               <div>
                 <label className="block text-[12px] font-medium text-[#c6c5d5] mb-1.5">Email Address</label>
-                <div className="relative">
-                  <input 
-                    type="email" 
-                    defaultValue="alex.mercer@example.com"
-                    readOnly
-                    className="bg-[#1C1C23] border border-[#242430] w-full rounded-[10px] h-[48px] px-4 text-[16px] text-[#c6c5d5] cursor-not-allowed opacity-80"
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded text-xs font-medium">
-                    <CheckCircle size={14} className="mr-1" />
-                    Verified
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[12px] font-medium text-[#c6c5d5] mb-1.5">Bio</label>
-                <textarea 
-                  rows={3}
-                  defaultValue="Senior Developer focusing on improving technical communication for international teams."
-                  className="bg-[#1C1C23] border border-[#242430] focus:border-[#818cf8] outline-none w-full rounded-[10px] p-4 text-[16px] text-[#e4e1e9] transition-colors resize-none"
+                <input 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-[#1C1C23] border border-[#242430] focus:border-[#818cf8] outline-none w-full rounded-[10px] h-[48px] px-4 text-[16px] text-[#e4e1e9] transition-colors"
                 />
               </div>
             </div>
           </div>
 
           <div className="mt-8 flex justify-end">
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleSave}
               disabled={saving || loading}
-              className="bg-[#818cf8] text-[#0A0A0F] rounded-[10px] h-[40px] px-6 text-[14px] font-semibold hover:opacity-90 transition-all shadow-lg shadow-indigo-500/20 active:scale-[0.98] disabled:opacity-50"
+              className="bg-[#818cf8] text-[#0A0A0F] rounded-[10px] h-[40px] px-6 text-[14px] font-semibold hover:opacity-90 transition-shadow shadow-lg shadow-indigo-500/20 disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save changes"}
-            </button>
+            </motion.button>
           </div>
         </section>
 
@@ -175,20 +170,33 @@ export default function SettingsPage() {
             <h3 className="text-[20px] font-semibold text-[#e4e1e9]">Learning Preferences</h3>
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-[12px] font-medium text-[#c6c5d5] mb-1.5">Coach Voice</label>
-              <div className="relative">
-                <select 
-                  value={coachVoice}
-                  onChange={(e) => setCoachVoice(e.target.value)}
-                  className="bg-[#1C1C23] border border-[#242430] focus:border-[#818cf8] outline-none w-full rounded-[10px] h-[48px] px-4 appearance-none text-[16px] text-[#e4e1e9] cursor-pointer"
-                >
-                  <option value="female">Female (Default)</option>
-                  <option value="male">Male</option>
-                </select>
-                <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c6c5d5] pointer-events-none" />
-              </div>
+              <CustomSelect 
+                value={coachVoice}
+                onChange={setCoachVoice}
+                options={[
+                  { value: "female", label: "Female (Default)" },
+                  { value: "male", label: "Male" }
+                ]}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-[12px] font-medium text-[#c6c5d5] mb-1.5">Timezone</label>
+              <CustomSelect 
+                value={timezone}
+                onChange={setTimezone}
+                options={[
+                  { value: "UTC", label: "UTC" },
+                  { value: "America/New_York", label: "America/New_York (EST)" },
+                  { value: "America/Los_Angeles", label: "America/Los_Angeles (PST)" },
+                  { value: "Europe/London", label: "Europe/London (GMT)" },
+                  { value: "Asia/Dubai", label: "Asia/Dubai (GST)" },
+                  { value: "Asia/Karachi", label: "Asia/Karachi (PKT)" }
+                ]}
+              />
             </div>
           </div>
         </section>
@@ -204,35 +212,49 @@ export default function SettingsPage() {
                   <Key size={20} className="mr-3 text-[#c6c5d5]" />
                   <span className="text-[16px] text-[#e4e1e9]">Change Password</span>
                 </div>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
                   className="text-[#c6c5d5] hover:text-white transition-colors"
                   aria-label={showPassword ? "Hide password form" : "Show password form"}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+                </motion.button>
               </div>
 
-              {showPassword && (
-                <div className="flex flex-col md:flex-row gap-3">
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="New password"
-                    className="flex-1 bg-[#131318] border border-[#242430] rounded-[10px] h-[44px] px-4 text-[14px] text-[#e4e1e9] outline-none focus:border-[#818cf8]"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleChangePassword}
-                    disabled={passwordBusy}
-                    className="bg-[#818cf8] text-[#0A0A0F] rounded-[10px] h-[44px] px-5 text-[14px] font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+              <AnimatePresence>
+                {showPassword && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    className="overflow-hidden"
                   >
-                    {passwordBusy ? "Updating..." : "Update Password"}
-                  </button>
-                </div>
-              )}
+                    <div className="flex flex-col md:flex-row gap-3 pt-4">
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="New password"
+                        className="flex-1 bg-[#131318] border border-[#242430] rounded-[10px] h-[44px] px-4 text-[14px] text-[#e4e1e9] outline-none focus:border-[#818cf8]"
+                      />
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="button"
+                        onClick={handleChangePassword}
+                        disabled={passwordBusy}
+                        className="bg-[#818cf8] text-[#0A0A0F] rounded-[10px] h-[44px] px-5 text-[14px] font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+                      >
+                        {passwordBusy ? "Updating..." : "Update Password"}
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
@@ -243,14 +265,16 @@ export default function SettingsPage() {
               <p className="text-[14px] text-[#c6c5d5] max-w-sm">
                 Permanently delete your account and all associated data. This action cannot be undone.
               </p>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={handleDeleteAccount}
                 className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 px-4 py-2 rounded-[10px] text-[14px] font-semibold transition-colors whitespace-nowrap flex items-center"
               >
                 <Trash2 size={18} className="mr-2" />
                 Delete Account
-              </button>
+              </motion.button>
             </div>
           </div>
         </section>

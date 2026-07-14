@@ -5,6 +5,7 @@
 import { getButtonClasses } from "@/components/ui/Button";
 import Link from "next/link";
 import { Bot } from "lucide-react";
+import { MotionLink } from "@/components/ui/MotionLink";
 
 export default function WelcomeOnboardingPage() {
   return (
@@ -18,9 +19,14 @@ export default function WelcomeOnboardingPage() {
         Before we start, let's tailor your AI coach to your specific industry, English level, and professional goals.
       </p>
 
-      <Link href="/onboarding/level" className={getButtonClasses("primary", "default", "w-full max-w-[320px]")}>
+      <MotionLink 
+        href="/onboarding/level" 
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className={getButtonClasses("primary", "default", "w-full max-w-[320px]")}
+      >
         Get Started
-      </Link>
+      </MotionLink>
       
       <div className="mt-8 flex items-center gap-2 text-[13px] text-[#5F5F6B] font-medium">
         <span className="w-2 h-2 rounded-full bg-[#818CF8]"></span>

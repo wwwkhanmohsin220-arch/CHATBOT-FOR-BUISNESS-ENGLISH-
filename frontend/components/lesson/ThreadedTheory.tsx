@@ -82,13 +82,13 @@ export function ThreadedTheory({ content, examplePhrase, onSubmitAttempt }: Thre
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex justify-end gap-3 mt-4"
+          className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-3 mt-4"
         >
           {!showExample && examplePhrase && (
             <button 
               onClick={() => setShowExample(true)}
               disabled={isSubmitting}
-              className="flex items-center gap-2 px-4 py-2 rounded-[10px] text-[#818cf8] border border-[#818cf8] hover:bg-[#818cf8]/10 transition-colors text-[14px] font-semibold disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-4 py-2 rounded-[10px] text-[#818cf8] border border-[#818cf8] hover:bg-[#818cf8]/10 transition-colors text-[14px] font-semibold disabled:opacity-50 sm:w-auto"
             >
               <Lightbulb size={16} />
               Give me an example
@@ -97,7 +97,7 @@ export function ThreadedTheory({ content, examplePhrase, onSubmitAttempt }: Thre
           <button 
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="bg-[#818cf8] text-[#0A0A0F] text-[14px] font-semibold h-[40px] px-6 rounded-[10px] hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+            className="bg-[#818cf8] text-[#0A0A0F] text-[14px] font-semibold h-[40px] px-6 rounded-[10px] hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:active:scale-100 sm:w-auto"
           >
             {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : "Got it, let's practice"}
           </button>

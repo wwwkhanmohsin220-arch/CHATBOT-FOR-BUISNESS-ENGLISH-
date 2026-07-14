@@ -3,9 +3,13 @@
  * @ai-restriction
  * Primary Owner: Umer
  */
-import { useEffect, useState } from "react";
+import { useCachedFetch, invalidateCache } from "@/hooks/useCachedFetch";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, CheckCircle2, ChevronRight, Circle, PlayCircle } from "lucide-react";
+import { motion } from "framer-motion";
+
+const MotionLink = motion.create(Link);
 
 interface LessonSlot {
   id: string;
@@ -24,52 +28,70 @@ interface Unit {
 }
 
 export default function LearningPathPage() {
-  const [units, setUnits] = useState<Unit[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { data: rawCurriculum, loading } = useCachedFetch("/api/curriculum");
 
-  useEffect(() => {
-    fetch("/api/curriculum")
-      .then((r) => r.json())
-      .then((data) => {
-        let previousCompleted = true; // First lesson is always unlocked
-        
-        const processedUnits = (data.units || []).map((unit: Unit) => {
-          return {
-            ...unit,
-            lessons: unit.lessons.map((lesson) => {
-              const unlocked = previousCompleted || lesson.status === "completed" || lesson.status === "in_progress";
-              previousCompleted = lesson.status === "completed";
-              
-              return {
-                ...lesson,
-                unlocked
-              };
-            })
-          };
-        });
-        
-        setUnits(processedUnits);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+  // Process units synchronously to determine lock state
+  let units: Unit[] = [];
+  if (rawCurriculum?.units) {
+    let previousCompleted = true; // First lesson is always unlocked
+    units = rawCurriculum.units.map((unit: Unit) => {
+      return {
+        ...unit,
+        lessons: unit.lessons.map((lesson) => {
+          const unlocked = previousCompleted || lesson.status === "completed" || lesson.status === "in_progress";
+          previousCompleted = lesson.status === "completed";
+          return { ...lesson, unlocked };
+        })
+      };
+    });
+  }
+
+  const handleRetry = async (e: React.MouseEvent, instanceId: string) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`/api/lesson-instances/${instanceId}/restart`, { method: "POST" });
+      if (res.ok) {
+        invalidateCache(); // Clear cache so dashboard and learn page reload
+        router.push(`/lesson/${instanceId}`);
+      }
+    } catch (err) {
+      console.error("Failed to restart lesson", err);
+    }
+  };
 
   return (
     <main className="flex-1 overflow-y-auto p-6 md:p-16 relative">
       <div className="max-w-[720px] mx-auto w-full relative z-10 pb-24">
-        <h1 className="text-[28px] leading-tight tracking-tight font-bold text-white mb-10">
+        <motion.h1 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-[28px] leading-tight tracking-tight font-bold text-white mb-10"
+        >
           Learning path
-        </h1>
+        </motion.h1>
 
-        {loading ? (
+        {loading && units.length === 0 ? (
           <p className="text-[#8e8d9b]">Loading curriculum...</p>
         ) : units.length === 0 ? (
           <p className="text-[#8e8d9b]">No lessons available yet.</p>
         ) : (
-          <div className="relative pl-12">
+          <motion.div 
+            variants={{
+              hidden: { opacity: 0 },
+              show: { opacity: 1, transition: { staggerChildren: 0.15 } }
+            }}
+            initial="hidden"
+            animate="show"
+            className="relative pl-12"
+          >
             <div className="absolute left-[15px] top-[20px] bottom-[40px] w-[2px] bg-[#242430] z-0" />
             {units.map((unit, unitIdx) => (
-              <div key={unit.id} className="relative mb-10">
+              <motion.div 
+                key={unit.id} 
+                variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }}
+                className="relative mb-10"
+              >
                 {/* Unit connector dot */}
                 <div className="absolute -left-[33px] top-[6px] w-3 h-3 rounded-full bg-[#818CF8] z-10" />
                 <h2 className="text-[17px] font-bold text-white mb-4">{unit.title}</h2>
@@ -112,14 +134,29 @@ export default function LearningPathPage() {
                                 {lesson.final_score}%
                               </span>
                             )}
-                            <ChevronRight size={18} className="text-[#4b4b56] group-hover:text-[#818CF8] transition-colors" />
+                            {isCompleted && lesson.instance_id ? (
+                              <motion.button 
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={(e) => handleRetry(e, lesson.instance_id!)}
+                                className="bg-[#242430] hover:bg-[#2a2a35] text-[#c6c5d5] hover:text-[#e4e1e9] text-[13px] font-semibold px-4 py-1.5 rounded-[8px] transition-colors ml-2"
+                              >
+                                Retry
+                              </motion.button>
+                            ) : (
+                              <ChevronRight size={18} className="text-[#4b4b56] group-hover:text-[#818CF8] transition-colors" />
+                            )}
                           </div>
                         )}
                       </>
                     );
 
-                    const className = `flex items-center gap-4 bg-[#131318] border border-[#242430] rounded-[12px] px-5 py-4 transition-colors group ${
-                      isLocked ? "opacity-70" : "hover:border-[#818CF8]"
+                    const className = `flex items-center gap-4 border rounded-[12px] px-5 py-4 transition-colors group ${
+                      isLocked 
+                        ? "bg-[#131318] border-[#242430] opacity-70" 
+                        : isCompleted
+                          ? "bg-[#0a0a0f] border-[#1a1a20]"
+                          : "bg-[#131318] border-[#242430] hover:border-[#818CF8]"
                     }`;
 
                     if (isLocked) {
@@ -135,15 +172,21 @@ export default function LearningPathPage() {
                       : `/lesson/${lesson.id}`;
 
                     return (
-                      <Link key={lesson.id} href={href} className={className}>
+                      <MotionLink 
+                        key={lesson.id} 
+                        href={href} 
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        className={className}
+                      >
                         {innerContent}
-                      </Link>
+                      </MotionLink>
                     );
                   })}
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
     </main>

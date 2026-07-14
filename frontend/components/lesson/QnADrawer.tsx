@@ -155,20 +155,20 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
     setIsTyping(true);
 
     try {
-      const res = await fetch(`/api/qna/semantic-search`, {
+      const chatHistory = messages.map(m => ({ role: m.role, text: m.text }));
+      const res = await fetch(`/api/lesson-instances/${instanceId}/qna`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: userMsg })
+        body: JSON.stringify({ 
+          question: userMsg,
+          chat_history: chatHistory
+        })
       });
       const data = await res.json();
       
-      let answer_markdown = "Here is what I found in the curriculum:\n\n";
-      if (data.results && data.results.length > 0) {
-        data.results.forEach((r: any) => {
-          answer_markdown += `> **Source: ${r.source_title}**\n>\n> ${r.content}\n\n`;
-        });
-      } else {
-        answer_markdown = "I couldn't find anything relevant to that question.";
+      let answer_markdown = data.answer_markdown;
+      if (!res.ok || !answer_markdown) {
+        answer_markdown = data.detail || "I couldn't process that. Try asking again.";
       }
       
       setMessages(prev => [...prev, { 
@@ -219,7 +219,7 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="w-full max-w-[420px] h-full bg-[#12121A] border-l-2 border-[#3F3F4E] flex flex-col shadow-[-10px_0_40px_rgba(0,0,0,0.8)]"
+              className="w-full md:max-w-[420px] h-full bg-[#12121A] md:border-l-2 border-[#3F3F4E] flex flex-col shadow-[-10px_0_40px_rgba(0,0,0,0.8)]"
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
@@ -235,9 +235,9 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
                 </div>
                 <button 
                   onClick={() => setIsOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-[#242430] text-[#A0A0AB] hover:text-white transition-colors"
+                  className="w-12 h-12 flex items-center justify-center rounded-full bg-[#242430] text-[#A0A0AB] hover:text-white hover:bg-[#3F3F4E] transition-colors"
                 >
-                  <X size={16} />
+                  <X size={24} />
                 </button>
               </div>
 

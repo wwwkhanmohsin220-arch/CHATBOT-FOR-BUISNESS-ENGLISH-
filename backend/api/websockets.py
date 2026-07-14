@@ -91,6 +91,17 @@ async def voice_endpoint(websocket: WebSocket):
 
             if message_type in {"voice.start", "session.start", "start_session"}:
                 session.lesson_id = message.get("lesson_id") or session.lesson_id
+                # Store node content so prompts are scenario-aware
+                if message.get("scenario"):
+                    session.scenario = message["scenario"]
+                if message.get("ai_persona"):
+                    session.ai_persona = message["ai_persona"]
+                if message.get("objectives"):
+                    session.objectives = message["objectives"]
+                if message.get("coach_voice"):
+                    session.coach_voice = message["coach_voice"]
+                if message.get("level"):
+                    session.level = message["level"]
                 await websocket.send_json(
                     {
                         "event": "voice.session.started",
@@ -138,4 +149,6 @@ async def voice_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         voice_pipeline.reset(session.session_id)
     except Exception as exc:  # pragma: no cover - defensive websocket guard
+        import logging
+        logging.error("WebSocket unhandled exception:", exc_info=True)
         await _send_error(websocket, "internal_error", str(exc))
