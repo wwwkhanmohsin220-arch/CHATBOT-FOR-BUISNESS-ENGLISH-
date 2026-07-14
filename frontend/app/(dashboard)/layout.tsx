@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           colorStops={["#4f46e5", "#818CF8", "#0EA5E9"]}
           blend={0.6}
           amplitude={1.2}
-          speed={0.4}
+          speed={0.7}
         />
       </div>
       <div className="z-10 flex flex-col min-h-screen relative">
