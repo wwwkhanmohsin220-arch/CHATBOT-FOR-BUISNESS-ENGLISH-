@@ -116,17 +116,38 @@ def _fallback_bundle(slot: dict[str, Any], user_profile: dict[str, Any]) -> Less
                 "concept_tag": primary_tag,
                 "content": {
                     "question": f"Which reply fits a {user_profile.get('level', 'beginner')} learner in a business setting?",
-                    "options": [
-                        "Hey, what are you doing?",
-                        "Hello, I'd like to introduce myself.",
-                        "Yo, let's talk later.",
-                    ],
+                    "options": ["Hey, what are you doing?", "Hello, I'd like to introduce myself.", "Yo, let's talk later."],
                     "correct_index": 1,
-                    "explanations": {
-                        "0": "Too casual for a business setting.",
-                        "1": "Correct. It is clear and professional.",
-                        "2": "Too informal for a business lesson.",
-                    },
+                    "explanations": {"0": "Too casual.", "1": "Correct.", "2": "Too informal."}
+                },
+            },
+            {
+                "node_type": "mcq",
+                "concept_tag": primary_tag,
+                "content": {
+                    "question": "How should you start a formal email?",
+                    "options": ["Dear [Name],", "Hey there,", "What's up?"],
+                    "correct_index": 0,
+                    "explanations": {"0": "Professional.", "1": "Too casual.", "2": "Very informal."}
+                },
+            },
+            {
+                "node_type": "mcq",
+                "concept_tag": primary_tag,
+                "content": {
+                    "question": "Which of these is a polite way to decline an invitation?",
+                    "options": ["I can't.", "No way.", "I'm afraid I won't be able to make it."],
+                    "correct_index": 2,
+                    "explanations": {"0": "A bit abrupt.", "1": "Rude.", "2": "Polite and professional."}
+                },
+            },
+
+            {
+                "node_type": "writing",
+                "concept_tag": primary_tag,
+                "content": {
+                    "prompt": "Write a short, polite self-introduction for a business meeting.",
+                    "success_criteria": ["Uses a professional greeting", "States role or purpose clearly", "Sounds confident but not overly formal"],
                 },
             },
             {
@@ -139,18 +160,7 @@ def _fallback_bundle(slot: dict[str, Any], user_profile: dict[str, Any]) -> Less
                     "opening_line": "Nice to meet you. Could you introduce yourself in one sentence?",
                 },
             },
-            {
-                "node_type": "writing",
-                "concept_tag": primary_tag,
-                "content": {
-                    "prompt": "Write a short, polite self-introduction for a business meeting.",
-                    "success_criteria": [
-                        "Uses a professional greeting",
-                        "States role or purpose clearly",
-                        "Sounds confident but not overly formal",
-                    ],
-                },
-            },
+
         ],
         branches={
             primary_tag: {
@@ -345,3 +355,41 @@ async def compile_lesson(*, user_id: str, slot_key: str, instance_id: str) -> Le
 
     return bundle
 
+
+async def generate_and_inject_dynamic_node(
+    instance_id: str,
+    node_type: str,
+    concept_tag: str,
+    current_position: float,
+    chat_history: list[dict[str, str]],
+) -> None:
+    from backend.prompts.compile import build_dynamic_node_messages
+    from backend.models.schema import LessonNode
+
+    messages = build_dynamic_node_messages(node_type, concept_tag, chat_history)
+    try:
+        node = await generate_validated(messages, LessonNode, task="dynamic_node")
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()
+        return
+
+    try:
+        pool = await database.pool()
+        async with pool.acquire() as connection:
+            injected_position = current_position + 0.5
+            await connection.execute(
+                """
+                INSERT INTO lesson_nodes (lesson_instance_id, position, node_type, is_injected, concept_tag, content)
+                VALUES ($1, $2, $3, TRUE, $4, $5::jsonb)
+                ON CONFLICT (lesson_instance_id, position) DO NOTHING
+                """,
+                instance_id,
+                injected_position,
+                node.node_type,
+                node.concept_tag,
+                json.dumps(node.content),
+            )
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()

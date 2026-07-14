@@ -7,6 +7,7 @@ import { Flag, Flame, ArrowRight, Bookmark } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useCachedFetch } from "@/hooks/useCachedFetch";
+import { motion } from "framer-motion";
 
 export default function HomeDashboardPage() {
   const { data: dashboard, loading: dashLoading } = useCachedFetch("/api/dashboard");
@@ -32,9 +33,14 @@ export default function HomeDashboardPage() {
   else if (hour < 18) greeting = "Good afternoon";
 
   return (
-    <main className="flex-1 p-6 md:p-8 max-w-[960px] mx-auto w-full">
+    <motion.main 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="flex-1 p-6 md:p-8 max-w-[960px] mx-auto w-full"
+    >
       <h1 className="text-[32px] leading-[40px] tracking-[-0.02em] font-bold text-white mb-8 text-balance">
-        {greeting}, {name} 👋
+        {greeting}, {name}
       </h1>
 
       {/* Top Row: Stats */}
@@ -129,6 +135,6 @@ export default function HomeDashboardPage() {
         </div>
       </div>
 
-    </main>
+    </motion.main>
   );
 }

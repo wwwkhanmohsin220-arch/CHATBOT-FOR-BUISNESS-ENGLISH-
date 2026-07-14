@@ -5,14 +5,25 @@
  */
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopNav } from "@/components/layout/TopNav";
+import Aurora from "@/components/ui/Aurora";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#0A0A0F] flex flex-col font-sans">
-      <Sidebar />
-      <div className="flex-1 flex flex-col md:ml-[220px] min-h-screen">
-        <TopNav />
-        {children}
+    <div className="min-h-screen bg-[#0A0A0F] flex flex-col font-sans relative overflow-hidden">
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-20" style={{ filter: 'blur(30px)' }}>
+        <Aurora
+          colorStops={["#4f46e5", "#818CF8", "#0EA5E9"]}
+          blend={0.6}
+          amplitude={1.2}
+          speed={0.4}
+        />
+      </div>
+      <div className="z-10 flex flex-col min-h-screen relative">
+        <Sidebar />
+        <div className="flex-1 flex flex-col md:ml-[220px] min-h-screen">
+          <TopNav />
+          {children}
+        </div>
       </div>
     </div>
   );

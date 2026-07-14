@@ -1148,7 +1148,7 @@ async def complete_lesson(
                 
                 if instance["status"] != "completed":
                     await _award_completion_xp(connection, context.user_id, context.instance_id, instance.get("final_score"))
-                    await _log_activity_day(connection, context.user_id, minutes=15)
+                    await _log_activity_day(connection, context.user_id, minutes=5)
             await _seed_srs_cards_for_slot(
                 connection,
                 context.user_id,
@@ -1165,6 +1165,7 @@ async def complete_lesson(
 async def lesson_qna(
     instance_id: str,
     req: QnARequest,
+    background_tasks: BackgroundTasks,
     current_user: CurrentUser | None = Depends(get_optional_current_user),
 ):
     try:
@@ -1202,7 +1203,7 @@ async def lesson_qna(
             
             res = await generate_validated(messages, schema=QnAResponse, task="qna")
             
-            # Director Rule 2: Track QnA and inject targeted_fix if repeated
+            # Dynamic JIT Injection
             try:
                 await connection.execute(
                     """
@@ -1212,39 +1213,23 @@ async def lesson_qna(
                     context.instance_id, node_row["id"], req.question, res.model_dump_json()
                 )
                 
-                qna_count = await connection.fetchval(
-                    "SELECT COUNT(*) FROM qna_exchanges WHERE lesson_instance_id = $1 AND node_id = $2",
-                    context.instance_id, node_row["id"]
-                )
-                
-                if qna_count >= 2:
-                    injected_count = await connection.fetchval(
-                        "SELECT COUNT(*) FROM lesson_nodes WHERE lesson_instance_id = $1 AND is_injected = TRUE AND concept_tag = $2",
-                        context.instance_id, node_row["concept_tag"]
+                if res.trigger_dynamic_node:
+                    from backend.app.ai.compiler import generate_and_inject_dynamic_node
+                    
+                    # Convert Decimal to float for the compiler
+                    current_pos = float(_to_decimal(node_row["position"]))
+                    
+                    background_tasks.add_task(
+                        generate_and_inject_dynamic_node,
+                        instance_id=context.instance_id,
+                        node_type=res.trigger_dynamic_node,
+                        concept_tag=res.related_concept_tag or node_row["concept_tag"],
+                        current_position=current_pos,
+                        chat_history=req.chat_history or [],
                     )
-                    if injected_count < 2:
-                        branch = await connection.fetchrow(
-                            """
-                            SELECT id, content FROM lesson_branches
-                            WHERE lesson_instance_id = $1 AND concept_tag = $2 AND consumed = FALSE
-                            FOR UPDATE
-                            """,
-                            context.instance_id, node_row["concept_tag"]
-                        )
-                        if branch:
-                            injected_position = _to_decimal(node_row["position"]) + Decimal("0.5")
-                            await connection.execute(
-                                """
-                                INSERT INTO lesson_nodes (lesson_instance_id, position, node_type, is_injected, concept_tag, content)
-                                VALUES ($1, $2, 'targeted_fix', TRUE, $3, $4::jsonb)
-                                ON CONFLICT (lesson_instance_id, position) DO NOTHING
-                                """,
-                                context.instance_id, injected_position, node_row["concept_tag"], branch["content"]
-                            )
-                            await connection.execute("UPDATE lesson_branches SET consumed = TRUE WHERE id = $1", branch["id"])
             except Exception as e:
                 import logging
-                logging.error(f"Failed to process Director Rule 2 for QnA: {e}")
+                logging.error(f"Failed to process Dynamic Node Injection for QnA: {e}")
                 
             return res
     except HTTPException:

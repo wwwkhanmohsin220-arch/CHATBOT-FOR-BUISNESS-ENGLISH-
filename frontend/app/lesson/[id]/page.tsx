@@ -10,6 +10,8 @@ import { ThreadedVoice } from "@/components/lesson/ThreadedVoice";
 import { ThreadedMCQ } from "@/components/lesson/ThreadedMCQ";
 import { QnADrawer } from "@/components/lesson/QnADrawer";
 import { TargetedFixCard } from "@/components/lesson/TargetedFixCard";
+import { useCachedFetch } from "@/hooks/useCachedFetch";
+import Aurora from "@/components/ui/Aurora";
 
 type BlockType = "theory" | "mcq" | "writing" | "voice" | "targeted_fix";
 
@@ -36,6 +38,27 @@ export default function UnifiedLessonPage() {
   const MAX_RETRIES = 10;
 
   const instanceId = params.id as string;
+  const { data: rawCurriculum } = useCachedFetch("/api/curriculum");
+
+  let computedUnitTitle = "Loading...";
+  let computedLessonTitle = "Loading...";
+
+  if (rawCurriculum?.units) {
+    for (const unit of rawCurriculum.units) {
+      const lesson = unit.lessons.find((l: any) => l.id === instanceId);
+      if (lesson) {
+        const unitNumMatch = unit.title.match(/Unit (\d+)/i);
+        const unitNum = unitNumMatch ? `Unit ${unitNumMatch[1]}` : "Unit";
+        
+        const lessonNumMatch = lesson.title.match(/Lesson (\d+)/i);
+        const lessonNum = lessonNumMatch ? `Lesson ${lessonNumMatch[1]}` : "Lesson";
+
+        computedUnitTitle = `${unitNum} › ${lessonNum}`;
+        computedLessonTitle = lesson.title.includes(":") ? lesson.title.split(": ")[1] : lesson.title;
+        break;
+      }
+    }
+  }
 
   // 1. Fetch current node on mount
   const fetchCurrentNode = async () => {
@@ -251,7 +274,7 @@ export default function UnifiedLessonPage() {
 
         {block.type === "writing" && (
            <InteractiveQnA
-             question={block.content?.scenario || block.content?.text || "Please write a draft."}
+             question={block.content?.prompt || block.content?.scenario || block.content?.text || "Please write a draft."}
              onSubmitDraft={async (draft: string) => {
                const res = await fetch(`/api/lesson-instances/${instanceId}/writing/submit`, {
                  method: "POST",
@@ -284,12 +307,22 @@ export default function UnifiedLessonPage() {
 
   if (isLoadingInitial || isCompiling) {
      return (
-       <div className="min-h-screen bg-[#0A0A0F] flex flex-col items-center justify-center text-white gap-4">
-         <div className="w-16 h-16 border-4 border-[#818cf8] border-t-transparent rounded-full animate-spin mb-4" />
-         <h2 className="text-[24px] font-bold text-white">
-           {isCompiling ? "Personalizing your lesson..." : "Loading Lesson..."}
-         </h2>
-         <p className="text-[#A0A0AB]">AI is assembling real-world business scenarios</p>
+       <div className="min-h-screen bg-[#0A0A0F] flex flex-col items-center justify-center text-white gap-4 relative overflow-hidden">
+         <div className="absolute inset-0 z-0 opacity-40 mix-blend-screen">
+            <Aurora
+              colorStops={["#4f46e5", "#818CF8", "#0EA5E9"]}
+              blend={0.5}
+              amplitude={1.5}
+              speed={isCompiling ? 1.8 : 0.6}
+            />
+         </div>
+         <div className="z-10 flex flex-col items-center">
+           <div className="w-16 h-16 border-4 border-[#818cf8] border-t-transparent rounded-full animate-spin mb-4" />
+           <h2 className="text-[24px] font-bold text-white shadow-sm">
+             {isCompiling ? "Personalizing your lesson..." : "Loading Lesson..."}
+           </h2>
+           <p className="text-[#A0A0AB] mt-2 drop-shadow-md font-medium">AI is assembling real-world business scenarios</p>
+         </div>
        </div>
      );
   }
@@ -323,7 +356,7 @@ export default function UnifiedLessonPage() {
           <div className="flex flex-col sm:flex-row gap-4 w-full mt-4">
             <button 
               onClick={() => router.push(`/lesson/complete?instanceId=${instanceId}`)}
-              className="flex-1 h-12 rounded-[10px] bg-[#242430] text-white text-[14px] font-semibold hover:bg-[#2a2a35] transition-colors flex items-center justify-center"
+              className="w-full sm:flex-1 min-h-[48px] rounded-[10px] bg-[#242430] text-white text-[14px] font-semibold hover:bg-[#2a2a35] transition-colors flex items-center justify-center"
             >
               View Report Card
             </button>
@@ -343,7 +376,7 @@ export default function UnifiedLessonPage() {
                   setIsDeleting(false);
                 }
               }}
-              className="flex-1 h-12 rounded-[10px] bg-[#818CF8] text-[#0A0A0F] text-[14px] font-semibold hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full sm:flex-1 min-h-[48px] rounded-[10px] bg-[#818CF8] text-[#0A0A0F] text-[14px] font-semibold hover:bg-[#bdc2ff] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isDeleting ? (
                 <div className="w-4 h-4 border-2 border-[#0A0A0F] border-t-transparent rounded-full animate-spin" />
@@ -361,8 +394,8 @@ export default function UnifiedLessonPage() {
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-[#e4e1e9] flex flex-col font-sans">
       <LessonHeader 
-        unitTitle="Unit 1 › Lesson 1" 
-        lessonTitle="Business Greetings"
+        unitTitle={computedUnitTitle} 
+        lessonTitle={computedLessonTitle}
         progress={progress}
       />
       

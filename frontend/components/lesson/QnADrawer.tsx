@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, Bot, User, Mic, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import { useCachedFetch } from "@/hooks/useCachedFetch";
 
 interface QnADrawerProps {
   instanceId: string;
@@ -11,12 +12,15 @@ interface QnADrawerProps {
 
 interface ChatMessage {
   id: string;
-  role: "user" | "ai";
+  role: "user" | "assistant";
   text: string;
   isOffTopic?: boolean;
 }
 
 export function QnADrawer({ instanceId }: QnADrawerProps) {
+  const { data: me } = useCachedFetch("/api/me");
+  const initial = me?.name ? me.name.charAt(0).toUpperCase() : "U";
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -27,6 +31,22 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
   const audioChunksRef = useRef<Blob[]>([]);
   const recognitionRef = useRef<any>(null);
   const ignoreTranscriptionRef = useRef(false);
+  
+  const [dragBounds, setDragBounds] = useState({ left: -1000, right: 0, top: -1000, bottom: 0 });
+
+  useEffect(() => {
+    const updateBounds = () => {
+      setDragBounds({
+        left: -window.innerWidth + 80,
+        right: 0,
+        top: -window.innerHeight + 80,
+        bottom: 0,
+      });
+    };
+    updateBounds();
+    window.addEventListener('resize', updateBounds);
+    return () => window.removeEventListener('resize', updateBounds);
+  }, []);
 
   const playTTS = (text: string) => {
     const utterance = new SpeechSynthesisUtterance(text);
@@ -173,7 +193,7 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
       
       setMessages(prev => [...prev, { 
         id: (Date.now() + 1).toString(), 
-        role: "ai", 
+        role: "assistant", 
         text: answer_markdown,
         isOffTopic: false
       }]);
@@ -181,7 +201,7 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
       console.error(error);
       setMessages(prev => [...prev, { 
         id: (Date.now() + 1).toString(), 
-        role: "ai", 
+        role: "assistant", 
         text: "Sorry, I lost my connection. Please try asking again!" 
       }]);
     } finally {
@@ -193,11 +213,14 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
     <>
       {/* Floating Action Button */}
       <motion.button
+        drag
+        dragMomentum={false}
+        dragConstraints={dragBounds}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        style={{ position: "fixed", bottom: "32px", right: "32px", zIndex: 9999 }}
-        className="w-14 h-14 bg-[#818cf8] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(129,140,248,0.3)] hover:shadow-[0_0_30px_rgba(129,140,248,0.5)] transition-shadow"
+        style={{ position: "fixed", bottom: "32px", right: "32px", zIndex: 9999, touchAction: "none" }}
+        className="w-14 h-14 bg-[#818cf8] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(129,140,248,0.3)] hover:shadow-[0_0_30px_rgba(129,140,248,0.5)] transition-shadow cursor-grab active:cursor-grabbing"
       >
         <MessageSquare size={24} className="text-[#0A0A0F]" />
       </motion.button>
@@ -251,8 +274,12 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
                 
                 {messages.map(msg => (
                   <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                    <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${msg.role === "user" ? "bg-[#35343a]" : "bg-[#818cf8]/20 border border-[#818cf8]/30"}`}>
-                      {msg.role === "user" ? <User size={14} className="text-[#c6c5d5]" /> : <Bot size={14} className="text-[#818cf8]" />}
+                    <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${msg.role === "user" ? "bg-gradient-to-br from-[#818CF8] to-[#4f46e5]" : "bg-[#818cf8]/20 border border-[#818cf8]/30"}`}>
+                      {msg.role === "user" ? (
+                        <span className="text-white text-[12px] font-bold">{initial}</span>
+                      ) : (
+                        <Bot size={14} className="text-[#818cf8]" />
+                      )}
                     </div>
                     <div className={`flex flex-col gap-2 max-w-[75%] ${msg.role === "user" ? "items-end" : "items-start"}`}>
                       <div className={`p-3 rounded-[14px] text-[15px] leading-relaxed ${
@@ -270,7 +297,7 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
                       </div>
                       
                       <div className="flex items-center gap-2 mt-1">
-                        {msg.role === "ai" && (
+                        {msg.role === "assistant" && (
                           <button 
                             onClick={() => playTTS(msg.text)}
                             className="text-[#A0A0AB] hover:text-[#818cf8] transition-colors p-1"

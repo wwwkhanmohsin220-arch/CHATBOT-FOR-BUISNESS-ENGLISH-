@@ -329,3 +329,57 @@ async def update_settings(
             return {"status": "success"}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Database error: {exc}")
+
+@router.delete("/me")
+async def delete_me(current_user: CurrentUser | None = Depends(get_optional_current_user)):
+    user_id = current_user.user_id if current_user else DEFAULT_USER_ID
+    try:
+        pool = await database.pool()
+        async with pool.acquire() as connection:
+            async with connection.transaction():
+                # Delete SRS cards
+                srs_exists = await connection.fetchval(
+                    "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'srs_cards')"
+                )
+                if srs_exists:
+                    await connection.execute("DELETE FROM srs_cards WHERE user_id = $1", user_id)
+                
+                # Delete QnA exchanges
+                qna_exists = await connection.fetchval(
+                    "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'qna_exchanges')"
+                )
+                if qna_exists:
+                    await connection.execute("""
+                        DELETE FROM qna_exchanges 
+                        WHERE lesson_instance_id IN (SELECT id FROM lesson_instances WHERE user_id = $1)
+                    """, user_id)
+                
+                # Delete lesson components
+                await connection.execute("""
+                    DELETE FROM node_attempts 
+                    WHERE node_id IN (
+                        SELECT ln.id FROM lesson_nodes ln 
+                        JOIN lesson_instances li ON li.id = ln.lesson_instance_id 
+                        WHERE li.user_id = $1
+                    )
+                """, user_id)
+                
+                await connection.execute("""
+                    DELETE FROM lesson_branches 
+                    WHERE lesson_instance_id IN (SELECT id FROM lesson_instances WHERE user_id = $1)
+                """, user_id)
+                
+                await connection.execute("""
+                    DELETE FROM lesson_nodes 
+                    WHERE lesson_instance_id IN (SELECT id FROM lesson_instances WHERE user_id = $1)
+                """, user_id)
+                
+                await connection.execute("DELETE FROM lesson_instances WHERE user_id = $1", user_id)
+                
+                # Delete activity and profile
+                await connection.execute("DELETE FROM activity_days WHERE user_id = $1", user_id)
+                await connection.execute("DELETE FROM user_profiles WHERE user_id = $1", user_id)
+                
+        return {"status": "success", "message": "User data completely erased."}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Database error: {exc}")

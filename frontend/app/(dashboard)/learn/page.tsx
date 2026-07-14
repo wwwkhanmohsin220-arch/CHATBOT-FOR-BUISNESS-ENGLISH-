@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, CheckCircle2, ChevronRight, Circle, PlayCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { UnitCelebrationOverlay } from "@/components/ui/UnitCelebrationOverlay";
 
 const MotionLink = motion.create(Link);
 
@@ -47,6 +49,29 @@ export default function LearningPathPage() {
     });
   }
 
+  const [celebratingUnit, setCelebratingUnit] = useState<{id: string, title: string} | null>(null);
+
+  useEffect(() => {
+    if (!units || units.length === 0) return;
+    
+    try {
+      const celebrated = JSON.parse(localStorage.getItem("buslingo_celebrated_units_v2") || "[]");
+      
+      for (const unit of units) {
+        if (unit.lessons.length > 0 && unit.lessons.every((l: LessonSlot) => l.status === "completed")) {
+          if (!celebrated.includes(unit.id)) {
+            celebrated.push(unit.id);
+            localStorage.setItem("buslingo_celebrated_units_v2", JSON.stringify(celebrated));
+            setCelebratingUnit({ id: String(unit.id), title: unit.title });
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Error checking celebrated units", e);
+    }
+  }, [rawCurriculum]);
+
   const handleRetry = async (e: React.MouseEvent, instanceId: string) => {
     e.preventDefault();
     try {
@@ -62,6 +87,12 @@ export default function LearningPathPage() {
 
   return (
     <main className="flex-1 overflow-y-auto p-6 md:p-16 relative">
+      {celebratingUnit && (
+        <UnitCelebrationOverlay 
+          unitTitle={celebratingUnit.title} 
+          onComplete={() => setCelebratingUnit(null)} 
+        />
+      )}
       <div className="max-w-[720px] mx-auto w-full relative z-10 pb-24">
         <motion.h1 
           initial={{ opacity: 0, y: -10 }}

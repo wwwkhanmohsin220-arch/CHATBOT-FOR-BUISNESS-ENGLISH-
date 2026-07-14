@@ -76,12 +76,6 @@ export function LessonHeader({ unitTitle, lessonTitle, progress = 0, variant = "
             style={{ width: `${progress}%` }} 
           />
         </div>
-        <button 
-          onClick={() => router.back()}
-          className="text-[#c6c5d5] hover:text-[#e4e1e9] transition-colors p-1 md:hidden"
-        >
-          <X size={20} />
-        </button>
       </div>
     </header>
   );

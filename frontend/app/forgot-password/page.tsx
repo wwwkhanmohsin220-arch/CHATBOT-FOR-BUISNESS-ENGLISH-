@@ -38,7 +38,14 @@ export default function ForgotPasswordPage() {
       
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || "Failed to send reset link");
+      let errMsg = err?.message || "Failed to send reset link";
+      if (typeof errMsg === 'object') {
+        errMsg = JSON.stringify(errMsg);
+      }
+      if (errMsg === '{}' || errMsg === '[object Object]') {
+        errMsg = "An unknown error occurred. Please check your email or try again later.";
+      }
+      setError(errMsg);
     } finally {
       setIsLoading(false);
     }

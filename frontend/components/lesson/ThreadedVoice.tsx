@@ -38,10 +38,11 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
   const recognitionRef = useRef<any>(null);
 
   const [visuals, setVisuals] = useState({
-    speed: 0.2,
-    amplitude: 0.4,
-    waviness: 0.5,
-    thickness: 0.3
+    speed: 1.0,
+    amplitude: 0.1,
+    waviness: 1.0,
+    thickness: 0.02,
+    opacity: 0.1
   });
   const [sessionComplete, setSessionComplete] = useState(false);
 
@@ -53,10 +54,11 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
 
   useEffect(() => {
     const controls = animate(visuals, {
-      speed: isPlayingAudio ? 1.0 : 0.2,
-      amplitude: isPlayingAudio ? 1.5 : 0.4,
-      waviness: isPlayingAudio ? 1.2 : 0.5,
-      thickness: isPlayingAudio ? 0.8 : 0.3,
+      speed: 1.0,
+      amplitude: isPlayingAudio ? 1.5 : 0.1,
+      waviness: 1.0,
+      thickness: isPlayingAudio ? 0.8 : 0.02,
+      opacity: isPlayingAudio ? 1.0 : 0.1,
     }, {
       duration: 0.8,
       ease: "easeInOut",
@@ -339,7 +341,7 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
 
       <div className="pl-0 md:pl-14 w-full flex flex-col items-center gap-8">
         <div className="relative w-[180px] h-[180px] md:w-[220px] md:h-[220px] rounded-full overflow-hidden shrink-0 mt-4">
-          <div className="absolute inset-0 w-full h-full">
+          <div className="absolute inset-0 w-full h-full" style={{ opacity: visuals.opacity }}>
             <Strands
               style={{}}
               colors={isPlayingAudio ? ["#818CF8", "#0EA5E9"] : ["#6366f1", "#4f46e5"]}

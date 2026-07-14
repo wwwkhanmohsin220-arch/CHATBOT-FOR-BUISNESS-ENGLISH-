@@ -26,7 +26,7 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [passwordBusy, setPasswordBusy] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-
+  const [isGoogleUser, setIsGoogleUser] = useState(false);
 
   useEffect(() => {
     if (profileData) {
@@ -36,6 +36,14 @@ export default function SettingsPage() {
       if (profileData.name) setDisplayName(profileData.name);
       if (profileData.email) setEmail(profileData.email);
     }
+    
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.app_metadata?.provider === "google") {
+        setIsGoogleUser(true);
+      }
+    };
+    checkUser();
   }, [profileData]);
 
   const handleSave = async () => {
@@ -89,20 +97,28 @@ export default function SettingsPage() {
 
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm(
-      "Delete your account? This will sign you out. Full server-side deletion still needs a dedicated backend delete route."
+      "Are you absolutely sure you want to delete your account? All your progress and data will be permanently erased."
     );
     if (!confirmed) return;
 
     try {
+      const res = await fetch("/api/me", { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete user data from server.");
+      
       await supabase.auth.signOut();
       router.push("/sign-in");
-    } catch (err) {
-      setStatusMessage("Could not sign out cleanly.");
+    } catch (err: any) {
+      setStatusMessage(err?.message || "Could not complete account deletion.");
     }
   };
 
   return (
-    <main className="flex-1 w-full flex justify-center py-10 px-6 md:px-0 overflow-y-auto">
+    <motion.main 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="flex-1 w-full flex justify-center py-10 px-6 md:px-0 overflow-y-auto"
+    >
       <div className="w-full max-w-[720px] space-y-8 pb-20">
         
         {/* Header */}
@@ -144,8 +160,10 @@ export default function SettingsPage() {
                 <input 
                   type="email" 
                   value={email}
+                  disabled={isGoogleUser}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-[#1C1C23] border border-[#242430] focus:border-[#818cf8] outline-none w-full rounded-[10px] h-[48px] px-4 text-[16px] text-[#e4e1e9] transition-colors"
+                  className={`border border-[#242430] focus:border-[#818cf8] outline-none w-full rounded-[10px] h-[48px] px-4 text-[16px] text-[#e4e1e9] transition-colors ${isGoogleUser ? 'bg-[#131318] opacity-60 cursor-not-allowed' : 'bg-[#1C1C23]'}`}
+                  title={isGoogleUser ? "Email cannot be changed for Google accounts" : ""}
                 />
               </div>
             </div>
@@ -198,6 +216,18 @@ export default function SettingsPage() {
                 ]}
               />
             </div>
+          </div>
+          
+          <div className="mt-8 flex justify-end">
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleSave}
+              disabled={saving || loading}
+              className="bg-[#818cf8] text-[#0A0A0F] rounded-[10px] h-[40px] px-6 text-[14px] font-semibold hover:opacity-90 transition-shadow shadow-lg shadow-indigo-500/20 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save preferences"}
+            </motion.button>
           </div>
         </section>
 
@@ -286,6 +316,6 @@ export default function SettingsPage() {
         )}
 
       </div>
-    </main>
+    </motion.main>
   );
 }

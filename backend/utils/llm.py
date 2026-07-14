@@ -71,7 +71,7 @@ def _extract_json(raw: str) -> str:
 
 def _format_errors(exc: ValidationError | ValueError) -> str:
     if isinstance(exc, ValidationError):
-        return json.dumps(exc.errors(), ensure_ascii=False, indent=2)
+        return exc.json()
     return str(exc)
 
 

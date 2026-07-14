@@ -14,7 +14,7 @@ A LessonBundle has exactly three fields:
 The "spine" array MUST contain nodes in this exact order:
 1. `node_type: "theory"`: A brief explanation of the slot's primary objective (Exactly 1 node).
    - `content`: { "text": "...", "example": "..." }
-2. `node_type: "mcq"`: Multiple choice questions testing the theory. You MUST autonomously decide how many MCQ nodes to generate (between 4 and 6) based on the difficulty of the material.
+2. `node_type: "mcq"`: Multiple choice questions testing the theory. You MUST autonomously decide how many MCQ nodes to generate (between 2 and 3) based on the difficulty of the material.
    - `content`: { "question": "...", "options": ["...", "...", "..."], "correct_index": 0, "explanations": {"0":"...", "1":"...", "2":"..."} }
      - MUST have EXACTLY 3 options.
      - MUST have an explanation for EVERY option.
@@ -49,6 +49,31 @@ def build_compile_messages(slot: dict, user_profile: dict, rag_context: str = ""
     
     system_prompt = COMPILE_SYSTEM_V1.replace("<CANONICAL_TAGS_PLACEHOLDER>", str(CANONICAL_TAGS))
     
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_msg},
+    ]
+
+DYNAMIC_NODE_SYSTEM = """You are the Buslingo dynamic content compiler.
+Generate ONE single JSON object matching the `LessonNode` schema.
+Your goal is to generate an exercise specifically tailored to the user's recent chat history.
+Node types available:
+- "mcq": Multiple choice (must have exactly 3 options, and explanations for each)
+- "writing": Free-form text input (requires a "scenario")
+- "targeted_fix": A remedial micro-lesson and MCQ.
+
+Ensure you classify the node with the closest matching concept_tag from this exact list:
+<CANONICAL_TAGS_PLACEHOLDER>
+Return valid JSON only.
+"""
+
+def build_dynamic_node_messages(node_type: str, concept_tag: str, chat_history: list[dict[str, str]]) -> list[dict[str, str]]:
+    user_msg = (
+        f"Generate a custom '{node_type}' node based on this conversation history.\n"
+        f"The primary concept tag is '{concept_tag}'. Ensure the exercise directly addresses what the user asked or struggled with.\n"
+        f"Conversation History:\n{chat_history}\n"
+    )
+    system_prompt = DYNAMIC_NODE_SYSTEM.replace("<CANONICAL_TAGS_PLACEHOLDER>", str(CANONICAL_TAGS))
     return [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_msg},

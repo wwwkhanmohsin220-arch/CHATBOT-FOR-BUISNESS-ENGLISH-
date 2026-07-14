@@ -214,8 +214,20 @@ async def score_voice_session_background(
     except Exception:
         ai_module = None
 
-    transcript_text = " ".join(entry.get("text", "") for entry in transcript_lines).strip()
-    if ai_module and hasattr(ai_module, "generate_voice_score"):
+    user_messages = [entry for entry in transcript_lines if entry.get("role") == "user"]
+    if not user_messages:
+        voice_score = VoiceScore(
+            tone=0,
+            fluency=0,
+            vocabulary=0,
+            grammar=0,
+            listening=0,
+            objectives_met=[],
+            notable_errors=["You did not say anything during the roleplay."],
+            one_line_feedback="Please use your microphone to participate in the conversation next time."
+        )
+    elif ai_module and hasattr(ai_module, "generate_voice_score"):
+        transcript_text = " ".join(entry.get("text", "") for entry in transcript_lines).strip()
         try:
             maybe_result = ai_module.generate_voice_score(
                 transcript=transcript_text,

@@ -93,8 +93,8 @@ class LessonBundle(BaseModel):
         
         if theory_count != 1:
             raise ValueError("The spine MUST have exactly 1 'theory' node.")
-        if mcq_count < 4 or mcq_count > 6:
-            raise ValueError(f"The spine MUST have between 4 and 6 'mcq' nodes. You provided {mcq_count}.")
+        if mcq_count < 2 or mcq_count > 3:
+            raise ValueError(f"The spine MUST have between 2 and 3 'mcq' nodes. You provided {mcq_count}.")
         if writing_count < 1 or writing_count > 3:
             raise ValueError(f"The spine MUST have between 1 and 3 'writing' nodes. You provided {writing_count}.")
         if voice_count != 1:
@@ -161,6 +161,10 @@ class QnAResponse(BaseModel):
     scope: Literal["core", "adjacent", "off_topic"]
     related_concept_tag: Optional[str] = None
     bridge_line: Optional[str] = None
+    trigger_dynamic_node: Optional[Literal["mcq", "writing", "targeted_fix"]] = Field(
+        default=None,
+        description="If the user specifically asks for an exercise, or if they are heavily struggling, specify the type of node to dynamically generate and inject."
+    )
 
     @field_validator("related_concept_tag")
     @classmethod

@@ -48,7 +48,7 @@ export function TopNav() {
   const initial = me?.name ? me.name.charAt(0).toUpperCase() : "G";
 
   return (
-    <header className="h-[56px] bg-[#131318] border-b border-[#1A1A22] sticky top-0 z-30 flex items-center justify-between px-6">
+    <header className="h-[56px] bg-[#0A0A0F]/40 backdrop-blur-2xl border-b border-[#1A1A22] sticky top-0 z-30 flex items-center justify-between px-6">
       <div className="flex items-center">
         {/* Mobile menu button (hidden on desktop) */}
         <button 
@@ -57,15 +57,6 @@ export function TopNav() {
         >
           <Menu size={24} />
         </button>
-        
-        <div className="relative hidden sm:block">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#908f9e]" />
-          <input 
-            type="text"
-            placeholder="Search lessons, vocabulary..." 
-            className="w-[280px] h-[36px] bg-[#1c1c23] border border-[#242430] rounded-full pl-10 pr-4 text-[14px] text-white placeholder:text-[#52525B] focus:border-[#818CF8] focus:ring-1 focus:ring-[#818CF8] focus:outline-none transition-all"
-          />
-        </div>
       </div>
       
       <div className="flex items-center gap-6">

@@ -8,11 +8,15 @@ You MUST match this exact JSON schema:
   "answer_markdown": "Your detailed answer in markdown format. Keep it concise but helpful.",
   "scope": "core" | "adjacent" | "off_topic",
   "related_concept_tag": null,
-  "bridge_line": "Optional sentence bridging back to the lesson"
+  "bridge_line": "Optional sentence bridging back to the lesson",
+  "trigger_dynamic_node": null | "mcq" | "writing" | "targeted_fix"
 }
 
 Classify scope as one of: core, adjacent, off_topic.
+If the user requests an exercise, or if they are severely struggling, set `trigger_dynamic_node` to automatically generate and inject a tailored exercise into their lesson.
+Otherwise, leave it null.
 Prefer concise markdown answers that are helpful and on-topic.
+If you inject an exercise, add a `bridge_line` telling the user about it (e.g. "I've added a quick exercise to the end of this lesson to help you practice!").
 Return valid JSON only.
 """
 
