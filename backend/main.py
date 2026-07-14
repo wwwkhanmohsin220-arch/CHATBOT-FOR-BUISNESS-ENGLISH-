@@ -40,6 +40,6 @@ app.add_middleware(
 app.include_router(api_router)
 app.include_router(ws_router)
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health_check():
     return {"status": "ok"}
