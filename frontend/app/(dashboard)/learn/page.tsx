@@ -144,7 +144,7 @@ export default function LearningPathPage() {
                           <Circle size={20} className="text-[#8e8d9b] shrink-0" />
                         )}
                         
-                        <div className="flex-1 flex flex-col">
+                        <div className="flex-1 flex flex-col min-w-0">
                           <span className={`text-[15px] ${isLocked ? "text-[#4b4b56]" : "text-white"}`}>
                             {lesson.title}
                           </span>
@@ -159,7 +159,7 @@ export default function LearningPathPage() {
                         </div>
 
                         {!isLocked && (
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                             {isCompleted && lesson.final_score !== undefined && lesson.final_score !== null && (
                               <span className="text-[14px] font-bold text-[#22c55e] bg-[#22c55e]/10 px-2 py-0.5 rounded-[6px]">
                                 {lesson.final_score}%
@@ -170,7 +170,7 @@ export default function LearningPathPage() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={(e) => handleRetry(e, lesson.instance_id!)}
-                                className="bg-[#242430] hover:bg-[#2a2a35] text-[#c6c5d5] hover:text-[#e4e1e9] text-[13px] font-semibold px-4 py-1.5 rounded-[8px] transition-colors ml-2"
+                                className="bg-[#242430] hover:bg-[#2a2a35] text-[#c6c5d5] hover:text-[#e4e1e9] text-[13px] font-semibold px-4 py-1.5 rounded-[8px] transition-colors"
                               >
                                 Retry
                               </motion.button>
