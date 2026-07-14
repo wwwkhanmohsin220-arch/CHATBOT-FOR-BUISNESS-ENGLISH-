@@ -28,7 +28,6 @@ from backend.models.schema import WritingSubmitRequest, WritingSubmitResponse
 router = APIRouter(tags=["lessons"])
 
 CURRICULUM_PATH = Path(__file__).resolve().parents[1] / "app" / "content" / "curriculum.json"
-DEMO_INSTANCE_ALIAS = "test"
 DEMO_USER_ID = os.getenv("BUSLINGO_DEMO_USER_ID", "00000000-0000-0000-0000-000000000001")
 COMPILE_VERSION = "fixture_v1"
 
@@ -157,13 +156,6 @@ def _fixture_bundle(slot: dict[str, Any]) -> dict[str, Any]:
                 },
             },
             {
-                "node_type": "writing",
-                "concept_tag": "email_structure",
-                "content": {
-                    "scenario": "A client just asked for a project update. Write a brief, professional reply.",
-                },
-            },
-            {
                 "node_type": "voice",
                 "concept_tag": "small_talk",
                 "content": {
@@ -195,48 +187,7 @@ def _fixture_bundle(slot: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def _ensure_curriculum_seeded(connection: Any) -> None:
-    existing = await connection.fetchval("SELECT COUNT(*) FROM units")
-    if existing:
-        return
-
-    curriculum = json.loads(CURRICULUM_PATH.read_text(encoding="utf-8"))
-    for unit in curriculum["units"]:
-        unit_id = await connection.fetchval(
-            """
-            INSERT INTO units (position, title)
-            VALUES ($1, $2)
-            ON CONFLICT (position) DO UPDATE SET title = EXCLUDED.title
-            RETURNING id
-            """,
-            unit["position"],
-            unit["title"],
-        )
-
-        for slot in unit["slots"]:
-            await connection.execute(
-                """
-                INSERT INTO lesson_slots (unit_id, position, slot_key)
-                VALUES ($1, $2, $3)
-                ON CONFLICT (slot_key) DO UPDATE
-                SET unit_id = EXCLUDED.unit_id, position = EXCLUDED.position
-                """,
-                unit_id,
-                slot["position"],
-                slot["slot_key"],
-            )
-
-
-async def _ensure_demo_instance(connection: Any, user_id: str) -> str:
-    await _ensure_curriculum_seeded(connection)
-    slot = json.loads(CURRICULUM_PATH.read_text(encoding="utf-8"))["units"][0]["slots"][0]
-    slot_row = await connection.fetchrow(
-        "SELECT id FROM lesson_slots WHERE slot_key = $1",
-        slot["slot_key"],
-    )
-    if not slot_row:
-        raise HTTPException(status_code=404, detail="Lesson slot not found.")
-
+async def _hydrate_fixture_instance(connection: Any, *, user_id: str, slot_row: Any, slot: dict[str, Any]) -> str:
     existing = await connection.fetchrow(
         """
         SELECT id
@@ -246,33 +197,45 @@ async def _ensure_demo_instance(connection: Any, user_id: str) -> str:
         user_id,
         slot_row["id"],
     )
-    if existing:
-        return str(existing["id"])
 
     bundle = _fixture_bundle(slot)
-    try:
+    profile_snapshot = json.dumps({"level": "beginner", "source": "fixture"})
+
+    if existing:
+        instance_id = str(existing["id"])
+        await connection.execute("DELETE FROM lesson_nodes WHERE lesson_instance_id = $1::uuid", instance_id)
+        await connection.execute("DELETE FROM lesson_branches WHERE lesson_instance_id = $1::uuid", instance_id)
+        await connection.execute(
+            """
+            UPDATE lesson_instances
+            SET title = $2,
+                status = 'ready',
+                current_node_index = 0,
+                compile_version = $3,
+                profile_snapshot = $4::jsonb,
+                completed_at = NULL,
+                started_at = NULL
+            WHERE id = $1::uuid
+            """,
+            instance_id,
+            bundle["title"],
+            COMPILE_VERSION,
+            profile_snapshot,
+        )
+    else:
         instance_id = await connection.fetchval(
             """
             INSERT INTO lesson_instances
               (user_id, lesson_slot_id, title, status, current_node_index, compile_version, profile_snapshot)
-            VALUES ($1::uuid, $2, $3, 'ready', 0, $4, $5::jsonb)
+            VALUES ($1, $2, $3, 'ready', 0, $4, $5::jsonb)
             RETURNING id
             """,
             user_id,
             slot_row["id"],
             bundle["title"],
             COMPILE_VERSION,
-            json.dumps({"level": "beginner", "source": "fixture"}),
+            profile_snapshot,
         )
-    except Exception as exc:
-        print(f"Demo instance creation failed: {exc}")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=(
-                "Could not create demo lesson instance. Ensure BUSLINGO_DEMO_USER_ID "
-                "exists in Supabase auth.users before testing the runtime."
-            ),
-        ) from exc
 
     for index, node in enumerate(bundle["spine"]):
         await connection.execute(
@@ -303,10 +266,41 @@ async def _ensure_demo_instance(connection: Any, user_id: str) -> str:
     return str(instance_id)
 
 
-async def _resolve_instance_id(connection: Any, instance_id: str) -> str:
-    if instance_id == DEMO_INSTANCE_ALIAS:
-        return await _ensure_demo_instance(connection, DEMO_USER_ID)
-    return instance_id
+
+
+async def _ensure_curriculum_seeded(connection: Any) -> None:
+    existing_units = await connection.fetchval("SELECT COUNT(*) FROM units")
+    if existing_units and int(existing_units) > 0:
+        return
+
+    curriculum = json.loads(CURRICULUM_PATH.read_text(encoding="utf-8"))
+    for unit in curriculum.get("units", []):
+        unit_id = await connection.fetchval(
+            """
+            INSERT INTO units (position, title)
+            VALUES ($1, $2)
+            ON CONFLICT (position) DO UPDATE
+            SET title = EXCLUDED.title
+            RETURNING id
+            """,
+            unit["position"],
+            unit["title"],
+        )
+
+        for slot in unit.get("slots", []):
+            await connection.execute(
+                """
+                INSERT INTO lesson_slots (unit_id, position, slot_key)
+                VALUES ($1, $2, $3)
+                ON CONFLICT (slot_key) DO UPDATE
+                SET unit_id = EXCLUDED.unit_id,
+                    position = EXCLUDED.position
+                """,
+                unit_id,
+                slot["position"],
+                slot["slot_key"],
+            )
+
 
 
 async def get_db_user_instance(
@@ -316,64 +310,92 @@ async def get_db_user_instance(
     background_tasks: BackgroundTasks | None = None,
 ) -> LessonInstanceContext:
     user_id = current_user.user_id if current_user else DEMO_USER_ID
-    if instance_id == DEMO_INSTANCE_ALIAS:
-        resolved_id = await _ensure_demo_instance(connection, user_id)
-    else:
-        if not current_user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Supabase authentication is required for non-demo lesson instances.",
-            )
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Supabase authentication is required for lesson instances.",
+        )
 
-        # Check if this looks like a slot_key rather than a UUID
-        # UUIDs have the format 8-4-4-4-12 hex chars with dashes
-        import re
-        is_uuid = bool(re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', instance_id, re.I))
+    # Check if this looks like a slot_key rather than a UUID
+    import re
+    is_uuid = bool(re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', instance_id, re.I))
 
-        if not is_uuid:
-            # Treat as slot_key - find or create a lesson instance for this user+slot
-            slot_row = await connection.fetchrow(
-                "SELECT id FROM lesson_slots WHERE slot_key = $1",
-                instance_id,
-            )
-            if not slot_row:
-                raise HTTPException(status_code=404, detail=f"Lesson slot '{instance_id}' not found.")
+    if not is_uuid:
+        # Treat as slot_key - find or create a lesson instance for this user+slot
+        slot_row = await connection.fetchrow(
+            "SELECT id FROM lesson_slots WHERE slot_key = $1",
+            instance_id,
+        )
+        if not slot_row:
+            raise HTTPException(status_code=404, detail=f"Lesson slot '{instance_id}' not found.")
 
-            existing = await connection.fetchrow(
-                "SELECT id, status, current_node_index FROM lesson_instances WHERE user_id = $1::uuid AND lesson_slot_id = $2",
-                user_id,
-                slot_row["id"],
-            )
-            if existing:
-                resolved_id = str(existing["id"])
-                instance = existing
-            else:
-                from backend.app.ai.compiler import compile_lesson
-                
-                # Create a new instance for this user with status 'compiling'
-                await _ensure_curriculum_seeded(connection)
-                
-                instance_uuid = await connection.fetchval(
-                    """
-                    INSERT INTO lesson_instances
-                      (user_id, lesson_slot_id, title, status, current_node_index, compile_version, profile_snapshot)
-                    VALUES ($1::uuid, $2, 'Generating...', 'compiling', 0, 'v2', '{}'::jsonb)
-                    RETURNING id
-                    """,
-                    user_id,
-                    slot_row["id"],
+        existing = await connection.fetchrow(
+            "SELECT id, status, current_node_index FROM lesson_instances WHERE user_id = $1::uuid AND lesson_slot_id = $2",
+            user_id,
+            slot_row["id"],
+        )
+        if existing:
+            if existing["status"] == "compiling":
+                node_count = await connection.fetchval(
+                    "SELECT COUNT(*) FROM lesson_nodes WHERE lesson_instance_id = $1::uuid",
+                    existing["id"],
                 )
-                resolved_id = str(instance_uuid)
-                
-                if background_tasks:
-                    background_tasks.add_task(
-                        compile_lesson,
-                        user_id=user_id,
-                        slot_key=instance_id,
-                        instance_id=resolved_id
+                if node_count and int(node_count) > 0:
+                    await connection.execute(
+                        "UPDATE lesson_instances SET status = 'ready' WHERE id = $1::uuid",
+                        existing["id"],
                     )
+                    existing = await connection.fetchrow(
+                        "SELECT id, status, current_node_index FROM lesson_instances WHERE id = $1::uuid",
+                        existing["id"],
+                    )
+                else:
+                    resolved_id = await _hydrate_fixture_instance(
+                        connection,
+                        user_id=user_id,
+                        slot_row=slot_row,
+                        slot={
+                            "slot_key": instance_id,
+                            "objectives": [
+                                "Understand introduction to communication",
+                                "Apply professional communication techniques",
+                            ],
+                            "concept_tags": ["polite_disagreement"],
+                            "key_vocabulary": ["communication", "professional", "strategy", "structure"],
+                            "grammar_points": ["Present simple for general truths"],
+                            "example_phrases": ["Let's discuss introduction to communication in detail."],
+                        },
+                    )
+                    instance = await connection.fetchrow(
+                        """
+                        SELECT id, user_id, status, current_node_index
+                        FROM lesson_instances
+                        WHERE id = $1::uuid
+                        """,
+                        resolved_id,
+                    )
+                    return LessonInstanceContext(user_id=user_id, instance_id=resolved_id, instance_row=instance)
+            resolved_id = str(existing["id"])
+            instance = existing
         else:
-            resolved_id = await _resolve_instance_id(connection, instance_id)
+            resolved_id = await _hydrate_fixture_instance(
+                connection,
+                user_id=user_id,
+                slot_row=slot_row,
+                slot={
+                    "slot_key": instance_id,
+                    "objectives": [
+                        "Understand introduction to communication",
+                        "Apply professional communication techniques",
+                    ],
+                    "concept_tags": ["polite_disagreement"],
+                    "key_vocabulary": ["communication", "professional", "strategy", "structure"],
+                    "grammar_points": ["Present simple for general truths"],
+                    "example_phrases": ["Let's discuss introduction to communication in detail."],
+                },
+            )
+    else:
+        resolved_id = instance_id
 
     instance = await connection.fetchrow(
         """
@@ -392,9 +414,81 @@ async def get_db_user_instance(
     return LessonInstanceContext(user_id=user_id, instance_id=str(resolved_id), instance_row=instance)
 
 
+@router.post("/lessons/{slot_id}/start", status_code=202)
+async def start_lesson(
+    slot_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: CurrentUser | None = Depends(get_optional_current_user),
+):
+    user_id = current_user.user_id if current_user else DEMO_USER_ID
+    try:
+        pool = await database.pool()
+        async with pool.acquire() as connection:
+            ls = await connection.fetchrow("SELECT id FROM lesson_slots WHERE slot_key = $1", slot_id)
+            if not ls:
+                raise HTTPException(status_code=404, detail="Slot not found")
+                
+            existing = await connection.fetchrow(
+                "SELECT id, status FROM lesson_instances WHERE user_id = $1 AND lesson_slot_id = $2",
+                user_id, ls["id"]
+            )
+            
+            if existing:
+                if existing["status"] in ("compiling", "ready", "in_progress", "completed"):
+                    status_value = existing["status"]
+                    if status_value == "compiling":
+                        node_count = await connection.fetchval(
+                            "SELECT COUNT(*) FROM lesson_nodes WHERE lesson_instance_id = $1::uuid",
+                            existing["id"],
+                        )
+                        if node_count and int(node_count) > 0:
+                            await connection.execute(
+                                "UPDATE lesson_instances SET status = 'ready' WHERE id = $1::uuid",
+                                existing["id"],
+                            )
+                            status_value = "ready"
+                    if status_value == "ready":
+                        await connection.execute("UPDATE lesson_instances SET status = 'in_progress' WHERE id = $1", existing["id"])
+                        return {"instance_id": str(existing["id"]), "status": "in_progress"}
+                    return {"instance_id": str(existing["id"]), "status": status_value}
+
+            slot = await connection.fetchrow(
+                """
+                SELECT slot_key
+                FROM lesson_slots
+                WHERE id = $1
+                """,
+                ls["id"],
+            )
+            if not slot:
+                raise HTTPException(status_code=404, detail="Slot not found")
+
+            resolved_id = await _hydrate_fixture_instance(
+                connection,
+                user_id=user_id,
+                slot_row=ls,
+                slot={
+                    "slot_key": slot["slot_key"],
+                    "objectives": [
+                        "Understand introduction to communication",
+                        "Apply professional communication techniques",
+                    ],
+                    "concept_tags": ["polite_disagreement"],
+                    "key_vocabulary": ["communication", "professional", "strategy", "structure"],
+                    "grammar_points": ["Present simple for general truths"],
+                    "example_phrases": ["Let's discuss introduction to communication in detail."],
+                },
+            )
+
+            return {"instance_id": str(resolved_id), "status": "ready"}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _db_error(exc) from exc
+
 @router.get("/curriculum")
 async def get_curriculum(current_user: CurrentUser | None = Depends(get_optional_current_user)):
-    user_id = current_user.user_id if current_user else DEFAULT_USER_ID
+    user_id = current_user.user_id if current_user else DEMO_USER_ID
     try:
         pool = await database.pool()
         async with pool.acquire() as connection:
@@ -457,7 +551,7 @@ async def get_curriculum(current_user: CurrentUser | None = Depends(get_optional
             
             unit["lessons"].append(
                 {
-                    "id": DEMO_INSTANCE_ALIAS if row["lesson_position"] == 1 else row["slot_key"],
+                    "id": row["slot_key"],
                     "instance_id": str(row["instance_id"]) if row["instance_id"] else None,
                     "title": real_title,
                     "status": row["status"] or "available",
@@ -483,7 +577,26 @@ async def get_current_node(
             if instance["status"] == "completed":
                 return {"status": "already_completed"}
             if instance["status"] == "compiling":
-                return {"status": "compiling"}
+                node_count = await connection.fetchval(
+                    "SELECT COUNT(*) FROM lesson_nodes WHERE lesson_instance_id = $1::uuid",
+                    context.instance_id,
+                )
+                if node_count and int(node_count) > 0:
+                    await connection.execute(
+                        "UPDATE lesson_instances SET status = 'ready' WHERE id = $1::uuid",
+                        context.instance_id,
+                    )
+                    context.instance_row = await connection.fetchrow(
+                        """
+                        SELECT id, user_id, status, current_node_index
+                        FROM lesson_instances
+                        WHERE id = $1::uuid
+                        """,
+                        context.instance_id,
+                    )
+                    instance = context.instance_row
+                if instance["status"] == "compiling":
+                    return {"status": "compiling"}
 
             node = await connection.fetchrow(
                 """
@@ -1066,8 +1179,52 @@ async def lesson_qna(
             from backend.models.schema import QnAResponse
             
             res = await generate_validated(messages, schema=QnAResponse, task="qna")
-            return res
             
+            # Director Rule 2: Track QnA and inject targeted_fix if repeated
+            try:
+                await connection.execute(
+                    """
+                    INSERT INTO qna_exchanges (lesson_instance_id, node_id, question, answer_content)
+                    VALUES ($1, $2, $3, $4::jsonb)
+                    """,
+                    context.instance_id, node_row["id"], req.question, res.model_dump_json()
+                )
+                
+                qna_count = await connection.fetchval(
+                    "SELECT COUNT(*) FROM qna_exchanges WHERE lesson_instance_id = $1 AND node_id = $2",
+                    context.instance_id, node_row["id"]
+                )
+                
+                if qna_count >= 2:
+                    injected_count = await connection.fetchval(
+                        "SELECT COUNT(*) FROM lesson_nodes WHERE lesson_instance_id = $1 AND is_injected = TRUE AND concept_tag = $2",
+                        context.instance_id, node_row["concept_tag"]
+                    )
+                    if injected_count < 2:
+                        branch = await connection.fetchrow(
+                            """
+                            SELECT id, content FROM lesson_branches
+                            WHERE lesson_instance_id = $1 AND concept_tag = $2 AND consumed = FALSE
+                            FOR UPDATE
+                            """,
+                            context.instance_id, node_row["concept_tag"]
+                        )
+                        if branch:
+                            injected_position = _to_decimal(node_row["position"]) + Decimal("0.5")
+                            await connection.execute(
+                                """
+                                INSERT INTO lesson_nodes (lesson_instance_id, position, node_type, is_injected, concept_tag, content)
+                                VALUES ($1, $2, 'targeted_fix', TRUE, $3, $4::jsonb)
+                                ON CONFLICT (lesson_instance_id, position) DO NOTHING
+                                """,
+                                context.instance_id, injected_position, node_row["concept_tag"], branch["content"]
+                            )
+                            await connection.execute("UPDATE lesson_branches SET consumed = TRUE WHERE id = $1", branch["id"])
+            except Exception as e:
+                import logging
+                logging.error(f"Failed to process Director Rule 2 for QnA: {e}")
+                
+            return res
     except HTTPException:
         raise
     except Exception as exc:
@@ -1147,4 +1304,74 @@ async def delete_lesson_instance(
                 f.write(f"\nException message: {exc}")
         except:
             pass
+        raise _db_error(exc) from exc
+
+
+@router.post("/lesson-instances/{instance_id}/restart")
+async def restart_lesson_instance(
+    instance_id: str,
+    current_user: CurrentUser | None = Depends(get_optional_current_user),
+):
+    try:
+        pool = await database.pool()
+        async with pool.acquire() as connection:
+            context = await get_db_user_instance(connection, instance_id, current_user)
+            lesson_slot_id = await connection.fetchval(
+                "SELECT lesson_slot_id FROM lesson_instances WHERE id = $1::uuid",
+                context.instance_id,
+            )
+            slot_key = await connection.fetchval(
+                """
+                SELECT ls.slot_key
+                FROM lesson_instances li
+                JOIN lesson_slots ls ON ls.id = li.lesson_slot_id
+                WHERE li.id = $1::uuid
+                """,
+                context.instance_id,
+            )
+            if not slot_key:
+                raise HTTPException(status_code=404, detail="Lesson slot not found for restart")
+
+            async with connection.transaction():
+                await connection.execute(
+                    "DELETE FROM node_attempts WHERE node_id IN (SELECT id FROM lesson_nodes WHERE lesson_instance_id = $1::uuid)",
+                    context.instance_id,
+                )
+                await connection.execute(
+                    "UPDATE lesson_branches SET consumed = FALSE WHERE lesson_instance_id = $1::uuid",
+                    context.instance_id,
+                )
+                await connection.execute(
+                    "DELETE FROM lesson_nodes WHERE lesson_instance_id = $1::uuid AND is_injected = TRUE",
+                    context.instance_id,
+                )
+                await connection.execute(
+                    """
+                    UPDATE lesson_nodes
+                    SET status = 'pending'
+                    WHERE lesson_instance_id = $1::uuid
+                    """,
+                    context.instance_id,
+                )
+                await connection.execute(
+                    """
+                    UPDATE lesson_instances
+                    SET title = COALESCE(title, 'Generating...'),
+                        status = 'ready',
+                        current_node_index = 0,
+                        completed_at = NULL,
+                        started_at = NULL
+                    WHERE id = $1::uuid
+                    """,
+                    context.instance_id,
+                )
+
+            return {
+                "status": "restarted",
+                "instance_id": str(context.instance_id),
+                "slot_key": slot_key,
+            }
+    except HTTPException:
+        raise
+    except Exception as exc:
         raise _db_error(exc) from exc

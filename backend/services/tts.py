@@ -81,13 +81,9 @@ class ElevenLabsSpeechProvider:
             print(f"ElevenLabs HTTPError: {exc.code} for voice {voice_id}")
             if hasattr(exc, 'read'):
                 print(exc.read().decode('utf-8', errors='replace'))
-            
-            # If the voice is not free or fails, fallback to Rachel
-            RACHEL_ID = "21m00Tcm4TlvDq8ikWAM"
-            if voice_id != RACHEL_ID:
-                print(f"Falling back to Rachel ({RACHEL_ID})...")
-                return await self.synthesize(text, voice_id_override=RACHEL_ID)
-                
+            if exc.code == 402:
+                return SpeechResult(audio_b64=None, provider="elevenlabs_payment_required")
+
             return SpeechResult(audio_b64=None, provider="elevenlabs_error")
         except Exception as exc:
             import traceback
@@ -118,9 +114,13 @@ class MockSpeechProvider:
 
 
 def build_tts_provider() -> TTSProvider:
-    provider = os.getenv("TTS_PROVIDER", "browser").lower()
+    provider = os.getenv("TTS_PROVIDER", "auto").lower()
+    has_elevenlabs_key = bool(os.getenv("ELEVENLABS_API_KEY"))
+
     if provider == "elevenlabs":
         return ElevenLabsSpeechProvider()
     if provider == "mock":
         return MockSpeechProvider()
+    if provider == "auto" and has_elevenlabs_key:
+        return ElevenLabsSpeechProvider()
     return BrowserSpeechProvider()

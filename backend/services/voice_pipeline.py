@@ -87,22 +87,35 @@ class VoicePipeline:
                 "event": "assistant.partial",
                 "session_id": session.session_id,
                 "text": chunk,
-                "accumulated_text": assistant_text,
+                "accumulated_text": assistant_text.replace("[SCENARIO_COMPLETE]", ""),
                 "is_final": False,
             }
 
+        is_complete = False
+        if "[SCENARIO_COMPLETE]" in assistant_text:
+            is_complete = True
+            assistant_text = assistant_text.replace("[SCENARIO_COMPLETE]", "").strip()
+
         session.assistant_text = assistant_text
         session.history.append(VoiceMessage(role="assistant", text=assistant_text))
-        speech = await self.tts.synthesize(assistant_text)
-        yield {
-            "event": "assistant.final",
-            "session_id": session.session_id,
-            "text": assistant_text,
-            "is_final": True,
-            "turn_count": session.turn_count,
-            "tts_provider": speech.provider,
-            "reply_audio_b64": speech.audio_b64,
-        }
+        
+        if assistant_text:
+            speech = await self.tts.synthesize(assistant_text)
+            yield {
+                "event": "assistant.final",
+                "session_id": session.session_id,
+                "text": assistant_text,
+                "is_final": True,
+                "turn_count": session.turn_count,
+                "tts_provider": speech.provider,
+                "reply_audio_b64": speech.audio_b64,
+            }
+            
+        if is_complete:
+            yield {
+                "event": "conversation.complete",
+                "session_id": session.session_id,
+            }
 
     def reset(self, session_id: str) -> None:
         self.sessions.pop(session_id, None)

@@ -11,16 +11,16 @@ A LessonBundle has exactly three fields:
 3. "branches": A dictionary mapping concept_tags to remedial "targeted_fix" LessonNode objects.
 
 ## Spine Structure Constraints
-The "spine" array MUST contain exactly 4 to 5 nodes in this exact order:
-1. `node_type: "theory"`: A brief explanation of the slot's primary objective. 
+The "spine" array MUST contain nodes in this exact order:
+1. `node_type: "theory"`: A brief explanation of the slot's primary objective (Exactly 1 node).
    - `content`: { "text": "...", "example": "..." }
-2. `node_type: "mcq"`: A multiple choice question testing the theory. (You may include a second MCQ node right after this one if needed).
+2. `node_type: "mcq"`: Multiple choice questions testing the theory. You MUST autonomously decide how many MCQ nodes to generate (between 1 and 4) based on the difficulty of the material.
    - `content`: { "question": "...", "options": ["...", "...", "..."], "correct_index": 0, "explanations": {"0":"...", "1":"...", "2":"..."} }
      - MUST have EXACTLY 3 options.
      - MUST have an explanation for EVERY option.
-3. `node_type: "voice"`: A spoken walkie-talkie scenario.
+3. `node_type: "voice"`: A spoken walkie-talkie scenario (Exactly 1 node).
    - `content`: { "scenario": "...", "ai_persona": "...", "objectives": ["...", "..."], "opening_line": "..." }
-4. `node_type: "writing"`: A short writing prompt.
+4. `node_type: "writing"`: A short writing prompt (Exactly 1 node).
    - `content`: { "scenario": "A brief business scenario requiring a written response." }
 
 ## Concept Tags

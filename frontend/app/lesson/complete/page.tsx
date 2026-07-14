@@ -43,12 +43,14 @@ function ReportCardContent() {
     if (!instanceId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/lesson-instances/${instanceId}`, { method: "DELETE" });
+      const res = await fetch(`/api/lesson-instances/${instanceId}/restart`, { method: "POST" });
       if (!res.ok) {
         const body = await res.text().catch(() => "no body");
-        throw new Error(`Delete failed with status: ${res.status}. Body: ${body}`);
+        throw new Error(`Restart failed with status: ${res.status}. Body: ${body}`);
       }
-      router.push('/home'); // Send them to dashboard so they can start fresh
+      const data = await res.json().catch(() => null);
+      const nextInstanceId = data?.instance_id || instanceId;
+      router.push(`/lesson/${nextInstanceId}`);
     } catch (err) {
       console.error("Failed to retry lesson", err);
       setDeleting(false);

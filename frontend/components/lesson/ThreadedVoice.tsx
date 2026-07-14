@@ -36,11 +36,11 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
   const audioChunksRef = useRef<Blob[]>([]);
   const recognitionRef = useRef<any>(null);
 
-  const [visuals, setVisuals] = useState({ 
-    speed: 0.2, 
-    amplitude: 0.4, 
-    waviness: 0.5, 
-    thickness: 0.3 
+  const [visuals, setVisuals] = useState({
+    speed: 0.2,
+    amplitude: 0.4,
+    waviness: 0.5,
+    thickness: 0.3
   });
   const [sessionComplete, setSessionComplete] = useState(false);
 
@@ -64,6 +64,75 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
     return controls.stop;
   }, [isPlayingAudio]);
 
+  const wsRef = useRef<WebSocket | null>(null);
+
+  useEffect(() => {
+    // Connect to WebSocket
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.close();
+    }
+
+    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/voice?session_id=${instanceId}&lesson_id=${nodeId}`);
+    wsRef.current = ws;
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.event === "assistant.partial") {
+        // Update the last Coach message with the partial text
+        setMessages(prev => {
+          const newMessages = [...prev];
+          const lastMsg = newMessages[newMessages.length - 1];
+          if (lastMsg && lastMsg.sender === "Coach" && !lastMsg.audioData) {
+            lastMsg.text = data.accumulated_text;
+          } else {
+            newMessages.push({
+              id: Date.now().toString(),
+              sender: "Coach",
+              text: data.accumulated_text
+            });
+          }
+          return newMessages;
+        });
+      }
+
+      if (data.event === "assistant.final") {
+        setIsProcessing(false);
+        setMessages(prev => {
+          const newMessages = [...prev];
+          const lastMsg = newMessages[newMessages.length - 1];
+          if (lastMsg && lastMsg.sender === "Coach") {
+            lastMsg.text = data.text;
+            lastMsg.audioData = data.reply_audio_b64;
+          }
+          return newMessages;
+        });
+        if (data.reply_audio_b64) {
+          playAudioData(data.reply_audio_b64);
+        } else {
+          playTTSFallback(data.text);
+        }
+      }
+
+      if (data.event === "conversation.complete") {
+        setSessionComplete(true);
+      }
+    };
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ event: "start_session", lesson_id: nodeId }));
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        ws.close();
+      }
+      if (wsRef.current === ws) {
+        wsRef.current = null;
+      }
+    };
+  }, [instanceId, nodeId]);
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -72,14 +141,12 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
       audioChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
+        if (event.data.size > 0 && wsRef.current?.readyState === WebSocket.OPEN) {
+          wsRef.current.send(event.data);
         }
       };
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await sendAudioTurn(audioBlob);
+      mediaRecorder.onstop = () => {
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -101,7 +168,8 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
         recognitionRef.current = recognition;
       }
 
-      mediaRecorder.start();
+      // Record in chunks of 500ms for streaming
+      mediaRecorder.start(500);
       setIsRecording(true);
     } catch (error) {
       console.error("Error accessing microphone:", error);
@@ -113,10 +181,26 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (e) {}
+        try { recognitionRef.current.stop(); } catch (e) { }
       }
       setIsRecording(false);
       setIsProcessing(true);
+
+      const transcript = interimTranscriptRef.current;
+      if (transcript) {
+        setMessages(prev => [...prev, { id: Date.now().toString(), sender: "You", text: transcript }]);
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({
+            event: "transcript.final",
+            transcript,
+            session_id: instanceId,
+            lesson_id: nodeId,
+          }));
+        }
+      }
+
+      setInterimTranscript("");
+      interimTranscriptRef.current = "";
     }
   };
 
@@ -144,65 +228,19 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
   const playTTSFallback = (text: string) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices?.() || [];
+      const preferredVoice =
+        voices.find((voice) => /female|woman|zira|samantha|victoria|google us english female/i.test(voice.name)) ||
+        voices.find((voice) => /female|woman/i.test(voice.name)) ||
+        voices.find((voice) => /female|woman/i.test(voice.voiceURI)) ||
+        voices.find((voice) => /female|woman/i.test(voice.lang));
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
       setIsPlayingAudio(true);
       utterance.onend = () => setIsPlayingAudio(false);
       utterance.onerror = () => setIsPlayingAudio(false);
       window.speechSynthesis.speak(utterance);
-    }
-  };
-
-  const sendAudioTurn = async (audioBlob: Blob) => {
-    try {
-      const formData = new FormData();
-      formData.append("audio", audioBlob, "recording.webm");
-      
-      const fallbackText = interimTranscriptRef.current;
-      if (fallbackText) {
-        formData.append("transcript_fallback", fallbackText);
-      }
-
-      const res = await fetch(`/api/lesson-instances/${instanceId}/voice/turn`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to process voice turn");
-      }
-
-      const data = await res.json();
-      
-      setInterimTranscript(""); // Clear real-time transcript
-      interimTranscriptRef.current = "";
-      
-      // Add User message
-      const userMsg: Message = { id: Date.now().toString(), sender: "You", text: data.transcript };
-      
-      // Add Coach message
-      const coachMsg: Message = { 
-        id: (Date.now() + 1).toString(), 
-        sender: "Coach", 
-        text: data.reply_text,
-        audioData: data.reply_audio_b64 
-      };
-      
-      setMessages(prev => [...prev, userMsg, coachMsg]);
-
-      if (data.is_complete) {
-        setSessionComplete(true);
-      }
-
-      // Play audio response
-      if (data.reply_audio_b64) {
-        playAudioData(data.reply_audio_b64);
-      } else {
-        playTTSFallback(data.reply_text);
-      }
-
-    } catch (error) {
-      console.error("Voice turn error:", error);
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -234,7 +272,7 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       className="flex flex-col gap-6 w-full"
@@ -285,17 +323,17 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
                   className="flex flex-col gap-1 w-full shrink-0"
                 >
                   <div className="flex items-center gap-2">
-                    <span 
+                    <span
                       className={
-                        msg.sender === "Coach" 
-                          ? "text-[#818cf8] text-[12px] font-bold tracking-wide uppercase" 
+                        msg.sender === "Coach"
+                          ? "text-[#818cf8] text-[12px] font-bold tracking-wide uppercase"
                           : "text-[#A0A0AB] text-[12px] font-bold tracking-wide uppercase"
                       }
                     >
                       {msg.sender}
                     </span>
                     {msg.sender === "Coach" && (
-                      <button 
+                      <button
                         onClick={() => {
                           if (msg.audioData) {
                             playAudioData(msg.audioData);
@@ -320,29 +358,29 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
         </div>
 
         <div className="flex flex-col items-center gap-4 mt-4 w-full">
-          <button 
+          <button
             onClick={toggleRecording}
             disabled={isProcessing}
             className={`flex items-center gap-3 px-8 h-[56px] rounded-full transition-all group active:scale-95 border-2
               ${isProcessing
                 ? "bg-[#35343a] border-[#35343a] text-[#c6c5d5] opacity-70 cursor-not-allowed"
-                : isRecording 
-                  ? "bg-red-500 border-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:bg-red-400 hover:border-red-400" 
+                : isRecording
+                  ? "bg-red-500 border-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:bg-red-400 hover:border-red-400"
                   : "bg-[#818cf8] border-[#818cf8] text-[#0A0A0F] shadow-[0_0_20px_rgba(129,140,248,0.2)] hover:bg-[#bdc2ff] hover:border-[#bdc2ff]"
               }
             `}
           >
-            <Mic 
-              size={22} 
-              className={`transition-transform ${isRecording ? "animate-pulse" : (isProcessing ? "" : "group-hover:scale-110")}`} 
-              fill="currentColor" 
+            <Mic
+              size={22}
+              className={`transition-transform ${isRecording ? "animate-pulse" : (isProcessing ? "" : "group-hover:scale-110")}`}
+              fill="currentColor"
             />
             <span className="text-[15px] font-bold tracking-wide">
               {isProcessing ? "AI Thinking..." : isRecording ? "Tap to Stop" : "Tap to Speak"}
             </span>
           </button>
-          
-          <button 
+
+          <button
             onClick={handleEndSession}
             disabled={isProcessing || isRecording}
             className="text-[#908f9e] hover:text-white transition-colors text-[14px] font-semibold mt-4 disabled:opacity-50"

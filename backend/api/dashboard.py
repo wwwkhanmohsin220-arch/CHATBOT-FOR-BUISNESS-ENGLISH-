@@ -10,7 +10,8 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 from backend.core.auth import CurrentUser, get_optional_current_user
 from backend.core.database import database
@@ -269,3 +270,51 @@ async def get_me(current_user: CurrentUser | None = Depends(get_optional_current
             "total_xp": 0,
             "streak_count": 0
         }
+
+class SettingsUpdate(BaseModel):
+    coach_voice: str | None = None
+    daily_goal_min: int | None = None
+    timezone: str | None = None
+    level: str | None = None
+
+@router.patch("/me/settings")
+async def update_settings(
+    settings: SettingsUpdate,
+    current_user: CurrentUser | None = Depends(get_optional_current_user)
+):
+    user_id = current_user.user_id if current_user else DEFAULT_USER_ID
+    
+    updates = []
+    values = []
+    idx = 1
+    
+    if settings.coach_voice is not None:
+        updates.append(f"coach_voice = ${idx}")
+        values.append(settings.coach_voice)
+        idx += 1
+    if settings.daily_goal_min is not None:
+        updates.append(f"daily_goal_min = ${idx}")
+        values.append(settings.daily_goal_min)
+        idx += 1
+    if settings.timezone is not None:
+        updates.append(f"timezone = ${idx}")
+        values.append(settings.timezone)
+        idx += 1
+    if settings.level is not None:
+        updates.append(f"level = ${idx}")
+        values.append(settings.level)
+        idx += 1
+        
+    if not updates:
+        return {"status": "no_changes"}
+        
+    values.append(user_id)
+    query = f"UPDATE user_profiles SET {', '.join(updates)} WHERE user_id = ${idx}"
+    
+    try:
+        pool = await database.pool()
+        async with pool.acquire() as connection:
+            await connection.execute(query, *values)
+            return {"status": "success"}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Database error: {exc}")

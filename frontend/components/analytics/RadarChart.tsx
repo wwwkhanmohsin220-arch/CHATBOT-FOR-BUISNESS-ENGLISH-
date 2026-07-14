@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-export function RadarChart() {
+export function RadarChart({ radar }: { radar?: any }) {
   // We use state to trigger the CSS transition on mount
   const [mounted, setMounted] = useState(false);
 
@@ -16,11 +16,30 @@ export function RadarChart() {
     return () => clearTimeout(timer);
   }, []);
 
+  const getRadius = (axis: string) => {
+    if (!radar || !radar[axis]) return 60; // fallback radius if empty
+    // EMA score is typically 0-100. Max radius is 120 (outer edge)
+    return Math.min(120, (radar[axis].value / 100) * 120);
+  };
+
+  const rGrammar = getRadius("grammar");
+  const rVocab = getRadius("vocabulary");
+  const rFluency = getRadius("fluency");
+  const rPronunc = getRadius("pronunciation");
+  const rTone = getRadius("tone");
+  const rWriting = getRadius("writing");
+
+  const p1 = `0,${-rGrammar}`;
+  const p2 = `${rVocab * 0.866},${-rVocab * 0.5}`;
+  const p3 = `${rFluency * 0.866},${rFluency * 0.5}`;
+  const p4 = `0,${rPronunc}`;
+  const p5 = `${-rTone * 0.866},${rTone * 0.5}`;
+  const p6 = `${-rWriting * 0.866},${-rWriting * 0.5}`;
+
   // Center starting points (before animation)
   const initialPoints = "0,0 0,0 0,0 0,0 0,0 0,0";
-  // The animated points from the HTML reference:
-  // Points mapping: Top(Grammar), TopRight(Vocab), BotRight(Fluency), Bot(Pronunciation), BotLeft(Tone), TopLeft(Writing)
-  const finalPoints = "0,-96 67.5,-39 41.5,24 0,84 -88.3,51 -62.3,-36";
+  // The animated points from the actual data
+  const finalPoints = `${p1} ${p2} ${p3} ${p4} ${p5} ${p6}`;
 
   return (
     <section className="bg-[#131318] border border-[#454653] rounded-lg p-[28px] flex flex-col gap-6 items-center w-full max-w-2xl mx-auto">
@@ -60,12 +79,12 @@ export function RadarChart() {
             
             {/* Data Points */}
             <g className={cn("transition-opacity duration-1000 delay-300", mounted ? "opacity-100" : "opacity-0")}>
-              <circle className="fill-[#818cf8]" cx="0" cy="-96" r="4" />
-              <circle className="fill-[#818cf8]" cx="67.5" cy="-39" r="4" />
-              <circle className="fill-[#818cf8]" cx="41.5" cy="24" r="4" />
-              <circle className="fill-[#818cf8]" cx="0" cy="84" r="4" />
-              <circle className="fill-[#818cf8]" cx="-88.3" cy="51" r="4" />
-              <circle className="fill-[#818cf8]" cx="-62.3" cy="-36" r="4" />
+              <circle className="fill-[#818cf8]" cx="0" cy={-rGrammar} r="4" />
+              <circle className="fill-[#818cf8]" cx={rVocab * 0.866} cy={-rVocab * 0.5} r="4" />
+              <circle className="fill-[#818cf8]" cx={rFluency * 0.866} cy={rFluency * 0.5} r="4" />
+              <circle className="fill-[#818cf8]" cx="0" cy={rPronunc} r="4" />
+              <circle className="fill-[#818cf8]" cx={-rTone * 0.866} cy={rTone * 0.5} r="4" />
+              <circle className="fill-[#818cf8]" cx={-rWriting * 0.866} cy={-rWriting * 0.5} r="4" />
             </g>
             
             {/* Labels */}

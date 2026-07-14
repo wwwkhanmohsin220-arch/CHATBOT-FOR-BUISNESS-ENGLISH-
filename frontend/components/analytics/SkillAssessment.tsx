@@ -17,7 +17,19 @@ const WEAKNESSES = [
   "Idiomatic Vocabulary"
 ];
 
-export function SkillAssessment() {
+export function SkillAssessment({ radar }: { radar?: any }) {
+  const strengths: string[] = [];
+  const weaknesses: string[] = [];
+
+  if (radar && Object.keys(radar).length > 0) {
+    const sorted = Object.entries(radar).sort((a: any, b: any) => b[1].value - a[1].value);
+    strengths.push(...sorted.slice(0, 3).map(x => x[0].charAt(0).toUpperCase() + x[0].slice(1)));
+    weaknesses.push(...sorted.slice(-2).map(x => x[0].charAt(0).toUpperCase() + x[0].slice(1)));
+  } else {
+    strengths.push(...STRENGTHS);
+    weaknesses.push(...WEAKNESSES);
+  }
+
   return (
     <section className="bg-[#131318] border border-[#454653] rounded-lg p-[20px] flex flex-col gap-6">
       <h3 className="text-[20px] font-semibold text-[#e4e1e9]">Skill Assessment</h3>
@@ -29,7 +41,7 @@ export function SkillAssessment() {
             Top Strengths
           </h4>
           <ul className="flex flex-col gap-3">
-            {STRENGTHS.map((skill, idx) => (
+            {strengths.map((skill, idx) => (
               <li key={`s-${idx}`} className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-[#818cf8] shadow-[0_0_8px_rgba(129,140,248,0.6)]" />
                 <span className="text-[16px] text-[#e4e1e9]">{skill}</span>
@@ -44,7 +56,7 @@ export function SkillAssessment() {
             Focus Areas
           </h4>
           <ul className="flex flex-col gap-3">
-            {WEAKNESSES.map((skill, idx) => (
+            {weaknesses.map((skill, idx) => (
               <li key={`w-${idx}`} className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-[#f7bd3e] shadow-[0_0_8px_rgba(247,189,62,0.4)]" />
                 <span className="text-[16px] text-[#e4e1e9]">{skill}</span>

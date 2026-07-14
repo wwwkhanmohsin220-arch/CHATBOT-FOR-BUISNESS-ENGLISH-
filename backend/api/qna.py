@@ -8,7 +8,6 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 import json
-from sentence_transformers import SentenceTransformer
 from backend.core.database import database
 
 # Since Mohsin hasn't finished the get_current_user dependency yet, we'll use a mock
@@ -25,6 +24,7 @@ def get_model():
     global _model
     if _model is None:
         print("Lazy-loading SentenceTransformer model (BAAI/bge-small-en-v1.5)...")
+        from sentence_transformers import SentenceTransformer
         _model = SentenceTransformer('BAAI/bge-small-en-v1.5')
     return _model
 

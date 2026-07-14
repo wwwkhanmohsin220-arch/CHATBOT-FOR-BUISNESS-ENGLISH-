@@ -275,33 +275,6 @@ async def _persist_compile_metadata(
             )
 
 
-async def _fetch_rag_context(connection, slot: dict) -> str:
-    try:
-        from backend.api.qna import get_model
-        import json
-        
-        query = f"{slot.get('unit_title', '')} - {' '.join(slot.get('objectives', []))}"
-        if not query.strip() or query == " - ":
-            return ""
-            
-        model = get_model()
-        embedding = model.encode(query)
-        embedding_json = json.dumps(embedding.tolist())
-        
-        rows = await connection.fetch(
-            """
-            SELECT dc.content
-            FROM document_chunks dc
-            ORDER BY dc.embedding <-> $1::vector
-            LIMIT 3
-            """,
-            embedding_json
-        )
-        return "\n\n".join(row["content"] for row in rows)
-    except Exception as e:
-        print(f"RAG fetch failed: {e}")
-        return ""
-
 async def _compile_or_fallback(
     *,
     connection,
@@ -309,8 +282,9 @@ async def _compile_or_fallback(
     user_profile: dict[str, Any],
 ) -> LessonBundle:
     try:
-        rag_context = await _fetch_rag_context(connection, slot)
-        messages = build_compile_messages(_slot_context(slot), user_profile, rag_context=rag_context)
+        # Blueprint v1 rule: compile from curriculum.json + user profile only.
+        # RAG stays a future swap point, but it must not block lesson startup now.
+        messages = build_compile_messages(_slot_context(slot), user_profile)
         return await generate_validated(messages, LessonBundle, task="compile", model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"))
     except Exception as exc:
         import traceback
