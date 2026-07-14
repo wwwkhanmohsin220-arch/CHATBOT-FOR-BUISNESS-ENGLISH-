@@ -25,6 +25,15 @@ export function TopNav() {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
+  // Fix BFCache (back button) infinite loading issue
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) setIsLoggingOut(false);
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
   useEffect(() => {
     fetch("/api/me")
       .then((r) => r.json())
