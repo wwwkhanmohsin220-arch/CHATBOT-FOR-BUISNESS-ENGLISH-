@@ -48,39 +48,40 @@ export function TopNav() {
   const initial = me?.name ? me.name.charAt(0).toUpperCase() : "G";
 
   return (
+    <>
     <header className="h-[56px] bg-[#0A0A0F]/40 backdrop-blur-2xl border-b border-[#1A1A22] sticky top-0 z-30 flex items-center justify-between px-6">
       <div className="flex items-center">
         {/* Mobile menu button (hidden on desktop) */}
-        <button 
+        <button
           onClick={() => setIsMobileMenuOpen(true)}
           className="md:hidden mr-4 text-[#c6c5d5] hover:text-white active:scale-[0.95] transition-all"
         >
           <Menu size={24} />
         </button>
       </div>
-      
+
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
           <Flame size={20} className="text-[#f7bd3e]" />
           <span className="text-[14px] font-bold text-white">{streak}</span>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Star size={20} className="text-[#818CF8]" fill="currentColor" />
           <span className="text-[14px] font-bold text-white">{xp}</span>
         </div>
-        
+
         <div className="relative ml-2" ref={dropdownRef}>
-          <button 
+          <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="w-8 h-8 rounded-full bg-gradient-to-br from-[#818CF8] to-[#4f46e5] flex items-center justify-center text-white text-[14px] font-bold active:scale-95 transition-transform"
           >
             {initial}
           </button>
-          
+
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-[#1c1c23] border border-[#242430] rounded-[10px] shadow-xl py-1 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-              <Link 
+              <Link
                 href="/settings"
                 onClick={() => setIsDropdownOpen(false)}
                 className="flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-[#c6c5d5] hover:bg-[#2a292f] hover:text-white transition-colors"
@@ -88,7 +89,7 @@ export function TopNav() {
                 <SettingsIcon size={16} />
                 Profile & Settings
               </Link>
-              <button 
+              <button
                 disabled={isLoggingOut}
                 onClick={async () => {
                   setIsLoggingOut(true);
@@ -117,8 +118,8 @@ export function TopNav() {
           )}
         </div>
       </div>
-
-      {/* Mobile Menu Overlay */}
+    </header>
+      {/* Mobile Menu Overlay - rendered OUTSIDE <header> so it's not capped by header's z-30 stacking context */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
@@ -126,7 +127,7 @@ export function TopNav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[#0A0A0F]/80 backdrop-blur-md z-40 md:hidden"
+              className="fixed inset-0 bg-[#0A0A0F]/80 backdrop-blur-md z-[9998] md:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <motion.div
@@ -134,18 +135,19 @@ export function TopNav() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-[280px] bg-[#0A0A0F] border-r border-[#242430] z-50 md:hidden flex flex-col shadow-2xl"
+              className="fixed inset-y-0 left-0 w-[280px] border-r border-[#242430] z-[9999] md:hidden flex flex-col shadow-2xl"
+              style={{ backgroundColor: '#0A0A0F' }}
             >
               <div className="h-[56px] flex items-center justify-between px-6 border-b border-[#242430]">
                 <Logo />
-                <button 
+                <button
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="text-[#c6c5d5] hover:text-white transition-colors"
                 >
                   <X size={24} />
                 </button>
               </div>
-              
+
               <div className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
                 {mainNav.map((item) => {
                   const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
@@ -189,6 +191,6 @@ export function TopNav() {
           </>
         )}
       </AnimatePresence>
-    </header>
+    </>
   );
 }

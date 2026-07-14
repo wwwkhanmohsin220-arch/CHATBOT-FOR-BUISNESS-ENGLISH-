@@ -10,7 +10,7 @@ import Aurora from "@/components/ui/Aurora";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#0A0A0F] flex flex-col font-sans relative overflow-hidden">
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-20" style={{ filter: 'blur(30px)' }}>
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-20" style={{ filter: 'blur(30px)' }}>
         <Aurora
           colorStops={["#4f46e5", "#818CF8", "#0EA5E9"]}
           blend={0.6}

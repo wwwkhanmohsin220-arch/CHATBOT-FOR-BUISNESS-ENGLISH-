@@ -75,7 +75,7 @@ export default function HomeDashboardPage() {
               <p className="text-[20px] font-bold text-white">{streak.count} Days</p>
             </div>
           </div>
-          <div className="flex justify-between w-full sm:w-auto sm:justify-start gap-1">
+          <div className="flex flex-wrap sm:flex-nowrap justify-between w-full sm:w-auto sm:justify-start gap-1 overflow-hidden min-w-0">
             {streak.week_days.length > 0 ? streak.week_days.map((dayObj: any, i: number) => {
               const dayStr = new Date(dayObj.day).toLocaleDateString('en-US', { weekday: 'short' }).charAt(0);
               const isActive = dayObj.active;
