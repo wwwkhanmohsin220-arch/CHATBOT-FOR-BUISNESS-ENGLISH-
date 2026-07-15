@@ -1,94 +1,158 @@
-# BusLingo
+<div align="center">
 
-BusLingo is an AI-powered Business English learning platform built as a portfolio project by Mohsin, Umer, and Talha. The project is designed to help learners improve professional communication through interactive lessons, voice practice, writing tasks, progress tracking, and adaptive feedback.
+# 🌐 BusLingo
 
-Live project: [buslingo.vercel.app](https://buslingo.vercel.app)
+**An AI-native Business English learning platform built with a Compiler → Runtime → Director architecture.**
 
-## Overview
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-buslingo.vercel.app-818cf8?style=for-the-badge&logo=vercel&logoColor=white)](https://buslingo.vercel.app)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
+[![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
+[![Groq](https://img.shields.io/badge/Groq-LLaMA%203%2070B-F55036?style=for-the-badge)](https://groq.com)
 
-BusLingo combines a modern frontend with an AI-enabled backend to deliver guided Business English practice. The platform focuses on practical workplace communication such as professional tone, negotiation, meetings, vocabulary, writing, and spoken fluency.
+*Developed by [Mohsin](https://github.com/wwwkhanmohsin220-arch), [Umer](https://github.com/umerk), and [Talha](https://github.com/talha-butt)*
 
-At a high level, the product includes:
+</div>
 
-- Guided lesson flows with theory, MCQs, writing, voice, and review experiences
-- AI-assisted question answering and coaching
-- Adaptive lesson progression and targeted remediation
-- Vocabulary and SRS-based review support
-- Progress analytics and learner dashboards
-- Authentication and user profile management
+---
 
-## Tech Stack
+## What Is This?
 
-### Frontend
+BusLingo is a full-stack SaaS application that teaches Business English through a structured, AI-driven lesson experience. Think Duolingo — but instead of translating words, the AI coaches you through real workplace scenarios: negotiating contracts, writing professional emails, managing client calls, and conducting business meetings.
 
-- Next.js 16
-- React 19
-- TypeScript
-- Tailwind CSS 4
-- Framer Motion
-- Supabase SSR/Auth integration
+The core engineering challenge we solved is **eliminating spinner fatigue**. Most AI learning apps make the user wait 5-10 seconds between *every* single step while the LLM thinks. We don't. We built a three-phase architecture where the AI does all its heavy lifting silently in the background *before* the user even presses "Start Lesson."
 
-### Backend
+---
 
-- FastAPI
-- Python
-- Pydantic
-- AsyncPG
-- WebSockets
-- HTTPX
+## The Architecture: Compiler → Runtime → Director
 
-### Database and Auth
+This is what makes BusLingo technically distinct from a basic "ChatGPT wrapper."
 
-- Supabase
-- PostgreSQL
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         PHASE 1: COMPILER                           │
+│                                                                     │
+│   Background Task (Groq LLaMA 3 70B)                               │
+│   → Reads user onboarding profile (level, goals, industry)          │
+│   → Generates a complete, personalized lesson bundle                │
+│   → Saves every node to Supabase as pre-compiled JSON               │
+│   → Zero user-facing latency. Runs while user browses the dashboard.│
+└────────────────────────────┬────────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         PHASE 2: RUNTIME                            │
+│                                                                     │
+│   Deterministic FastAPI State Machine                               │
+│   → Serves pre-compiled lesson nodes instantly from Postgres        │
+│   → Types: Theory → MCQ → Interactive Writing → Voice Roleplay      │
+│   → Progress tracked per-node, per-user, with attempt history       │
+│   → Zero LLM calls during lesson transitions. Pure state reads.     │
+└────────────────────────────┬────────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         PHASE 3: DIRECTOR                           │
+│                                                                     │
+│   Pure Python Rules Engine                                          │
+│   → Monitors every user attempt in real-time                        │
+│   → If a user fails the same concept twice → pause the lesson        │
+│   → Dynamically inject a pre-compiled "Targeted Fix" node           │
+│   → Resume the original lesson path after remediation              │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-### AI and Voice
-
-- Groq for LLM responses and transcription
-- Whisper-based speech-to-text through Groq
-- ElevenLabs for text-to-speech fallback/support
-- Fish Audio references in the UI/backend voice pipeline
+---
 
 ## Key Features
 
-- Business English onboarding and learner-level setup
-- Personalized lesson runtime with resumable progress
-- Interactive theory, assessment, and review flows
-- Voice lesson support and conversational coaching
-- Writing evaluation and feedback generation
-- Ask-anything QnA support around lesson content
-- Dashboard metrics, activity tracking, and progress views
-- Vocabulary practice and spaced repetition support
+### 🧠 AI-Powered Adaptive Learning
+- Personalized lesson bundles generated by **LLaMA 3 70B via Groq** before the lesson starts
+- Automatic remediation: fail twice → the AI injects a targeted fix node mid-lesson
+- AI-scored writing with rubric axes: Tone, Clarity, Structure, Vocabulary, and Formality
+
+### 🎙️ Real-Time Voice Roleplay
+- Live WebSocket connection for walkie-talkie style voice practice
+- **Whisper STT** (via Groq) transcribes speech in real-time
+- **ElevenLabs TTS** synthesizes the AI persona's spoken responses
+- The AI plays a business persona (client, manager, colleague) in a scenario-aware conversation
+- Conversation completeness is evaluated before ending the session
+
+### 📊 Adaptive Progress Tracking
+- Exponential Moving Average (EMA) stats across 5 skill axes per user
+- Radar chart visualization of learner strengths and weaknesses
+- Spaced Repetition System (SRS) for vocabulary review
+- Per-lesson completion, streak tracking, and daily activity logging
+
+### 💬 QnA AI Coach
+- Ask-anything drawer available inside every lesson
+- Coach answers only questions relevant to the current lesson's concepts
+- Maintains context across a full conversation session
+
+### 🔒 Full Auth & Data Layer
+- Supabase Auth (email/password) with JWT verification on every API route
+- Row Level Security (RLS) on all database tables
+- SSR-safe session management via `@supabase/ssr`
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Frontend** | Next.js 15, React 19, TypeScript, Tailwind CSS v4, Framer Motion |
+| **Backend** | FastAPI (Python 3.11), Uvicorn, Pydantic v2, AsyncPG |
+| **Database & Auth** | Supabase (PostgreSQL + Auth + RLS) |
+| **AI / LLM** | Groq API — LLaMA 3.3 70B Versatile |
+| **Speech-to-Text** | Whisper (via Groq) |
+| **Text-to-Speech** | ElevenLabs |
+| **WebSockets** | FastAPI native WebSocket for real-time voice streaming |
+| **Deployment** | Vercel (frontend) + Render (backend) |
+
+---
+
+## Team & Ownership
+
+This project was built collaboratively with clearly defined domain ownership — mirroring how real engineering teams operate.
+
+| Engineer | Role | Domain |
+|---|---|---|
+| **Umer** | Frontend Lead & PM | Full Next.js frontend, UI/UX, routing, RAG integration, core aesthetics |
+| **Mohsin** | Backend Architect | FastAPI state machine, Supabase schema, `/attempt` endpoint, dashboard APIs |
+| **Talha** | AI & Voice | LLM curriculum prompts, Groq/Whisper integration, WebSocket voice pipeline, TTS |
+
+Files are tagged with `@ai-restriction` comments to enforce ownership and prevent merge conflicts across domains.
+
+---
 
 ## Project Structure
 
-```text
+```
 .
-|-- backend/      FastAPI API, AI logic, lesson services, schema, scripts
-|-- frontend/     Next.js app, UI components, auth flows, dashboard, lessons
-|-- docs/         Architecture, roadmap, implementation notes, planning docs
-|-- old/          Older prototype code kept for reference
-`-- .env.example  Example backend environment variables
+├── backend/
+│   ├── api/          # FastAPI routers: lessons, voice, auth, websockets
+│   ├── app/ai/       # LLM client, streaming helpers
+│   ├── core/         # Auth, database pool, state machine logic, SRS engine
+│   ├── models/       # Pydantic schemas
+│   ├── prompts/      # Structured LLM prompt templates
+│   ├── services/     # Voice pipeline, TTS provider, curriculum compiler
+│   └── schema.sql    # Full Supabase/Postgres schema
+├── frontend/
+│   ├── app/          # Next.js app router: dashboard, lesson, onboarding, auth
+│   └── components/   # Reusable UI components: MCQ, Voice, Theory, QnA, etc.
+├── docs/             # Architecture blueprint, roadmap, planning notes
+└── old/              # Previous prototype (reference only)
 ```
 
-## Architecture Summary
+---
 
-BusLingo follows a split frontend/backend architecture:
-
-- The `frontend` app provides the learner experience, onboarding, dashboard, lesson pages, and authenticated flows.
-- The `backend` app provides APIs for lessons, progress, voice, QnA, auth-related sync, and AI-powered evaluation.
-- Supabase is used for authentication and PostgreSQL-backed persistence.
-- AI services are used to support lesson generation, grading, summaries, transcription, and coaching.
-
-The docs folder also shows that the project is structured around a lesson compiler/runtime approach, where lesson content, remediation, and learner progress are coordinated through backend services and database state.
-
-## Getting Started
+## Running Locally
 
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
-cd CHATBOT-FOR-BUISNESS-ENGLISH--1
+git clone https://github.com/wwwkhanmohsin220-arch/CHATBOT-FOR-BUISNESS-ENGLISH-.git
+cd CHATBOT-FOR-BUISNESS-ENGLISH-
 ```
 
 ### 2. Backend setup
@@ -96,27 +160,28 @@ cd CHATBOT-FOR-BUISNESS-ENGLISH--1
 ```bash
 cd backend
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\activate       # Windows
+# source .venv/bin/activate  # Mac/Linux
 pip install -r requirements.txt
 ```
 
-Create a backend `.env` file based on the project needs. Current code references values such as:
+Create a `.env` file in the project root:
 
 ```env
 DATABASE_URL=
 SUPABASE_URL=
 SUPABASE_ANON_KEY=
 SUPABASE_JWT_SECRET=
-SUPABASE_JWT_AUD=
+SUPABASE_JWT_AUD=authenticated
 SUPABASE_JWT_ISSUER=
 GROQ_API_KEY=
-GROQ_MODEL=
+GROQ_MODEL=llama-3.3-70b-versatile
 ELEVENLABS_API_KEY=
-TTS_PROVIDER=
-CORS_ORIGINS=
+TTS_PROVIDER=elevenlabs
+CORS_ORIGINS=http://localhost:3000
 ```
 
-Run the API:
+Start the API:
 
 ```bash
 uvicorn backend.main:app --reload
@@ -129,17 +194,16 @@ cd frontend
 npm install
 ```
 
-Create a frontend `.env.local` file:
+Create `frontend/.env.local`:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-NEXT_PUBLIC_API_URL=/api
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
 BACKEND_API_URL=http://127.0.0.1:8000
 ```
 
-Run the frontend:
+Start the dev server:
 
 ```bash
 npm run dev
@@ -147,35 +211,24 @@ npm run dev
 
 ### 4. Database
 
-The repository includes a database schema at `backend/schema.sql`. Supabase/Postgres tables cover:
+Run `backend/schema.sql` against your Supabase project to set up all tables:
+- `user_profiles`, `lesson_units`, `lesson_slots`
+- `lesson_instances`, `lesson_nodes`, `node_attempts`
+- `user_stats`, `srs_cards`, `rag_documents`, `ai_failures`
 
-- user profiles
-- lesson units and lesson slots
-- lesson instances and lesson nodes
-- progress and stats
-- spaced repetition cards
-- AI failure logging
-- RAG-related document storage
+---
 
-## Documentation
+## Why We Built This
 
-Important project documentation is available in `docs/`, including:
+This project exists to demonstrate that three engineers can design and ship a **production-quality AI SaaS** — not a CRUD app, not a ChatGPT wrapper — something with real architectural depth:
 
-- implementation blueprint
-- roadmap and phases
-- project planning notes
-- curriculum/content references
+- A multi-phase AI pipeline that separates compilation from serving
+- A live WebSocket voice system with real-time STT and TTS
+- A database schema with RLS, state machines, and background job coordination
+- A frontend polished enough that users mistake it for a funded startup
 
-## Why This Project
+---
 
-BusLingo was built as a portfolio project to showcase practical full-stack product development across:
+## License
 
-- modern frontend engineering
-- API and backend system design
-- Supabase auth and database integration
-- AI-assisted learning workflows
-- voice and language-learning experiences
-
-## Authors
-
-Developed by Mohsin, Umer, and Talha as a portfolio project.
+MIT
