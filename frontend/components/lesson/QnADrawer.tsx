@@ -297,15 +297,7 @@ export function QnADrawer({ instanceId }: QnADrawerProps) {
                       </div>
                       
                       <div className="flex items-center gap-2 mt-1">
-                        {msg.role === "assistant" && (
-                          <button 
-                            onClick={() => playTTS(msg.text)}
-                            className="text-[#A0A0AB] hover:text-[#818cf8] transition-colors p-1"
-                            title="Listen"
-                          >
-                            <Volume2 size={14} />
-                          </button>
-                        )}
+
                         {msg.isOffTopic && (
                           <button className="bg-[#818cf8]/10 text-[#818cf8] text-[12px] font-medium px-3 py-1.5 rounded-full border border-[#818cf8]/30 hover:bg-[#818cf8]/20 transition-colors" onClick={() => setIsOpen(false)}>
                             Return to Lesson
