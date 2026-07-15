@@ -316,13 +316,13 @@ export default function UnifiedLessonPage() {
               speed={isCompiling ? 1.8 : 0.6}
             />
          </div>
-         <div className="z-10 flex flex-col items-center">
-           <div className="w-16 h-16 border-4 border-[#818cf8] border-t-transparent rounded-full animate-spin mb-4" />
-           <h2 className="text-[24px] font-bold text-white shadow-sm">
-             {isCompiling ? "Personalizing your lesson..." : "Loading Lesson..."}
-           </h2>
-           <p className="text-[#A0A0AB] mt-2 drop-shadow-md font-medium">AI is assembling real-world business scenarios</p>
-         </div>
+          <div className="z-10 flex flex-col items-center text-center px-4">
+            <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-[#818cf8] border-t-transparent rounded-full animate-spin mb-4" />
+            <h2 className="text-[20px] md:text-[24px] font-bold text-white shadow-sm">
+              {isCompiling ? "Personalizing your lesson..." : "Loading Lesson..."}
+            </h2>
+            <p className="text-[14px] md:text-[16px] text-[#A0A0AB] mt-2 drop-shadow-md font-medium">AI is assembling real-world business scenarios</p>
+          </div>
        </div>
      );
   }
