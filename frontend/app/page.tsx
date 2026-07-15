@@ -14,14 +14,14 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <nav className="fixed top-0 w-full h-16 z-50 border-b border-white/10 bg-black/30 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.1)] supports-[backdrop-filter]:bg-black/30">
-        <div className="flex justify-between items-center px-5 md:px-16 max-w-7xl mx-auto h-full">
+        <div className="flex justify-between items-center px-4 md:px-16 max-w-7xl mx-auto h-full">
           <Logo />
-          <div className="flex items-center gap-4 md:gap-6">
+          <div className="flex items-center gap-3 md:gap-6">
             <MotionLink 
               href="/sign-in" 
               whileHover={{ scale: 1.02 }} 
               whileTap={{ scale: 0.98 }} 
-              className="text-[#c6c5d5] font-medium hover:text-[#bdc2ff] transition-colors duration-200"
+              className="text-[#c6c5d5] font-medium hover:text-[#bdc2ff] transition-colors duration-200 text-[13px] md:text-[15px]"
             >
               Sign in
             </MotionLink>
@@ -29,7 +29,7 @@ export default function Home() {
               href="/onboarding" 
               whileHover={{ scale: 1.02 }} 
               whileTap={{ scale: 0.98 }} 
-              className={getButtonClasses("primary")}
+              className={getButtonClasses("primary", "default", "h-9 px-3 text-[13px] md:h-12 md:px-6 md:text-[15px]")}
             >
               Start Learning
             </MotionLink>
