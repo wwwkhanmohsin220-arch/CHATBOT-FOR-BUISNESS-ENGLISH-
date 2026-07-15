@@ -116,7 +116,7 @@ export default function LearningPathPage() {
             animate="show"
             className="relative pl-12"
           >
-            <div className="absolute left-[15px] top-[20px] bottom-[40px] w-[2px] bg-[#242430] z-0" />
+            <div className="absolute left-[20px] top-[20px] bottom-[40px] w-[2px] bg-[#242430] z-0" />
             {units.map((unit, unitIdx) => (
               <motion.div 
                 key={unit.id} 
