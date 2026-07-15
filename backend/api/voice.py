@@ -19,13 +19,12 @@ from backend.core.database import DatabaseNotConfigured, database
 from backend.core.jobs import compile_lesson_background
 from backend.core.srs import ensure_srs_cards_for_terms
 from backend.core.voice import (
-    VOICE_SESSIONS,
     VoiceMessage,
     generate_voice_reply,
-    get_or_create_state,
     score_voice_session_background,
     transcribe_audio_bytes,
 )
+from backend.api.websockets import voice_pipeline
 from backend.models.schema import TranscribeResponse, VoiceFinishResponse, VoiceTurnResponse
 
 router = APIRouter(tags=["voice"])
@@ -253,16 +252,16 @@ async def voice_finish_route(
                     """,
                     context.instance_id,
                 )
-                session_key = f"{context.instance_id}:{node['id']}"
-                state = VOICE_SESSIONS.get(session_key)
+                session_key = context.instance_id
+                state = voice_pipeline.sessions.get(session_key)
                 if state is None:
-                    state = await get_or_create_state(
-                        connection,
-                        context.user_id,
-                        context.instance_id,
-                        node,
-                        profile,
-                    )
+                    # Fallback if session was dropped
+                    state = type('obj', (object,), {
+                        'history': [],
+                        'turn_count': 0,
+                        'objectives': node["content"].get("objectives", []),
+                        'session_id': session_key
+                    })
 
                 transcript_lines = [
                     {"role": message.role, "text": message.text}
@@ -273,7 +272,7 @@ async def voice_finish_route(
                     "transcript": transcript_lines,
                     "turn_count": state.turn_count,
                     "objectives": state.objectives,
-                    "objectives_hit": sorted(state.objectives_hit),
+                    "objectives_hit": [],
                 }
 
                 attempt_row = await connection.fetchrow(
@@ -320,8 +319,8 @@ async def voice_finish_route(
                     node["position"],
                 )
 
-                if state.key in VOICE_SESSIONS:
-                    VOICE_SESSIONS.pop(state.key, None)
+                if hasattr(state, "session_id"):
+                    voice_pipeline.reset(state.session_id)
 
         if not already_finished:
             background_tasks.add_task(
