@@ -202,9 +202,9 @@ function SignUpContent() {
             href="/sign-in" 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className={getButtonClasses("secondary", "default", "w-full")}
+            className={getButtonClasses("secondary", "default", "w-full text-center")}
           >
-            Already have an account? Sign In
+            Already have an account? Log in
           </MotionLink>
         </div>
       </Card>

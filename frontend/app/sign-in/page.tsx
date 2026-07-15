@@ -172,9 +172,9 @@ export default function SignInPage() {
             href="/onboarding" 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className={getButtonClasses("secondary", "default", "w-full")}
+            className={getButtonClasses("secondary", "default", "w-full text-center")}
           >
-            No Account? Start Learning for Free
+            No account? Sign up
           </MotionLink>
         </div>
       </Card>
