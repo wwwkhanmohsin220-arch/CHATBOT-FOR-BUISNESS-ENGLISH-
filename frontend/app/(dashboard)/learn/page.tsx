@@ -145,7 +145,7 @@ export default function LearningPathPage() {
                         )}
                         
                         <div className="flex-1 flex flex-col min-w-0">
-                          <span className={`text-[15px] ${isLocked ? "text-[#4b4b56]" : "text-white"}`}>
+                          <span className={`text-[13px] sm:text-[15px] ${isLocked ? "text-[#4b4b56]" : "text-white"}`}>
                             {lesson.title}
                           </span>
                           {isInProgress && !isLocked && (
@@ -161,7 +161,7 @@ export default function LearningPathPage() {
                         {!isLocked && (
                           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                             {isCompleted && lesson.final_score !== undefined && lesson.final_score !== null && (
-                              <span className="text-[14px] font-bold text-[#22c55e] bg-[#22c55e]/10 px-2 py-0.5 rounded-[6px]">
+                              <span className="text-[13px] sm:text-[14px] font-bold text-[#22c55e] bg-[#22c55e]/10 px-1.5 py-0.5 sm:px-2 rounded-[6px]">
                                 {lesson.final_score}%
                               </span>
                             )}
@@ -170,7 +170,7 @@ export default function LearningPathPage() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={(e) => handleRetry(e, lesson.instance_id!)}
-                                className="bg-[#242430] hover:bg-[#2a2a35] text-[#c6c5d5] hover:text-[#e4e1e9] text-[13px] font-semibold px-4 py-1.5 rounded-[8px] transition-colors"
+                                className="bg-[#242430] hover:bg-[#2a2a35] text-[#c6c5d5] hover:text-[#e4e1e9] text-[12px] sm:text-[13px] font-semibold px-3 py-1 sm:px-4 sm:py-1.5 rounded-[8px] transition-colors"
                               >
                                 Retry
                               </motion.button>
@@ -182,7 +182,7 @@ export default function LearningPathPage() {
                       </>
                     );
 
-                    const className = `flex items-center gap-4 border rounded-[12px] px-5 py-4 transition-colors group ${
+                    const className = `flex items-center gap-2 sm:gap-4 border rounded-[12px] px-3 py-3 sm:px-5 sm:py-4 transition-colors group ${
                       isLocked 
                         ? "bg-[#131318] border-[#242430] opacity-70" 
                         : isCompleted
