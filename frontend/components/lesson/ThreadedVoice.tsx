@@ -75,7 +75,9 @@ export function ThreadedVoice({ instanceId, nodeId, content, onEndSession }: Thr
       wsRef.current.close();
     }
 
-    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/voice?session_id=${instanceId}&lesson_id=${nodeId}`);
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+    const wsUrl = baseUrl.replace(/^http/, "ws") + `/ws/voice?session_id=${instanceId}&lesson_id=${nodeId}`;
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onmessage = (event) => {
