@@ -162,7 +162,7 @@ export function InteractiveQnA({ question, onSubmitDraft, onComplete }: Interact
               </div>
             )}
 
-            <div className="flex gap-3 mt-2 self-start">
+            <div className="flex flex-col sm:flex-row gap-3 mt-4 self-start w-full sm:w-auto">
               {overallAvg < 60 && (
                 <button 
                   onClick={() => {
@@ -170,7 +170,7 @@ export function InteractiveQnA({ question, onSubmitDraft, onComplete }: Interact
                     setState("idle");
                     setRubric(null);
                   }}
-                  className="bg-transparent text-[#e4e1e9] border border-[#35343a] text-[15px] font-bold h-[48px] px-8 rounded-[12px] hover:bg-[#35343a] transition-all active:scale-95 flex items-center gap-2"
+                  className="bg-transparent text-[#e4e1e9] border border-[#35343a] text-[15px] font-bold h-[48px] px-4 sm:px-8 rounded-[12px] hover:bg-[#35343a] transition-all active:scale-95 flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap"
                 >
                   Try Again
                 </button>
@@ -185,7 +185,7 @@ export function InteractiveQnA({ question, onSubmitDraft, onComplete }: Interact
                   }
                 }}
                 disabled={isAdvancing}
-                className="bg-[#818cf8] text-[#0A0A0F] text-[15px] font-bold h-[48px] px-8 rounded-[12px] hover:bg-[#bdc2ff] transition-all active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(129,140,248,0.2)] disabled:opacity-50"
+                className="bg-[#818cf8] text-[#0A0A0F] text-[15px] font-bold h-[48px] px-4 sm:px-8 rounded-[12px] hover:bg-[#bdc2ff] transition-all active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(129,140,248,0.2)] disabled:opacity-50 w-full sm:w-auto whitespace-nowrap"
               >
                 {isAdvancing ? (
                   <>
