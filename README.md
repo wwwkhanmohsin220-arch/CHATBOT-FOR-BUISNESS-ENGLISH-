@@ -151,8 +151,8 @@ Files are tagged with `@ai-restriction` comments to enforce ownership and preven
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/wwwkhanmohsin220-arch/CHATBOT-FOR-BUISNESS-ENGLISH-.git
-cd CHATBOT-FOR-BUISNESS-ENGLISH-
+git clone https://github.com/wwwkhanmohsin220-arch/busLingo-.git
+cd busLingo-
 ```
 
 ### 2. Backend setup
